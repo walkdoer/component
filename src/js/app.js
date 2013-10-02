@@ -1,10 +1,27 @@
 define(function(require, exports) {
     'use strict';
     var $ = require('core/selector'),
-        Display = require('base/display');
+        router = require('core/router'),
+        pageClass = {},
+        pages = {},
+        $body = $('body'),
+        changePage;
 
-    var test = new Display({
-        container: $('#main')
-    });
-    console.log('test', test);
+    changePage = function (ctx, next) {
+        var pathname = ctx.pathname,
+            pageName = pathname.slice(1),
+            pg;
+        if (!pageClass[pageName]) {
+            require.async('page/' + pageName, function (Page) {
+                pageClass[pageName] = Page;
+                pg = new Page({
+                    container: $body
+                });
+                console.log(ctx, pageClass);
+                pg.render();
+            });
+        }
+    };
+    router('/index', changePage);
+    router();
 });
