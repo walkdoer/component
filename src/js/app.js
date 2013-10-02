@@ -1,4 +1,10 @@
 define(function(require, exports) {
-    var $ = require('selector');
-    console.log('test');
+    'use strict';
+    var $ = require('core/selector'),
+        Display = require('base/display');
+
+    var test = new Display({
+        container: $('#main')
+    });
+    console.log('test', test);
 });
