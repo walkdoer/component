@@ -4,59 +4,27 @@
 define(function (require, exports) {
     'use strict';
     var Display = require('base/display'),
-        tpl = require('core/template'),
         Page;
 
     Page = Display.extend({
-        tpl: null,
-        tplContent: null,
-        /*** Flag ***/
-        updating: false,  //更新中
-        rendered: false,  //已渲染
-        waitToRender: false,
-
+        type: 'page',
+        _components: [],
         /*** Function ***/
-        init: function init(option) {
-            var self = this;
-            this._super(option);
-            this.initialized = false;
-            this.initializing = true;
-            if (option.tpl) {
-                this.tpl = option.tpl;
+        render: function (data) {
+            var cpConstructors = this.components,//组件构造函数列表
+                components = this._components,
+                Component,
+                cp;
+            //创建组件
+            for (var i = 0, len = cpConstructors.length; i < len; i++) {
+                Component = cpConstructors[i];
+                cp = new Component({
+                    parent: this.el
+                });
+                components.push(cp);
+                cp.render(data[cp.name]);
             }
-            require.async('tpl/' + this.tpl, function (res) {
-                self.tplContent = res;
-                self.initializing = false;
-                self.initialized = true;
-                if (self.waitToRender) {
-                    self.render();
-                    self.waitToRender = false;
-                }
-            });
-        },
-        /**
-         * 渲染组件
-         */
-        render: function render(data) {
-            if (this.initializing) {
-                this.waitToRender = true;
-            } else if (this.initialized) {
-                this.container.append(this.tmpl(data));
-                this.rendered = true;
-            }
-            return this;
-        },
-        update: function () {
-            this.updating = true;
-            return this;
-        },
-        tmpl: function template(data) {
-            var tplCont = this.tplContent,
-                html;
-            if (tplCont) {
-                html = tpl.tmpl(tplCont, data, this.helper);
-            }
-            return html || '';
+            this.el.appendTo(this.parent);
         }
     });
 

@@ -4,11 +4,11 @@
 define(function (require, exports) {
     'use strict';
     var Component = require('base/component'),
-        List;
+        Footer;
 
-    List = Component.extend({
-        name: 'list',
-        tpl: 'com.list'
+    Footer = Component.extend({
+        name: 'footer',
+        tpl: 'com.footer'
     });
-    return List;
+    return Footer;
 });

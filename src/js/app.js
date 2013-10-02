@@ -2,6 +2,7 @@ define(function(require, exports) {
     'use strict';
     var $ = require('core/selector'),
         router = require('core/router'),
+        model = require('model'),
         pageClass = {},
         pages = {},
         $body = $('body'),
@@ -15,10 +16,10 @@ define(function(require, exports) {
             require.async('page/' + pageName, function (Page) {
                 pageClass[pageName] = Page;
                 pg = new Page({
-                    container: $body
+                    parent: $body
                 });
                 console.log(ctx, pageClass);
-                pg.render();
+                pg.render(model.getData(pageName));
             });
         }
     };
