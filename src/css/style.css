@@ -1,0 +1,16 @@
+.topfix{
+    position: fixed;
+    top:0;
+    left: 0;
+    right: 0;
+}
+#top-nav{
+    height: 40px;
+    background-color: #CCC;
+    line-height: 40px;
+    background-image:-webkit-gradient(linear, center top, center bottom, from(#F3F3F3), to(#DFDFDF));
+    text-align: center;
+}
+#main{
+    margin-top: 40px;
+}
