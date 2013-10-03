@@ -6,7 +6,26 @@ define(function(require, exports) {
         pageClass = {},
         pages = {},
         $body = $('body'),
-        changePage;
+        changePage,
+        outPutAppStatus,
+        outPutPageStatus;
+    outPutAppStatus = function () {
+        for (var pgName in pages) {
+            if (pages.hasOwnProperty(pgName)) {
+                var pg = pages[pgName];
+                console.debug(pg.type + pg.name + ' rendered: ' + pg.rendered);
+                outPutPageStatus(pg);
+            }
+        }
+    };
+    outPutPageStatus = function (pg) {
+        var components = pg._components,
+            cp;
+        for (var i = 0; i < components.length; i++) {
+            cp = components[i];
+            console.debug('|____' + cp.type + cp.name + ' rendered: ' + cp.rendered);
+        }
+    };
     changePage = function (ctx, next) {
         var pathname = ctx.pathname,
             pageName = pathname.slice(1),
@@ -24,8 +43,10 @@ define(function(require, exports) {
                     }
                     console.debug('准备渲染页面' + page.name);
                 }).on('afterrender', function (evt, page) {
-                    $body.empty();
                     console.debug('成功渲染页面' + page.name);
+                }).on('beforerenderfirstcomponent', function (evt, page) {
+                    $body.empty();
+                    console.log('渲染第一个组件' + page.name);
                 }).on('componentrendered', function (evt, page) {
                     console.debug('成功渲染所有组件' + page.name);
                 });

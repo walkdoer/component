@@ -56,7 +56,11 @@ define(function (require, exports) {
             if (this.tpl) {
                 this.tplDowloading = true;
                 require.async('tpl/' + this.tpl, function (res) {
-                    var delayTime = Math.round(Math.random() * 10000),
+                    var delayTime = {
+                        'com.navigator': 2000,
+                        'com.footer': 4000,
+                        'com.list': 6000
+                    }/*Math.round(Math.random() * 10000)*/,
                         timer;
                     console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
                     timer = setTimeout(function () {
@@ -67,11 +71,11 @@ define(function (require, exports) {
                         self.tplContent = res;
                         self.tplDowloading = false;
                         if (self.waitToRender) {
-                            self.render(self.dataToRender);
+                            self.render(self._data);
                             self.waitToRender = false;
                         }
                         clearTimeout(timer);
-                    }, delayTime);
+                    }, delayTime[self.tpl]);
                 });
             }
         },
@@ -104,20 +108,22 @@ define(function (require, exports) {
          * 渲染组件
          */
         render: function render(data, callback) {
+            this._data = data;
             if (this.tplDowloading) {
                 this.waitToRender = true;
-                this.dataToRender = data;
             } else if (this.initialized) {
                 this.trigger('beforerender', [this, data]);
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
-                    this.el.append($(this.tmpl(data)));
-                    this.el.appendTo(this.parent);
-                    this.rendered = true; //标志已经渲染完毕
-                    this.display = true; //已添加到parent中，默认就是已显示
+                    if (!this.noTplContent) {
+                        this.el.append($(this.tmpl(data)));
+                        this.el.appendTo(this.parent);
+                        this.rendered = true; //标志已经渲染完毕
+                        this.display = true; //已添加到parent中，默认就是已显示
+                    }
                     this.trigger('afterrender', [this, data]);
                     if (typeof callback === 'function') {
-                        callback(this);
+                        callback(this, data);
                     }
                 }
             }
