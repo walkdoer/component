@@ -20,6 +20,12 @@ define(function (require, exports) {
         }
         return -1;//not found
     }
+    /**
+     * 比较两个组件是不是同一个
+     * @param  {Component}  cpA
+     * @param  {Component}  cpB
+     * @return {Boolean}
+     */
     function isSameComponent(cpA, cpB) {
         return cpA.name === cpB.name && cpA.num === cpB.num;
     }
@@ -41,6 +47,18 @@ define(function (require, exports) {
                 if (isSameComponent(components[i], component)) {
                     return true;
                 }
+            }
+            return false;
+        },
+        isAllComponentRendered: function () {
+            var components = this._components;
+            for (var i = 0; i < components.length; i++) {
+                if (!components[i].rendered) {
+                    return false;
+                }
+            }
+            if (this._componentsWaitToRender.length === 0) {
+                return true;
             }
             return false;
         },
@@ -79,8 +97,14 @@ define(function (require, exports) {
                     console.debug('成功渲染组件:' + component.name);
                     //组件渲染成功后，移除自己在等待渲染队列的引用
                     self.removeFromWaitQueue(component);
-                    //渲染等待序列中的其他组件
-                    self.renderComponents(self._componentsWaitToRender, self._data);
+                    //判断是否渲染结束
+                    if (!self.isAllComponentRendered()) {
+                        //渲染等待序列中的其他组件
+                        self.renderComponents(self._componentsWaitToRender, self._data);
+                    } else {
+                        //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
+                        self.trigger('componentrendered', [self]);
+                    }
                 });
                 components.push(cp);
             }
@@ -113,15 +137,13 @@ define(function (require, exports) {
                 }
             }
         },
-        render: function (data, callback) {
+        render: function (data) {
+            //这里写成回调的原因：页面模板渲染成功之后再渲染组件
             this._super(data, function (pg) {
                 pg._data = data;
                 pg.renderComponents(pg._components, data);
                 //将页面添加到父元素，一般是Body
                 pg.el.appendTo(pg.parent);
-                if (typeof callback === 'function') {
-                    callback(pg);
-                }
             });
         }
     });

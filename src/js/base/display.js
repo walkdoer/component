@@ -31,6 +31,7 @@ define(function (require, exports) {
         parent: null,
         num: null,  //编号
         el: null,  //该展示区域的容器
+        noTplContent: true,  //是否有模板文件
         updating: false,  //更新中
         tplDowloading: false, //下载模板中
         rendered: false,  //已渲染
@@ -60,6 +61,9 @@ define(function (require, exports) {
                     console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
                     timer = setTimeout(function () {
                         //console.debug(self.tpl + '模板加载成功', res);
+                        if (res) {
+                            self.noTplContent = false;
+                        }
                         self.tplContent = res;
                         self.tplDowloading = false;
                         if (self.waitToRender) {
@@ -104,14 +108,14 @@ define(function (require, exports) {
                 this.waitToRender = true;
                 this.dataToRender = data;
             } else if (this.initialized) {
-                this.el.trigger(this.name + ':beforerender', [this, data]);
+                this.trigger('beforerender', [this, data]);
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
                     this.el.append($(this.tmpl(data)));
                     this.el.appendTo(this.parent);
                     this.rendered = true; //标志已经渲染完毕
                     this.display = true; //已添加到parent中，默认就是已显示
-                    this.el.trigger(this.name + ':afterrender', [this, data]);
+                    this.trigger('afterrender', [this, data]);
                     if (typeof callback === 'function') {
                         callback(this);
                     }
@@ -154,7 +158,11 @@ define(function (require, exports) {
          * @param  {Function} callback [函数]
          */
         on: function (event, callback) {
-            this.el.on(this.name + ':' + event, callback);
+            this.el.on([this.name, ':', event].join(''), callback);
+            return this;
+        },
+        trigger: function (event, callback) {
+            this.el.trigger([this.name, ':', event].join(''), callback);
             return this;
         },
         /**
