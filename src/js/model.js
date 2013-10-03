@@ -17,7 +17,13 @@ define(function(require, exports) {
             }
         }
     };
-    exports.getData = function getData(api) {
-        return data[api];
+    exports.getData = function getData(api, callback) {
+        var delayTime = Math.round(Math.random() * 4000),
+            timer;
+        console.log('获取' + api + '数据delay:' + delayTime);
+        timer = setTimeout(function () {
+            callback(data[api]);
+            clearTimeout(timer);
+        }, delayTime);
     };
 });

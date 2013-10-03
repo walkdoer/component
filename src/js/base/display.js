@@ -53,7 +53,7 @@ define(function (require, exports) {
             this.startInit();
             this.num = Date.now().toString();
             if (!option.parent) {
-                throw new Error('no parent in init function');
+                throw new Error('no parent in init option');
             }
             this.originOption = $.extend(true, {}, option);
             this.parent = option.parent;
@@ -62,13 +62,22 @@ define(function (require, exports) {
                 this.tpl = option.tpl;
             }
             if (this.tpl) {
+                var delayTime = {
+                    'com.navigator': 7000,
+                    'com.list': 4000,
+                    'com.footer': 2000
+                };
                 require.async('tpl/' + this.tpl, function (res) {
-                    self.tplContent = res;
-                    self.finishInit();
-                    if (self.waitToRender) {
-                        self.render(self.dataToRender);
-                        self.waitToRender = false;
-                    }
+                    var timer;
+                    timer = setTimeout(function () {
+                        self.tplContent = res;
+                        self.finishInit();
+                        if (self.waitToRender) {
+                            self.render(self.dataToRender);
+                            self.waitToRender = false;
+                        }
+                        clearTimeout(timer);
+                    }, delayTime[self.tpl]);
                 });
             } else {
                 this.finishInit();
@@ -83,10 +92,13 @@ define(function (require, exports) {
                 this.waitToRender = true;
                 this.dataToRender = data;
             } else if (this.initialized) {
-                if (this.el.trigger(this.name + ':beforerender', [this, data]) !== false) {
+                this.el.trigger(this.name + ':beforerender', [this, data]);
+                if (this.isContinueRender !== false) {
+                    this.isContinueRender = true;
                     this.el.append($(this.tmpl(data)));
                     this.el.appendTo(this.parent);
-                    this.rendered = true;
+                    this.rendered = true; //标志已经渲染完毕
+                    this.display = true; //已添加到parent中，默认就是已显示
                     this.el.trigger(this.name + ':afterrender', [this, data]);
                 }
             }

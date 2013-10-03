@@ -17,7 +17,9 @@ define(function(require, exports) {
                 pg = new Page({
                     parent: $body
                 });
-                pg.render(model.getData(pageName));
+                model.getData(pageName, function (data) {
+                    pg.render(data);
+                });
             });
         }
     };

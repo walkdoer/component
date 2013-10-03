@@ -1,104 +1,13 @@
-<section id="main">
+<section id="main" class="sec-list">
     <p class="meta">一共有<%=data.totalCount%>个游记</p>
-    <ul class="list">
+    <ol class="list">
     <%
     var list = data.data,
         li;
     for (var i = 0; i < list.length; i++) {
         li = list[i];
     %>
-    <li><p><%=li.title%></p><p><%=li.content%></p></li>
+    <li><p class="title"><%=li.title%></p><p class="content"><%=li.content%></p></li>
     <% } %>
-    </ul>
-</section>
-<section id="main">
-    <p class="meta">一共有<%=data.totalCount%>个游记</p>
-    <ul class="list">
-    <%
-    var list = data.data,
-        li;
-    for (var i = 0; i < list.length; i++) {
-        li = list[i];
-    %>
-    <li><p><%=li.title%></p><p><%=li.content%></p></li>
-    <% } %>
-    </ul>
-</section>
-<section id="main">
-    <p class="meta">一共有<%=data.totalCount%>个游记</p>
-    <ul class="list">
-    <%
-    var list = data.data,
-        li;
-    for (var i = 0; i < list.length; i++) {
-        li = list[i];
-    %>
-    <li><p><%=li.title%></p><p><%=li.content%></p></li>
-    <% } %>
-    </ul>
-</section>
-<section id="main">
-    <p class="meta">一共有<%=data.totalCount%>个游记</p>
-    <ul class="list">
-    <%
-    var list = data.data,
-        li;
-    for (var i = 0; i < list.length; i++) {
-        li = list[i];
-    %>
-    <li><p><%=li.title%></p><p><%=li.content%></p></li>
-    <% } %>
-    </ul>
-</section>
-<section id="main">
-    <p class="meta">一共有<%=data.totalCount%>个游记</p>
-    <ul class="list">
-    <%
-    var list = data.data,
-        li;
-    for (var i = 0; i < list.length; i++) {
-        li = list[i];
-    %>
-    <li><p><%=li.title%></p><p><%=li.content%></p></li>
-    <% } %>
-    </ul>
-</section>
-<section id="main">
-    <p class="meta">一共有<%=data.totalCount%>个游记</p>
-    <ul class="list">
-    <%
-    var list = data.data,
-        li;
-    for (var i = 0; i < list.length; i++) {
-        li = list[i];
-    %>
-    <li><p><%=li.title%></p><p><%=li.content%></p></li>
-    <% } %>
-    </ul>
-</section>
-<section id="main">
-    <p class="meta">一共有<%=data.totalCount%>个游记</p>
-    <ul class="list">
-    <%
-    var list = data.data,
-        li;
-    for (var i = 0; i < list.length; i++) {
-        li = list[i];
-    %>
-    <li><p><%=li.title%></p><p><%=li.content%></p></li>
-    <% } %>
-    </ul>
-</section>
-<section id="main">
-    <p class="meta">一共有<%=data.totalCount%>个游记</p>
-    <ul class="list">
-    <%
-    var list = data.data,
-        li;
-    for (var i = 0; i < list.length; i++) {
-        li = list[i];
-    %>
-    <li><p><%=li.title%></p><p><%=li.content%></p></li>
-    <% } %>
-    </ul>
+    </ol>
 </section>

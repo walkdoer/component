@@ -12,27 +12,37 @@ define(function (require, exports) {
      * @return {Int}                  [序号 从0开始]
      */
     function getComponentPosition(components, targetCp) {
-        var cp;
         for (var i = 0, len = components.length; i < len; i++) {
-            cp = components[i];
-            if (cp.name === targetCp.name && cp.num === targetCp.num) {
+            if (isSameComponent(components[i], targetCp)) {
                 //found
                 return i;
             }
         }
         return -1;//not found
     }
+    function isSameComponent(cpA, cpB) {
+        return cpA.name === cpB.name && cpA.num === cpB.num;
+    }
     Page = Display.extend({
         type: 'page',
         _components: [],
         _componentsWaitToRender: [],
         _data: null,  //页面数据
-        removeComponentFromWaitQueue: function (component) {
+        removeFromWaitQueue: function (component) {
             var pos = getComponentPosition(this._componentsWaitToRender, component);
             if (pos >= 0) {
                 this._componentsWaitToRender.splice(pos, 1);
                 console.debug('将' + component.name + '移出待渲染序列', this._componentsWaitToRender.length);
             }
+        },
+        isInWaitQueue: function (component) {
+            var components = this._componentsWaitToRender;
+            for (var i = 0; i < components.length; i++) {
+                if (isSameComponent(components[i], component)) {
+                    return true;
+                }
+            }
+            return false;
         },
         getComponentPosition: function (component) {
             return getComponentPosition(this._components, component);
@@ -54,13 +64,21 @@ define(function (require, exports) {
                 cp.on('beforerender', function (event, component) {
                     //还没有轮到，插入等待序列
                     if (!self.allowToRender(component)) {
-                        self._componentsWaitToRender.push(component);
-                        return false;
+                        console.debug(component.name + '还不能渲染');
+                        //组件不再等待渲染的序列中，就插入到等待序列
+                        if (!self.isInWaitQueue(component)) {
+                            self._componentsWaitToRender.push(component);
+                            component.isContinueRender = false;
+                        } else {
+                            console.debug('组件' + component.name + '已经在渲染序列中');
+                        }
+                    } else {
+                        component.isContinueRender = true;
                     }
                 }).on('afterrender', function (event, component) {
                     console.debug('成功渲染组件:' + component.name);
                     //组件渲染成功后，移除自己在等待渲染队列的引用
-                    self.removeComponentFromWaitQueue(component);
+                    self.removeFromWaitQueue(component);
                     //渲染等待序列中的其他组件
                     self.renderComponents(self._componentsWaitToRender, self._data);
                 });
@@ -77,6 +95,8 @@ define(function (require, exports) {
                 return true;
             } else {
                 if (components[pos - 1].rendered) {
+                    console.log('前面的组件' + components[pos - 1].name + '已经渲染好了，当前组件 ' +
+                        component.name + '可以渲染');
                     //如果当前组件的前一个已经渲染，当前可以进行渲染
                     return true;
                 } else {
@@ -85,11 +105,15 @@ define(function (require, exports) {
             }
         },
         renderComponents: function (components, data) {
-            var cp;
+            var cp, log = '';
             for (var i = 0, len = components.length; i < len; i++) {
                 cp = components[i];
-                cp.render(data[cp.name]);
+                if (cp) {
+                    log += ' ' + cp.name;
+                    cp.render(data[cp.name]);
+                }
             }
+            console.debug(log);
         },
         /*** Function ***/
         render: function (data) {

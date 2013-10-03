@@ -17,3 +17,24 @@
 footer{
     margin-top:40px;
 }
+
+.sec-list {
+    padding: 10px;
+}
+.sec-list .list{
+
+}
+.sec-list .meta{
+    text-align: center;
+}
+.sec-list .list li{
+    margin:5px auto;
+}
+.sec-list .list .title{
+
+}
+.sec-list .list .content{
+    font-size:0.8rem;
+    color: #8A8585;
+    padding: 5px 3px;
+}
