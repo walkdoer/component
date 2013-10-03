@@ -18,7 +18,7 @@ define(function(require, exports) {
         }
     };
     exports.getData = function getData(api, callback) {
-        var delayTime = Math.round(Math.random() * 4000),
+        var delayTime = Math.round(Math.random() * 300),
             timer;
         console.log('获取' + api + '数据delay:' + delayTime);
         timer = setTimeout(function () {

@@ -10,6 +10,7 @@ define(function (require, exports) {
         Index;
 
     Index = Page.extend({
+        name: 'index',
         tpl: 'page.index',
         components: [Navigator, List, Footer]
     });

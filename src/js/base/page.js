@@ -32,7 +32,7 @@ define(function (require, exports) {
             var pos = getComponentPosition(this._componentsWaitToRender, component);
             if (pos >= 0) {
                 this._componentsWaitToRender.splice(pos, 1);
-                console.debug('将' + component.name + '移出待渲染序列', this._componentsWaitToRender.length);
+                //console.debug('将' + component.name + '移出待渲染序列', this._componentsWaitToRender.length);
             }
         },
         isInWaitQueue: function (component) {
@@ -48,13 +48,13 @@ define(function (require, exports) {
             return getComponentPosition(this._components, component);
         },
         init: function (option) {
+            this.startInit();
             var cpConstructors = this.components,//组件构造函数列表
                 components = this._components,
                 self = this,
                 Component,
                 cp;
-            this._super(option);
-            this.startInit();
+            this._super(option, true);
             for (var i = 0, len = cpConstructors.length; i < len; i++) {
                 Component = cpConstructors[i];
                 //创建组件
@@ -70,7 +70,7 @@ define(function (require, exports) {
                             self._componentsWaitToRender.push(component);
                             component.isContinueRender = false;
                         } else {
-                            console.debug('组件' + component.name + '已经在渲染序列中');
+                            //console.debug('组件' + component.name + '已经在渲染序列中');
                         }
                     } else {
                         component.isContinueRender = true;
@@ -95,8 +95,8 @@ define(function (require, exports) {
                 return true;
             } else {
                 if (components[pos - 1].rendered) {
-                    console.log('前面的组件' + components[pos - 1].name + '已经渲染好了，当前组件 ' +
-                        component.name + '可以渲染');
+                    //console.log('前面的组件' + components[pos - 1].name + '已经渲染好了，当前组件 ' +
+                    //    component.name + '可以渲染');
                     //如果当前组件的前一个已经渲染，当前可以进行渲染
                     return true;
                 } else {
@@ -105,22 +105,24 @@ define(function (require, exports) {
             }
         },
         renderComponents: function (components, data) {
-            var cp, log = '';
+            var cp;
             for (var i = 0, len = components.length; i < len; i++) {
                 cp = components[i];
                 if (cp) {
-                    log += ' ' + cp.name;
                     cp.render(data[cp.name]);
                 }
             }
-            console.debug(log);
         },
-        /*** Function ***/
-        render: function (data) {
-            this._data = data;
-            this.renderComponents(this._components, data);
-            //将页面添加到父元素，一般是Body
-            this.el.appendTo(this.parent);
+        render: function (data, callback) {
+            this._super(data, function (pg) {
+                pg._data = data;
+                pg.renderComponents(pg._components, data);
+                //将页面添加到父元素，一般是Body
+                pg.el.appendTo(pg.parent);
+                if (typeof callback === 'function') {
+                    callback(pg);
+                }
+            });
         }
     });
 
