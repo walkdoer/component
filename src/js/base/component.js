@@ -9,8 +9,14 @@ define(function (require, exports) {
     Component = Display.extend({
         type: 'component',
         /*** Function ***/
-        init: function init(option) {
-            this._super(option);
+        /**
+         * 监听事件
+         * @param  {String}   event    [事件名]
+         * @param  {Function} callback [函数]
+         */
+        on: function (event, callback) {
+            this.el.on(this.name + ':' + event, callback);
+            return this;
         }
     });
 

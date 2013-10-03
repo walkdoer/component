@@ -4,7 +4,6 @@ define(function(require, exports) {
         router = require('core/router'),
         model = require('model'),
         pageClass = {},
-        pages = {},
         $body = $('body'),
         changePage;
 
@@ -18,7 +17,6 @@ define(function(require, exports) {
                 pg = new Page({
                     parent: $body
                 });
-                console.log(ctx, pageClass);
                 pg.render(model.getData(pageName));
             });
         }

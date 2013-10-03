@@ -37,13 +37,20 @@ define(function (require, exports) {
         initialized: false,
         display: false,
         waitToRender: false,
+        startInit: function startInit() {
+            this.initialized = false;
+            this.initializing = true;
+        },
+        finishInit: function finishInit() {
+            this.initializing = false;
+            this.initialized = true;
+        },
         /**
          * 初始化函数
          */
         init: function init(option) {
             var self = this;
-            this.initialized = false;
-            this.initializing = true;
+            this.startInit();
             this.num = Date.now().toString();
             if (!option.parent) {
                 throw new Error('no parent in init function');
@@ -57,16 +64,14 @@ define(function (require, exports) {
             if (this.tpl) {
                 require.async('tpl/' + this.tpl, function (res) {
                     self.tplContent = res;
-                    self.initializing = false;
-                    self.initialized = true;
+                    self.finishInit();
                     if (self.waitToRender) {
                         self.render(self.dataToRender);
                         self.waitToRender = false;
                     }
                 });
             } else {
-                self.initializing = false;
-                self.initialized = true;
+                this.finishInit();
             }
 
         },
@@ -78,9 +83,12 @@ define(function (require, exports) {
                 this.waitToRender = true;
                 this.dataToRender = data;
             } else if (this.initialized) {
-                this.el.append($(this.tmpl(data)));
-                this.el.appendTo(this.parent);
-                this.rendered = true;
+                if (this.el.trigger(this.name + ':beforerender', [this, data]) !== false) {
+                    this.el.append($(this.tmpl(data)));
+                    this.el.appendTo(this.parent);
+                    this.rendered = true;
+                    this.el.trigger(this.name + ':afterrender', [this, data]);
+                }
             }
             return this;
         },
