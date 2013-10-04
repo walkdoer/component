@@ -62,10 +62,10 @@ define(function(require, exports) {
                     } else {
                         page.empty();
                     }
-                    firstInitial = false;
                     console.log('渲染第一个组件' + page.getName());
                 }).on('pagerendered', function (evt, page) {
                     console.debug('渲染页面' + page.getName() + '结束');
+                    firstInitial = false;
                 });
                 return pg;
             };
