@@ -39,11 +39,11 @@ define(function (require, exports) {
         initialized: false,
         display: false,
         waitToRender: false,
-        startInit: function startInit() {
+        startInit: function () {
             this.initialized = false;
             this.initializing = true;
         },
-        finishInit: function finishInit() {
+        finishInit: function () {
             this.initializing = false;
             this.initialized = true;
         },
@@ -144,7 +144,7 @@ define(function (require, exports) {
         /**
          * 渲染组件
          */
-        render: function render(data, callback) {
+        render: function (data, callback) {
             this._data = data;
             if (this.tplDowloading) {
                 this.waitToRender = true;
@@ -161,6 +161,8 @@ define(function (require, exports) {
                     this.trigger('afterrender', [this, data]);
                     if (typeof callback === 'function') {
                         callback(this, data);
+                    } else {
+                        this.finishRender();
                     }
                 }
             }
@@ -170,7 +172,10 @@ define(function (require, exports) {
             this.updating = true;
             return this;
         },
-        tmpl: function template(data) {
+        /**
+         * 渲染模板
+         */
+        tmpl: function (data) {
             var tplCont = this.tplContent,
                 html;
             if (tplCont) {
@@ -183,16 +188,16 @@ define(function (require, exports) {
         /**
          * 显示
          */
-        show: function show() {
+        show: function () {
             setVisibility.call(this, this.el, true);
         },
         /**
          * 隐藏
          */
-        hide: function hide() {
+        hide: function () {
             setVisibility.call(this, this.el, false);
         },
-        toggle: function toggle() {
+        toggle: function () {
             setVisibility.call(this, this.el, !this.isShow);
         },
         /**
@@ -211,7 +216,7 @@ define(function (require, exports) {
         /**
          * 析构
          */
-        destroy: function destroy() {
+        destroy: function () {
             this.el.remove();
             this.el = null;
         },
@@ -224,14 +229,17 @@ define(function (require, exports) {
         /**
          * 添加元素
          */
-        append: function append(element) {
+        append: function (element) {
             this.el.append(element);
         },
         /**
          * 添加到其他元素中
          */
-        appendTo: function appendTo(parent) {
+        appendTo: function (parent) {
             this.el.appendTo(parent);
+        },
+        finishRender: function () {
+            this.trigger(this.getType() + 'rendered', [this]);
         }
     });
     return Display;

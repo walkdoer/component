@@ -47,9 +47,9 @@ define(function(require, exports) {
                     if (page.hasTplContent && firstInitial) {
                         $body.empty();
                     }
-                    console.debug('准备渲染页面' + page.name);
+                    console.debug('准备渲染页面' + page.getName());
                 }).on('afterrender', function (evt, page) {
-                    console.debug('成功渲染页面' + page.name);
+                    console.debug('成功渲染页面' + page.getName());
                 }).on('beforerenderfirstcomponent', function (evt, page) {
                     //如果渲染第一个组件的时候，这个页面是没有加载成功的,hasTplContent = false
                     //这个时候body是没有清空的,需要清空body
@@ -63,9 +63,9 @@ define(function(require, exports) {
                         page.empty();
                     }
                     firstInitial = false;
-                    console.log('渲染第一个组件' + page.name);
-                }).on('componentrendered', function (evt, page) {
-                    console.debug('成功渲染所有组件' + page.name);
+                    console.log('渲染第一个组件' + page.getName());
+                }).on('pagerendered', function (evt, page) {
+                    console.debug('渲染页面' + page.getName() + '结束');
                 });
                 return pg;
             };

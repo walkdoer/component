@@ -62,6 +62,9 @@ define(function (require, exports) {
             }
             return false;
         },
+        hasComponent: function () {
+            return this._components.length > 0;
+        },
         getComponentPosition: function (component) {
             return getComponentPosition(this._components, component);
         },
@@ -116,7 +119,7 @@ define(function (require, exports) {
                         self.renderComponents(self._componentsWaitToRender, self._data);
                     } else {
                         //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
-                        self.trigger('componentrendered', [self]);
+                        self.finishRender();
                     }
                 });
                 components.push(cp);
@@ -156,13 +159,17 @@ define(function (require, exports) {
         render: function (data) {
             //this._data = data;
             //这里写成回调的原因：渲染组件默认模板成功之后再渲染子组件
-            this.trigger('before:page:render', [this, data]);
-            this._super(data, function (component, data) {
-                //渲染该组件的子组件
-                component.renderComponents(component._components, data);
-                //将元素添加到父元素
-                //component.el.appendTo(component.parent);
-            });
+            this._super(data, (function (component) {
+                //如果有组件再进行渲染，没有则返回undefined
+                if (component.hasComponent()) {
+                    return function (component, data) {
+                        //渲染该组件的子组件
+                        component.renderComponents(component._components, data);
+                        //将元素添加到父元素
+                        //component.el.appendTo(component.parent);
+                    };
+                }
+            })(this));
         }
     });
 
