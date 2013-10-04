@@ -7,23 +7,6 @@ define(function(require, exports) {
         getData;
         //outPutAppStatus,
         //outPutPageStatus;
-    /*outPutAppStatus = function () {
-        for (var pgName in pages) {
-            if (pages.hasOwnProperty(pgName)) {
-                var pg = pages[pgName];
-                console.debug(pg.type + pg.name + ' rendered: ' + pg.rendered);
-                outPutPageStatus(pg);
-            }
-        }
-    };
-    outPutPageStatus = function (pg) {
-        var components = pg._components,
-            cp;
-        for (var i = 0; i < components.length; i++) {
-            cp = components[i];
-            console.debug('|____' + cp.type + cp.name + ' rendered: ' + cp.rendered);
-        }
-    };*/
 
     getData = function (ctx, next) {
         var pathname = ctx.pathname,

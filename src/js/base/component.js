@@ -62,6 +62,11 @@ define(function (require, exports) {
             }
             return false;
         },
+        getComponent: function (query) {
+            if (!query) {
+                return this._components;
+            }
+        },
         hasComponent: function () {
             return this._components.length > 0;
         },

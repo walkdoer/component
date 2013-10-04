@@ -11,7 +11,30 @@ define(function(require, exports) {
         $body = $('body'),
         pageClass = {
             help: Page
-        };
+        },
+        outPutComponentStatus,
+        outPutPageStatus;
+
+    /**一些测试用的函数，会删除的 **/
+
+    outPutPageStatus = function () {
+        for (var pgName in pages) {
+            if (pages.hasOwnProperty(pgName)) {
+                var pg = pages[pgName];
+                console.debug(pg.type + '-' + pg.name + ' rendered: ' + pg.rendered);
+                outPutComponentStatus(pg);
+            }
+        }
+    };
+    outPutComponentStatus = function (pg) {
+        var components = pg.getComponent(),
+            cp;
+        for (var i = 0; i < components.length; i++) {
+            cp = components[i];
+            console.debug('  |____' + cp.type + cp.name + ' rendered: ' + cp.rendered);
+        }
+    };
+    /**********End of test Function******************/
     changePage = function (pageName, data) {
         var prevPage = getPrevPage(prevPageName),
             pg = pages[pageName];

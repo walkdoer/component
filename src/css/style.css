@@ -23,7 +23,6 @@
     text-align: center;
 }
 #main{
-    margin-top: 40px;
 }
 footer{
     margin-top:40px;
@@ -36,18 +35,34 @@ footer{
 
 }
 .sec-list .meta{
-    text-align: center;
+    margin-bottom: 10px;
 }
-.sec-list .list li{
-    margin:5px auto;
+.diary-rec{
+    margin: 8px auto;
+    box-shadow: #CCC 0 0 5px;
+    background: #FFF;
+    padding: 5px;
+    height: 100px;
 }
 .sec-list .list .title{
 
+}
+.diary-rec .thumb-hd{
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    float: left;
+    background-color: #000;
+    margin-right: 10px;
+}
+.diary-rec .thumb{
+    width: 100%;
 }
 .sec-list .list .content{
     font-size:0.8rem;
     color: #8A8585;
     padding: 5px 3px;
+    line-height: 18px;
 }
 .help-img{
     width: 100%;
