@@ -38,7 +38,7 @@ define(function (require, exports) {
             var pos = getComponentPosition(this._componentsWaitToRender, component);
             if (pos >= 0) {
                 this._componentsWaitToRender.splice(pos, 1);
-                //console.debug('将' + component.name + '移出待渲染序列', this._componentsWaitToRender.length);
+                //console.debug('将' + component.getName() + '移出待渲染序列', this._componentsWaitToRender.length);
             }
         },
         isInWaitQueue: function (component) {
@@ -65,19 +65,21 @@ define(function (require, exports) {
         getComponentPosition: function (component) {
             return getComponentPosition(this._components, component);
         },
-        initVariable: function () {
+        initVariable: function (option, variables) {
             this._components = [];
             this._componentsWaitToRender = [];
+            this._super(option, variables);
         },
         init: function (option) {
             this.startInit();
-            this.initVariable();
+            this.initVariable(option, ['name']);
+            this._super(option, true);
             var cpConstructors = this.components,//组件构造函数列表
                 components = this._components,
                 self = this,
                 Component,
                 cp;
-            this._super(option, true);
+            //构造子组件（sub Component）
             for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
                 Component = cpConstructors[i];
                 //创建组件
@@ -87,13 +89,13 @@ define(function (require, exports) {
                 cp.on('beforerender', function (event, component) {
                     //还没有轮到，插入等待序列
                     if (!self.allowToRender(component)) {
-                        console.debug(component.name + '还不能渲染');
+                        console.debug(component.getName() + '还不能渲染');
                         //组件不再等待渲染的序列中，就插入到等待序列
                         if (!self.isInWaitQueue(component)) {
                             self._componentsWaitToRender.push(component);
                             component.isContinueRender = false;
                         } else {
-                            //console.debug('组件' + component.name + '已经在渲染序列中');
+                            //console.debug('组件' + component.getName() + '已经在渲染序列中');
                         }
                     } else {
                         if (self.getComponentPosition(component) === 0) {
@@ -105,7 +107,7 @@ define(function (require, exports) {
                         component.isContinueRender = true;
                     }
                 }).on('afterrender', function (event, component) {
-                    console.debug('成功渲染组件:' + component.name);
+                    console.debug('成功渲染组件:' + component.getName());
                     //组件渲染成功后，移除自己在等待渲染队列的引用
                     self.removeFromWaitQueue(component);
                     //判断是否渲染结束
@@ -134,7 +136,7 @@ define(function (require, exports) {
             } else {
                 if (components[pos - 1].rendered) {
                     //console.log('前面的组件' + components[pos - 1].name + '已经渲染好了，当前组件 ' +
-                    //    component.name + '可以渲染');
+                    //    component.getName() + '可以渲染');
                     //如果当前组件的前一个已经渲染，当前可以进行渲染
                     return true;
                 } else {
@@ -154,6 +156,7 @@ define(function (require, exports) {
         render: function (data) {
             //this._data = data;
             //这里写成回调的原因：渲染组件默认模板成功之后再渲染子组件
+            this.trigger('before:page:render', [this, data]);
             this._super(data, function (component, data) {
                 //渲染该组件的子组件
                 component.renderComponents(component._components, data);

@@ -1,15 +1,13 @@
 define(function(require, exports) {
     'use strict';
-    var $ = require('core/selector'),
-        router = require('core/router'),
+    var router = require('core/router'),
         model = require('model'),
-        pageClass = {},
-        pages = {},
-        $body = $('body'),
+        view = require('view'),
         changePage,
-        outPutAppStatus,
-        outPutPageStatus;
-    outPutAppStatus = function () {
+        getData;
+        //outPutAppStatus,
+        //outPutPageStatus;
+    /*outPutAppStatus = function () {
         for (var pgName in pages) {
             if (pages.hasOwnProperty(pgName)) {
                 var pg = pages[pgName];
@@ -25,37 +23,24 @@ define(function(require, exports) {
             cp = components[i];
             console.debug('|____' + cp.type + cp.name + ' rendered: ' + cp.rendered);
         }
-    };
-    changePage = function (ctx, next) {
+    };*/
+
+    getData = function (ctx, next) {
         var pathname = ctx.pathname,
-            pageName = pathname.slice(1),
-            pg;
-        if (!pageClass[pageName]) {
-            require.async('page/' + pageName, function (Page) {
-                pageClass[pageName] = Page;
-                pg = pages[pageName] || (pages[pageName] = new Page({
-                    parent: $body
-                }));
-                pg.on('beforerender', function (evt, page) {
-                    //如果要加载的页面没有页面模板，则不清空Body
-                    if (!page.noTplContent) {
-                        $body.empty();
-                    }
-                    console.debug('准备渲染页面' + page.name);
-                }).on('afterrender', function (evt, page) {
-                    console.debug('成功渲染页面' + page.name);
-                }).on('beforerenderfirstcomponent', function (evt, page) {
-                    $body.empty();
-                    console.log('渲染第一个组件' + page.name);
-                }).on('componentrendered', function (evt, page) {
-                    console.debug('成功渲染所有组件' + page.name);
-                });
-                model.getData(pageName, function (data) {
-                    pg.render(data);
-                });
-            });
-        }
+            pageName = pathname.slice(1);
+        model.getData(pageName, function (data) {
+            ctx.data = data;
+            ctx.pageName = pageName;
+            next();
+        });
     };
-    router('/index', changePage);
+
+    changePage = function (ctx, next) {
+        view.changePage(ctx.pageName, ctx.data);
+        next();
+    };
+
+    router('/index', getData, changePage);
+    router('/help', getData, changePage);
     router();
 });

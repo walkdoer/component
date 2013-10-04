@@ -31,7 +31,7 @@ define(function (require, exports) {
         parent: null,
         num: null,  //编号
         el: null,  //该展示区域的容器
-        noTplContent: true,  //是否有模板文件
+        hasTplContent: false,  //是否有模板文件
         updating: false,  //更新中
         tplDowloading: false, //下载模板中
         rendered: false,  //已渲染
@@ -48,35 +48,75 @@ define(function (require, exports) {
             this.initialized = true;
         },
         /**
+         * 设置组件Id
+         */
+        setNum: function (num) {
+            this.num = num;
+        },
+        /**
+         * 获取组件Id
+         */
+        getNum: function () {
+            return this.num;
+        },
+        /**
+         * 获取类型 (Component/Page/...)
+         */
+        getType: function () {
+            return this.type;
+        },
+        getName: function () {
+            return this.name;
+        },
+        setName: function (name) {
+            this.name = name;
+        },
+        /**
          * 初始化模板
          * 下载模板文件
          */
         initTpl: function () {
             var self = this;
-            if (this.tpl) {
-                this.tplDowloading = true;
-                require.async('tpl/' + this.tpl, function (res) {
-                    var delayTime = {
-                        'com.navigator': 2000,
-                        'com.footer': 4000,
-                        'com.list': 6000
-                    }/*Math.round(Math.random() * 10000)*/,
-                        timer;
-                    console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
-                    timer = setTimeout(function () {
-                        //console.debug(self.tpl + '模板加载成功', res);
-                        if (res) {
-                            self.noTplContent = false;
-                        }
-                        self.tplContent = res;
-                        self.tplDowloading = false;
-                        if (self.waitToRender) {
-                            self.render(self._data);
-                            self.waitToRender = false;
-                        }
-                        clearTimeout(timer);
-                    }, delayTime[self.tpl]);
-                });
+            if (!this.tpl) {
+                throw new Error('no template config for ' + this.getType() + '-' + this.getName() +
+                    'please check your option');
+            }
+            this.tplDowloading = true;
+            require.async('tpl/' + this.tpl, function (res) {
+                var delayTime = /*{
+                    'com.navigator': 2000,
+                    'com.footer': 4000,
+                    'com.list': 6000
+                }*/Math.round(Math.random() * 300),
+                    timer;
+                console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
+                timer = setTimeout(function () {
+                    //console.debug(self.tpl + '模板加载成功', res);
+                    if (res) {
+                        self.hasTplContent = true;
+                    }
+                    self.tplContent = res;
+                    self.tplDowloading = false;
+                    if (self.waitToRender) {
+                        self.render(self._data);
+                        self.waitToRender = false;
+                    }
+                    clearTimeout(timer);
+                }, delayTime);
+            });
+        },
+        /**
+         * 初始化变量
+         * @return {[type]} [description]
+         */
+        initVariable: function (option, variables) {
+            var v;
+            for (var i = 0, len = variables.length; i < len; i++) {
+                v = variables[i];
+                //没有变量v或者有v，且不是属于prototype
+                if ((!this[v] || this.hasOwnProperty(v)) && option[v]) {
+                    this[v] = option[v];
+                }
             }
         },
         /**
@@ -84,20 +124,17 @@ define(function (require, exports) {
          * @param  {Object} option      Display所需配置
          * @param  {Boolean} flagSilent 是否改变状态量 true:改变,false:不改变
          */
-        init: function init(option, flagSilent) {
+        init: function (option, flagSilent) {
             if (!flagSilent) {
                 this.startInit();
             }
-            this.num = Date.now().toString();
+            this.initVariable(option, ['tpl', 'parent']);
+            this.setNum(Date.now().toString());
             if (!option.parent) {
                 throw new Error('no parent in init option');
             }
             this.originOption = $.extend(true, {}, option);
-            this.parent = option.parent;
-            this.el = $('<section id="' + this.type + this.num + '"></section>');
-            if (option.tpl) {
-                this.tpl = option.tpl;
-            }
+            this.el = $('<section id="' + this.getType() + this.getNum() + '"></section>');
             //初始化模板
             this.initTpl();
             if (!flagSilent) {
@@ -115,7 +152,7 @@ define(function (require, exports) {
                 this.trigger('beforerender', [this, data]);
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
-                    if (!this.noTplContent) {
+                    if (this.hasTplContent) {
                         this.el.append($(this.tmpl(data)));
                         this.el.appendTo(this.parent);
                         this.rendered = true; //标志已经渲染完毕
@@ -164,11 +201,11 @@ define(function (require, exports) {
          * @param  {Function} callback [函数]
          */
         on: function (event, callback) {
-            this.el.on([this.name, ':', event].join(''), callback);
+            this.el.on([this.getName(), ':', event].join(''), callback);
             return this;
         },
         trigger: function (event, callback) {
-            this.el.trigger([this.name, ':', event].join(''), callback);
+            this.el.trigger([this.getName(), ':', event].join(''), callback);
             return this;
         },
         /**
@@ -177,6 +214,12 @@ define(function (require, exports) {
         destroy: function destroy() {
             this.el.remove();
             this.el = null;
+        },
+        /**
+         * 清空组件
+         */
+        empty: function () {
+            this.el.empty();
         },
         /**
          * 添加元素
