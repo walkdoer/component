@@ -8,7 +8,14 @@ define(function (require, exports) {
 
     Button = Component.extend({
         type: 'button',
-        tplContent: '<button><%=data.title%></button>'
+        tplContent: '<button><%=data.title%></button>',
+        init: function (option) {
+            var self = this;
+            this._super(option);
+            this.on('click', 'button', function (event) {
+                self.trigger(self.getType() + ':click', [self, event]);
+            });
+        }
     });
     return Button;
 });

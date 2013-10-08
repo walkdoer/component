@@ -6,6 +6,10 @@ define(function (require, exports) {
     var Class = require('lib/class'),
         tpl = require('core/template'),
         setVisibility,
+        EVENTS = {
+            BEFORE_RENDER: 'beforerender',
+            AFTER_RENDER: 'afterrender',
+        },
         Display;
     /**
      * 设置元素显示还是隐藏
@@ -116,7 +120,7 @@ define(function (require, exports) {
             var v;
             for (var i = 0, len = variables.length; i < len; i++) {
                 v = variables[i];
-                //没有变量v或者有v，且不是属于prototype
+                //option的v属性会覆盖对象的v属性
                 if ((!this[v] || this.hasOwnProperty(v)) && option[v]) {
                     this[v] = option[v];
                 }
@@ -128,14 +132,19 @@ define(function (require, exports) {
          * @param  {Boolean} flagSilent 是否改变状态量 true:改变,false:不改变
          */
         init: function (option, flagSilent) {
+            var name = this.getName();
             if (!flagSilent) {
                 this.startInit();
             }
-            this._initVariable(option, ['tpl', 'parent']);
+            //将option的配置初始化到对象中
+            this._initVariable(option, ['tpl', 'parent', 'class', 'id']);
             this.setNum(Date.now().toString());
             if (!option.parent) {
                 throw new Error('no parent in init option');
             }
+            this.id = option.id ||
+                [this.getType(), '-', name ? name + '-' : '',
+                  this.getNum()].join('');
             this.originOption = $.extend(true, {}, option);
             //初始化模板
             this._initTpl();
@@ -147,27 +156,25 @@ define(function (require, exports) {
          * 渲染组件
          */
         render: function (data, callback) {
-            var name;
             this._data = data;
             if (this.tplDowloading) {
                 this.waitToRender = true;
             } else if (this.initialized) {
-                this.trigger('beforerender', [this, data]);
+                this.trigger(EVENTS.BEFORE_RENDER, [this, data]);
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
                     if (this.hasTplContent()) {
                         this.el = $(this.tmpl(data));
-                        name = this.getName();
-                        this.el.attr('id', [
-                            this.getType(), '-',
-                            name ? name + '-' : '',
-                            this.getNum()
-                        ].join(''));
+                        this.el.attr('id', this.id);
+                        this.el.attr('class', this.class);
                         this.el.appendTo(this.parent);
                         this.rendered = true; //标志已经渲染完毕
                         this.display = true; //已添加到parent中，默认就是已显示
+                        if (this.el.css('display') === 'none') {
+                            this.display = false;
+                        }
                     }
-                    this.trigger('afterrender', [this, data]);
+                    this.trigger(EVENTS.AFTER_RENDER, [this, data]);
                     if (typeof callback === 'function') {
                         callback(this, data);
                     } else {
@@ -207,19 +214,31 @@ define(function (require, exports) {
             setVisibility.call(this, this.el, false);
         },
         toggle: function () {
-            setVisibility.call(this, this.el, !this.isShow);
+            setVisibility.call(this, this.el, !this.display);
+        },
+        getEvent: function (event) {
+            for (var key in EVENTS) {
+                if (EVENTS[key] === event) {
+                    return [this.getType(), ':', this.getName(), ':', event].join('');
+                }
+            }
+            return event;
         },
         /**
          * 监听事件
          * @param  {String}   event    [事件名]
          * @param  {Function} callback [函数]
          */
-        on: function (event, callback) {
-            this.parent.on([this.getType(), ':', this.getName(), ':', event].join(''), callback);
+        on: function () {
+            var args = Array.prototype.slice.call(arguments, 0);
+            args[0] = this.getEvent(args[0]);
+            this.parent.on.apply(this.parent, args);
             return this;
         },
-        trigger: function (event, callback) {
-            this.parent.trigger([this.getType(), ':', this.getName(), ':', event].join(''), callback);
+        trigger: function () {
+            var args = Array.prototype.slice.call(arguments, 0);
+            args[0] = this.getEvent(args[0]);
+            this.parent.trigger.apply(this.parent, args);
             return this;
         },
         /**
@@ -251,5 +270,6 @@ define(function (require, exports) {
             this.trigger(this.getType() + 'rendered', [this]);
         }
     });
+    Display.EVENTS = EVENTS;
     return Display;
 });

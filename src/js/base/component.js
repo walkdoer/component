@@ -3,8 +3,12 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Display = require('base/display'),
+    var $ = require('core/selector'),
+        Display = require('base/display'),
         Component;
+    Display.EVENTS = $.extend(Display.EVENTS, {
+        BEFORE_RENDER_FIRST_COMPONENT: 'beforerenderfirstcomponent'
+    });
     /**
      * 获取组件在组件列表中的序号
      * @param  {Array} components     [组件数组]
@@ -35,6 +39,12 @@ define(function (require, exports) {
         _components: null,
         _componentsWaitToRender: null,
         _data: null,  //页面数据
+        /*
+        _each: function (components, callback) {
+            for (var i = 0, len = components.length; i < len; i++) {
+                callback(components[i], i);
+            }
+        },*/
         removeFromWaitQueue: function (component) {
             var pos = getComponentPosition(this._componentsWaitToRender, component);
             if (pos >= 0) {
@@ -63,10 +73,16 @@ define(function (require, exports) {
             }
             return false;
         },
-        getComponent: function (query) {
-            if (!query) {
-                return this._components;
+        getCmp : function (id) {
+            var components = this._components,
+                itm;
+            for (var i = 0, len = components.length; i < len; i++) {
+                itm = components[i];
+                if (id === itm.id) {
+                    return itm;
+                }
             }
+            return null;
         },
         hasComponent: function () {
             return !!this.components && this.components.length > 0;
@@ -79,19 +95,49 @@ define(function (require, exports) {
             this._componentsWaitToRender = [];
             this._super(option, variables);
         },
+        _listen: function () {
+            var self = this,
+                listeners = this.listeners;
+            if (!listeners) {
+                return;
+            }
+            for (var event in listeners) {
+                if (listeners.hasOwnProperty(event)) {
+                    this.on(event, (function (event) {
+                        return function () {
+                            listeners[event].call(self, arguments);
+                        };
+                    })(event));
+                }
+            }
+        },
         _buildComponents: function () {
             var cpConstructors = this.components,//组件构造函数列表
                 components = this._components,
                 self = this,
                 Component,
+                cItm,
                 cp;
             //构造子组件（sub Component）
             for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
-                Component = cpConstructors[i];
+                cItm = cpConstructors[i];
+                //不是构造函数,而是
+                //{
+                //    _constructor: Class,
+                //    class: '',
+                //    id: '',
+                //}
+                if (typeof cItm === 'function') {
+                    Component = cItm;
+                } else if (typeof cItm === 'object' && cItm._constructor_) {
+                    Component = cItm._constructor_;
+                } else {
+                    throw new Error(this.getType() + ' Component\'s component config is not right');
+                }
                 //创建组件
-                cp = new Component({
+                cp = new Component($.extend({
                     parent: this.el
-                });
+                }, cItm.option));
                 cp.on('beforerender', function (event, component) {
                     //还没有轮到，插入等待序列
                     if (!self.allowToRender(component)) {
@@ -132,6 +178,7 @@ define(function (require, exports) {
             this.startInit();
             this.initVariable(option, ['name']);
             this._super(option, true);
+            this._listen();
             this.finishInit();
         },
         allowToRender: function (component) {

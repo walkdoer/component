@@ -1,1 +1,0 @@
-<button><%=data.title%></button>

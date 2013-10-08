@@ -11,7 +11,28 @@ define(function (require, exports) {
     Navigator = Component.extend({
         type: 'navigator',
         tpl: 'com.navigator',
-        components: [Button, Menu]
+        components: [{
+            _constructor_: Button,
+            option: {
+                id: 'btn-config',
+                class: 'btn-config'
+            }
+        }, {
+            _constructor_: Menu,
+            option: {
+                id: 'nav-menu',
+                class: 'menu'
+            }
+        }],
+        listeners: {
+            'button:click': function () {
+                var menu = this.getCmp('nav-menu');
+                menu.toggle();
+            },
+            'menu:click': function () {
+
+            },
+        }
     });
     return Navigator;
 });

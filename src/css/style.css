@@ -19,8 +19,34 @@
     height: 40px;
     background-color: #CCC;
     line-height: 40px;
-    background-image:-webkit-gradient(linear, center top, center bottom, from(#F3F3F3), to(#DFDFDF));
+    background-image: -webkit-gradient(linear, center top, center bottom, from(#F3F3F3), to(#DFDFDF));
     text-align: center;
+}
+.top-nav .btn-config {
+    height: 32px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    padding: 5px 12px;
+    display: block;
+    background: #FFF;
+    border: 1px solid #CCC;
+}
+.top-nav .menu{
+    background-image: -webkit-gradient(linear, center top, center bottom, from(#DFDFDF), to(#D3D3D3));
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: left;
+    padding: 0 4px;
+}
+.top-nav .menu .itm {
+    display: inline-block;
+    background: #FFF;
+    height: 30px;
+    line-height: 30px;
+    padding: 0px 5px;
 }
 .main{
 }

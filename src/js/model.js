@@ -5,7 +5,7 @@ define(function(require, exports) {
             navigator: {
                 title: '沿途',
                 button: {
-                    title: '配置'
+                    title: '栏目'
                 },
                 menu: [{
                     title: '国外', 
