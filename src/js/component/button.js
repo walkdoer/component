@@ -7,7 +7,7 @@ define(function (require, exports) {
         Button;
 
     Button = Component.extend({
-        name: 'button',
+        type: 'button',
         tpl: 'com.button'
     });
     return Button;

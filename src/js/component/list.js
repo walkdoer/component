@@ -7,7 +7,7 @@ define(function (require, exports) {
         List;
 
     List = Component.extend({
-        name: 'list',
+        type: 'list',
         tpl: 'com.list'
     });
     return List;

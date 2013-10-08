@@ -7,7 +7,7 @@ define(function (require, exports) {
         Footer;
 
     Footer = Component.extend({
-        name: 'footer',
+        type: 'footer',
         tpl: 'com.footer'
     });
     return Footer;

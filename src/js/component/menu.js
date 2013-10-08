@@ -7,7 +7,7 @@ define(function (require, exports) {
         Menu;
 
     Menu = Component.extend({
-        name: 'menu',
+        type: 'menu',
         tpl: 'com.menu'
     });
     return Menu;

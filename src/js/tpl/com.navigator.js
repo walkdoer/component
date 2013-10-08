@@ -1,3 +1,3 @@
 define(function (require, exports, module) {
-    module.exports="<header id=\"top-nav\"><%=data.title%></header>";
+    module.exports="<header class=\"top-nav\"><%=data.title%></header>";
 });

@@ -11,30 +11,8 @@ define(function(require, exports) {
         $body = $('body'),
         pageClass = {
             help: Page
-        },
-        outPutComponentStatus,
-        outPutPageStatus;
+        };
 
-    /**一些测试用的函数，会删除的 **/
-
-    outPutPageStatus = function () {
-        for (var pgName in pages) {
-            if (pages.hasOwnProperty(pgName)) {
-                var pg = pages[pgName];
-                console.debug(pg.type + '-' + pg.name + ' rendered: ' + pg.rendered);
-                outPutComponentStatus(pg);
-            }
-        }
-    };
-    outPutComponentStatus = function (pg) {
-        var components = pg.getComponent(),
-            cp;
-        for (var i = 0; i < components.length; i++) {
-            cp = components[i];
-            console.debug('  |____' + cp.type + cp.name + ' rendered: ' + cp.rendered);
-        }
-    };
-    /**********End of test Function******************/
     changePage = function (pageName, data) {
         var prevPage = getPrevPage(prevPageName),
             pg = pages[pageName];
@@ -44,7 +22,7 @@ define(function(require, exports) {
         }
         //页面没有创建过
         if (!pg) {
-            //写出回调的原因是这个过程可能是异步的，因为代码需要远程加载
+            //使用回调的原因是这个过程可能是异步的，因为定义页面代码可能需要远程加载
             buildPage(pageName, function (page) {
                 pg = page;
                 pg.render(data);

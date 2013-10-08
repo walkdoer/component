@@ -1,1 +1,1 @@
-<header id="top-nav"><%=data.title%></header>
+<header class="top-nav"><%=data.title%></header>

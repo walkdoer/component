@@ -68,7 +68,7 @@ define(function (require, exports) {
             }
         },
         hasComponent: function () {
-            return this._components.length > 0;
+            return !!this.components && this.components.length > 0;
         },
         getComponentPosition: function (component) {
             return getComponentPosition(this._components, component);
@@ -78,10 +78,7 @@ define(function (require, exports) {
             this._componentsWaitToRender = [];
             this._super(option, variables);
         },
-        init: function (option) {
-            this.startInit();
-            this.initVariable(option, ['name']);
-            this._super(option, true);
+        _buildComponents: function () {
             var cpConstructors = this.components,//组件构造函数列表
                 components = this._components,
                 self = this,
@@ -97,7 +94,7 @@ define(function (require, exports) {
                 cp.on('beforerender', function (event, component) {
                     //还没有轮到，插入等待序列
                     if (!self.allowToRender(component)) {
-                        console.debug(component.getName() + '还不能渲染');
+                        console.debug(component.getType() + component.getName() + '还不能渲染');
                         //组件不再等待渲染的序列中，就插入到等待序列
                         if (!self.isInWaitQueue(component)) {
                             self._componentsWaitToRender.push(component);
@@ -115,13 +112,13 @@ define(function (require, exports) {
                         component.isContinueRender = true;
                     }
                 }).on('afterrender', function (event, component) {
-                    console.debug('成功渲染组件:' + component.getName());
+                    console.debug('成功渲染组件:' + component.getType() + component.getName());
                     //组件渲染成功后，移除自己在等待渲染队列的引用
                     self.removeFromWaitQueue(component);
                     //判断是否渲染结束
                     if (!self.isAllComponentRendered()) {
                         //渲染等待序列中的其他组件
-                        self.renderComponents(self._componentsWaitToRender, self._data);
+                        self._renderComponents(self._componentsWaitToRender, self._data);
                     } else {
                         //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
                         self.finishRender();
@@ -129,6 +126,11 @@ define(function (require, exports) {
                 });
                 components.push(cp);
             }
+        },
+        init: function (option) {
+            this.startInit();
+            this.initVariable(option, ['name']);
+            this._super(option, true);
             this.finishInit();
         },
         allowToRender: function (component) {
@@ -152,12 +154,20 @@ define(function (require, exports) {
                 }
             }
         },
-        renderComponents: function (components, data) {
+        _renderComponents: function (components, data) {
             var cp;
             for (var i = 0, len = components.length; i < len; i++) {
                 cp = components[i];
                 if (cp) {
-                    cp.render(data[cp.name]);
+                    //数据的返回格式
+                    // {
+                    //     
+                    //         navigator: { data... },
+                    //         list: { data... },
+                    //         footer: { data... }
+                    //     
+                    // }
+                    cp.render(data[cp.getType() + cp.getName()]);
                 }
             }
         },
@@ -169,7 +179,8 @@ define(function (require, exports) {
                 if (component.hasComponent()) {
                     return function (component, data) {
                         //渲染该组件的子组件
-                        component.renderComponents(component._components, data);
+                        component._buildComponents();
+                        component._renderComponents(component._components, data);
                         //将元素添加到父元素
                         //component.el.appendTo(component.parent);
                     };

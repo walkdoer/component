@@ -66,7 +66,7 @@ define(function (require, exports) {
             return this.type;
         },
         getName: function () {
-            return this.name;
+            return this.name || '';
         },
         setName: function (name) {
             this.name = name;
@@ -87,7 +87,7 @@ define(function (require, exports) {
                     'com.navigator': 2000,
                     'com.footer': 4000,
                     'com.list': 6000
-                }*/Math.round(Math.random() * 300),
+                }*/Math.round(Math.random() * 900),
                     timer;
                 console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
                 timer = setTimeout(function () {
@@ -134,7 +134,6 @@ define(function (require, exports) {
                 throw new Error('no parent in init option');
             }
             this.originOption = $.extend(true, {}, option);
-            this.el = $('<section id="' + this.getType() + this.getNum() + '"></section>');
             //初始化模板
             this.initTpl();
             if (!flagSilent) {
@@ -145,6 +144,7 @@ define(function (require, exports) {
          * 渲染组件
          */
         render: function (data, callback) {
+            var name;
             this._data = data;
             if (this.tplDowloading) {
                 this.waitToRender = true;
@@ -153,7 +153,13 @@ define(function (require, exports) {
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
                     if (this.hasTplContent) {
-                        this.el.append($(this.tmpl(data)));
+                        this.el = $(this.tmpl(data));
+                        name = this.getName();
+                        this.el.attr('id', [
+                            this.getType(), '-',
+                            name ? name + '-' : '',
+                            this.getNum()
+                        ].join(''));
                         this.el.appendTo(this.parent);
                         this.rendered = true; //标志已经渲染完毕
                         this.display = true; //已添加到parent中，默认就是已显示
@@ -206,11 +212,11 @@ define(function (require, exports) {
          * @param  {Function} callback [函数]
          */
         on: function (event, callback) {
-            this.el.on([this.getName(), ':', event].join(''), callback);
+            this.parent.on([this.getType(), ':', this.getName(), ':', event].join(''), callback);
             return this;
         },
         trigger: function (event, callback) {
-            this.el.trigger([this.getName(), ':', event].join(''), callback);
+            this.parent.trigger([this.getType(), ':', this.getName(), ':', event].join(''), callback);
             return this;
         },
         /**

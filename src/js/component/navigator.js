@@ -7,7 +7,7 @@ define(function (require, exports) {
         Navigator;
 
     Navigator = Component.extend({
-        name: 'navigator',
+        type: 'navigator',
         tpl: 'com.navigator'
     });
     return Navigator;

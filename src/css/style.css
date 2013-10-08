@@ -15,14 +15,14 @@
     left: 0;
     right: 0;
 }
-#top-nav{
+.top-nav{
     height: 40px;
     background-color: #CCC;
     line-height: 40px;
     background-image:-webkit-gradient(linear, center top, center bottom, from(#F3F3F3), to(#DFDFDF));
     text-align: center;
 }
-#main{
+.main{
 }
 footer{
     margin-top:40px;

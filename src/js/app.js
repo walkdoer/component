@@ -5,8 +5,6 @@ define(function(require, exports) {
         view = require('view'),
         changePage,
         getData;
-        //outPutAppStatus,
-        //outPutPageStatus;
 
     getData = function (ctx, next) {
         var pathname = ctx.pathname,

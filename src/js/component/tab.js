@@ -7,7 +7,7 @@ define(function (require, exports) {
         Tab;
 
     Tab = Component.extend({
-        name: 'tab',
+        type: 'tab',
         tpl: 'com.tab'
     });
     return Tab;
