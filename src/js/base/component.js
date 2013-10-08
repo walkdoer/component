@@ -20,6 +20,7 @@ define(function (require, exports) {
         }
         return -1;//not found
     }
+
     /**
      * 比较两个组件是不是同一个
      * @param  {Component}  cpA
@@ -95,7 +96,7 @@ define(function (require, exports) {
                     //还没有轮到，插入等待序列
                     if (!self.allowToRender(component)) {
                         console.debug(component.getType() + component.getName() + '还不能渲染');
-                        //组件不再等待渲染的序列中，就插入到等待序列
+                        //组件不在等待渲染的序列中，就插入到等待序列
                         if (!self.isInWaitQueue(component)) {
                             self._componentsWaitToRender.push(component);
                             component.isContinueRender = false;
@@ -105,9 +106,9 @@ define(function (require, exports) {
                     } else {
                         if (self.getComponentPosition(component) === 0) {
                             self.trigger('beforerenderfirstcomponent', [self]);
-                            if (!self.rendered) {
-                                self.el.appendTo(self.parent);
-                            }
+                            // if (!self.rendered) {
+                            //     self.el.appendTo(self.parent);
+                            // }
                         }
                         component.isContinueRender = true;
                     }
@@ -161,11 +162,9 @@ define(function (require, exports) {
                 if (cp) {
                     //数据的返回格式
                     // {
-                    //     
-                    //         navigator: { data... },
-                    //         list: { data... },
-                    //         footer: { data... }
-                    //     
+                    //     navigator: { data... },
+                    //     list: { data... },
+                    //     footer: { data... }
                     // }
                     cp.render(data[cp.getType() + cp.getName()]);
                 }
@@ -181,8 +180,6 @@ define(function (require, exports) {
                         //渲染该组件的子组件
                         component._buildComponents();
                         component._renderComponents(component._components, data);
-                        //将元素添加到父元素
-                        //component.el.appendTo(component.parent);
                     };
                 }
             })(this));

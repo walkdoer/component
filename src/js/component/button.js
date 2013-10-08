@@ -1,5 +1,5 @@
 /**
- * [组件] 顶部导航条
+ * [组件] 按钮
  */
 define(function (require, exports) {
     'use strict';
@@ -8,7 +8,7 @@ define(function (require, exports) {
 
     Button = Component.extend({
         type: 'button',
-        tpl: 'com.button'
+        tplContent: '<button><%=data.title%></button>'
     });
     return Button;
 });

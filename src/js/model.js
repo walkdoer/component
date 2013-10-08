@@ -3,7 +3,20 @@ define(function(require, exports) {
     var data = {
         index: {
             navigator: {
-                title: '沿途'
+                title: '沿途',
+                button: {
+                    title: '配置'
+                },
+                menu: [{
+                    title: '国外', 
+                    url: 'italy'
+                }, {
+                    title: '国内', 
+                    url: 'italy'
+                }, {
+                    title: '间隔年', 
+                    url: 'italy'
+                }]
             },
             list: {
                 totalCount: 10,

@@ -54,7 +54,7 @@ define(function(require, exports) {
                 }).on('beforerenderfirstcomponent', function (evt, page) {
                     //如果渲染第一个组件的时候，这个页面是没有加载成功的,hasTplContent = false
                     //这个时候body是没有清空的,需要清空body
-                    if (!page.hasTplContent) {
+                    if (!page.hasTplContent()) {
                         if (firstInitial) {
                             $body.empty();
                         }

@@ -31,7 +31,6 @@ define(function (require, exports) {
         parent: null,
         num: null,  //编号
         el: null,  //该展示区域的容器
-        hasTplContent: false,  //是否有模板文件
         updating: false,  //更新中
         tplDowloading: false, //下载模板中
         rendered: false,  //已渲染
@@ -46,6 +45,9 @@ define(function (require, exports) {
         finishInit: function () {
             this.initializing = false;
             this.initialized = true;
+        },
+        hasTplContent: function () {
+            return !!this.tplContent;
         },
         /**
          * 设置组件Id
@@ -75,11 +77,15 @@ define(function (require, exports) {
          * 初始化模板
          * 下载模板文件
          */
-        initTpl: function () {
+        _initTpl: function () {
             var self = this;
-            if (!this.tpl) {
+            if (!this.tpl && !this.tplContent) {
                 throw new Error('no template config for ' + this.getType() + '-' + this.getName() +
                     'please check your option');
+            }
+            //内置了模板文件，不需要请求模板文件
+            if (this.tplContent) {
+                return;
             }
             this.tplDowloading = true;
             require.async('tpl/' + this.tpl, function (res) {
@@ -92,9 +98,6 @@ define(function (require, exports) {
                 console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
                 timer = setTimeout(function () {
                     //console.debug(self.tpl + '模板加载成功', res);
-                    if (res) {
-                        self.hasTplContent = true;
-                    }
                     self.tplContent = res;
                     self.tplDowloading = false;
                     if (self.waitToRender) {
@@ -109,7 +112,7 @@ define(function (require, exports) {
          * 初始化变量
          * @return {[type]} [description]
          */
-        initVariable: function (option, variables) {
+        _initVariable: function (option, variables) {
             var v;
             for (var i = 0, len = variables.length; i < len; i++) {
                 v = variables[i];
@@ -128,14 +131,14 @@ define(function (require, exports) {
             if (!flagSilent) {
                 this.startInit();
             }
-            this.initVariable(option, ['tpl', 'parent']);
+            this._initVariable(option, ['tpl', 'parent']);
             this.setNum(Date.now().toString());
             if (!option.parent) {
                 throw new Error('no parent in init option');
             }
             this.originOption = $.extend(true, {}, option);
             //初始化模板
-            this.initTpl();
+            this._initTpl();
             if (!flagSilent) {
                 this.finishInit();
             }
@@ -152,7 +155,7 @@ define(function (require, exports) {
                 this.trigger('beforerender', [this, data]);
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
-                    if (this.hasTplContent) {
+                    if (this.hasTplContent()) {
                         this.el = $(this.tmpl(data));
                         name = this.getName();
                         this.el.attr('id', [

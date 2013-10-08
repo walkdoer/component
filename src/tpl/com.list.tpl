@@ -1,4 +1,4 @@
-<section id="main" class="sec-list">
+<section class="main sec-list">
     <p class="meta">一共有<%=data.totalCount%>个游记</p>
     <ol class="list">
     <%

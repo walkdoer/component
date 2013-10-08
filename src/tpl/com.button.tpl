@@ -1,1 +1,1 @@
-<button></button>
+<button><%=data.title%></button>
