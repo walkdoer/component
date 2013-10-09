@@ -3,32 +3,16 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Class = require('lib/class'),
+    var _ = require('core/lang'),
+        Class = require('lib/class'),
         tpl = require('core/template'),
-        setVisibility,
         EVENTS = {
             BEFORE_RENDER: 'beforerender',
             AFTER_RENDER: 'afterrender',
         },
+        slice = Array.prototype.slice,
+        methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
         Display;
-    /**
-     * 设置元素显示还是隐藏
-     * @param {Object}  element [Dom元素]
-     * @param {Boolean} isShow  [true:显示, false: 隐藏]
-     */
-    setVisibility = function setVisibility(element, isShow) {
-        if (!element) {
-            return;
-        }
-        var func = isShow ? 'show' : 'hide',
-            style = isShow ? 'block' : 'none';
-        if (typeof element[func] === 'function') {
-            element[func]();
-        } else {
-            element.style.display = style;
-        }
-        this.display = isShow;
-    };
     Display = Class.extend({
         tpl: null,
         tplContent: null,
@@ -201,21 +185,6 @@ define(function (require, exports) {
             }
             return html || '';
         },
-        /**
-         * 显示
-         */
-        show: function () {
-            setVisibility.call(this, this.el, true);
-        },
-        /**
-         * 隐藏
-         */
-        hide: function () {
-            setVisibility.call(this, this.el, false);
-        },
-        toggle: function () {
-            setVisibility.call(this, this.el, !this.display);
-        },
         getEvent: function (event) {
             for (var key in EVENTS) {
                 if (EVENTS[key] === event) {
@@ -230,13 +199,13 @@ define(function (require, exports) {
          * @param  {Function} callback [函数]
          */
         on: function () {
-            var args = Array.prototype.slice.call(arguments, 0);
+            var args = slice.call(arguments, 0);
             args[0] = this.getEvent(args[0]);
             this.parent.on.apply(this.parent, args);
             return this;
         },
         trigger: function () {
-            var args = Array.prototype.slice.call(arguments, 0);
+            var args = slice.call(arguments, 0);
             args[0] = this.getEvent(args[0]);
             this.parent.trigger.apply(this.parent, args);
             return this;
@@ -248,27 +217,16 @@ define(function (require, exports) {
             this.el.remove();
             this.el = null;
         },
-        /**
-         * 清空组件
-         */
-        empty: function () {
-            this.el.empty();
-        },
-        /**
-         * 添加元素
-         */
-        append: function (element) {
-            this.el.append(element);
-        },
-        /**
-         * 添加到其他元素中
-         */
-        appendTo: function (parent) {
-            this.el.appendTo(parent);
-        },
         finishRender: function () {
             this.trigger(this.getType() + 'rendered', [this]);
         }
+    });
+    //扩展方法
+    _.each(methods, function (method) {
+        Display.prototype[method] = function () {
+            var args = slice.call(arguments);
+            this.el[method].apply(this.el, args);
+        };
     });
     Display.EVENTS = EVENTS;
     return Display;
