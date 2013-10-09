@@ -27,7 +27,6 @@ define(function (require, exports) {
             }
         }
         args.push(event);
-        console.log(args.join(':'));
         return args.join(':');
     };
     return Event;

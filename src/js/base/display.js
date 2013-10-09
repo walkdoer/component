@@ -15,14 +15,14 @@ define(function (require, exports) {
         tplContent: null,
         parent: null,
         num: null,  //编号
-        el: null,  //该展示区域的容器
+        $el: null,  //该展示区域的容器
         updating: false,  //更新中
         tplDowloading: false, //下载模板中
         rendered: false,  //已渲染
-        initializing: false,
-        initialized: false,
-        display: false,
-        waitToRender: false,
+        initializing: false,  //初始化进行中
+        initialized: false,  //已初始化
+        display: false, //是否已显示
+        waitToRender: false, //等待被选人
         startInit: function () {
             this.initialized = false;
             this.initializing = true;
@@ -78,7 +78,7 @@ define(function (require, exports) {
                     'com.navigator': 2000,
                     'com.footer': 4000,
                     'com.list': 6000
-                }*/Math.round(Math.random() * 900),
+                }*/Math.round(Math.random() * 10900),
                     timer;
                 console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
                 timer = setTimeout(function () {
@@ -186,9 +186,7 @@ define(function (require, exports) {
             return html || '';
         },
         /**
-         * 监听事件
-         * @param  {String}   event    [事件名]
-         * @param  {Function} callback [函数]
+         * 监听事件,与jQuery 和 Zepto 同理
          */
         on: function () {
             var args = slice.call(arguments, 0);
@@ -196,6 +194,9 @@ define(function (require, exports) {
             this.parent.on.apply(this.parent, args);
             return this;
         },
+        /**
+         * 触发事件，同上
+         */
         trigger: function () {
             var args = slice.call(arguments, 0);
             args[0] = this.getEvent(args[0]);
