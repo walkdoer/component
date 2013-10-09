@@ -136,7 +136,7 @@ define(function (require, exports) {
                 }
                 //创建组件
                 cp = new Component($.extend({
-                    parent: this.el
+                    parent: this.$el
                 }, cItm.option));
                 cp.on('beforerender', function (event, component) {
                     //还没有轮到，插入等待序列
@@ -154,7 +154,7 @@ define(function (require, exports) {
                         if (self.getComponentPosition(component) === 0) {
                             self.trigger('beforerenderfirstcomponent', [self]);
                             // if (!self.rendered) {
-                            //     self.el.appendTo(self.parent);
+                            //     self.$el.appendTo(self.parent);
                             // }
                         }
                         // isContinueRender 表示不会执行下面的Render

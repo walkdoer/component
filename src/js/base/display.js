@@ -148,13 +148,13 @@ define(function (require, exports) {
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
                     if (this.hasTplContent()) {
-                        this.el = $(this.tmpl(data));
-                        this.el.attr('id', this.id);
-                        this.el.attr('class', this.class);
-                        this.el.appendTo(this.parent);
+                        this.$el = $(this.tmpl(data));
+                        this.$el.attr('id', this.id);
+                        this.$el.attr('class', this.class);
+                        this.$el.appendTo(this.parent);
                         this.rendered = true; //标志已经渲染完毕
                         this.display = true; //已添加到parent中，默认就是已显示
-                        if (this.el.css('display') === 'none') {
+                        if (this.$el.css('display') === 'none') {
                             this.display = false;
                         }
                     }
@@ -214,8 +214,8 @@ define(function (require, exports) {
          * 析构
          */
         destroy: function () {
-            this.el.remove();
-            this.el = null;
+            this.$el.remove();
+            this.$el = null;
         },
         finishRender: function () {
             this.trigger(this.getType() + 'rendered', [this]);
@@ -225,7 +225,7 @@ define(function (require, exports) {
     _.each(methods, function (method) {
         Display.prototype[method] = function () {
             var args = slice.call(arguments);
-            this.el[method].apply(this.el, args);
+            this.$el[method].apply(this.$el, args);
         };
     });
     Display.EVENTS = EVENTS;
