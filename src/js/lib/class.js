@@ -51,6 +51,9 @@ define(function (require, exports, module) {
         // The dummy class constructor
         function Class() {
             // All construction is actually done in the init method
+            // What’s especially important about this is that the init method could be 
+            // running all sorts of costly startup code (connecting to a server, 
+            // creating DOM elements, who knows) so circumventing this ends up working quite well.
             if (!initializing && this.init) {
                 this.init.apply(this, arguments);
             }

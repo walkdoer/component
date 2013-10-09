@@ -1,0 +1,95 @@
+.welcome-msg{
+    position: absolute;
+    height:50px;
+    line-height: 50px;
+    margin-top: -25px;
+    top:50%;
+    left:50%;
+    margin-left: -150px;
+    width: 300px;
+    text-align: center;
+}
+.topfix{
+    position: fixed;
+    top:0;
+    left: 0;
+    right: 0;
+}
+.top-nav{
+    height: 40px;
+    background-color: #CCC;
+    line-height: 40px;
+    background-image: -webkit-gradient(linear, center top, center bottom, from(#F3F3F3), to(#DFDFDF));
+    text-align: center;
+}
+.top-nav .btn-config {
+    height: 32px;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    padding: 5px 12px;
+    display: block;
+    background: #FFF;
+    border: 1px solid #CCC;
+}
+.top-nav .menu{
+    background-image: -webkit-gradient(linear, center top, center bottom, from(#DFDFDF), to(#D3D3D3));
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    text-align: left;
+    padding: 0 4px;
+}
+.top-nav .menu .itm {
+    display: inline-block;
+    background: #FFF;
+    height: 30px;
+    line-height: 30px;
+    padding: 0px 5px;
+}
+.main{
+}
+footer{
+    margin-top:40px;
+}
+
+.sec-list {
+    padding: 10px;
+}
+.sec-list .list{
+
+}
+.sec-list .meta{
+    margin-bottom: 10px;
+}
+.diary-rec{
+    margin: 8px auto;
+    box-shadow: #CCC 0 0 5px;
+    background: #FFF;
+    padding: 5px;
+    height: 100px;
+}
+.sec-list .list .title{
+
+}
+.diary-rec .thumb-hd{
+    width: 100px;
+    height: 100px;
+    overflow: hidden;
+    float: left;
+    background-color: #000;
+    margin-right: 10px;
+}
+.diary-rec .thumb{
+    width: 100%;
+}
+.sec-list .list .content{
+    font-size:0.8rem;
+    color: #8A8585;
+    padding: 5px 3px;
+    line-height: 18px;
+}
+.help-img{
+    width: 100%;
+}

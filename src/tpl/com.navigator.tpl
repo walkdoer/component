@@ -1,0 +1,1 @@
+<header class="top-nav"><%=data.title%></header>

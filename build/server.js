@@ -47,6 +47,7 @@ var server = {
         cfg.pidFile = path.resolve(cfg.pidFile);
         util.mkdirp(path.dirname(cfg.pidFile));
 
+        console.dir(cfg);
         // 初始化 express 配置
         keys(cfg.staticMapping).forEach(function (key) {
             app.use(key, express.static(cfg.staticMapping[key]));
