@@ -43,15 +43,15 @@ define(function(require, exports) {
                     tpl: ['page', pageName].join('.'),
                     parent: $body
                 });
-                pg.on('beforerender', function (evt, page) {
+                pg.on('BEFORE_RENDER', function (evt, page) {
                     //如果要加载的页面没有页面模板，则不清空Body
                     if (page.hasTplContent && firstInitial) {
                         $body.empty();
                     }
                     console.debug('准备渲染页面' + page.getName());
-                }).on('afterrender', function (evt, page) {
+                }).on('AFTER_RENDER', function (evt, page) {
                     console.debug('成功渲染页面' + page.getName());
-                }).on('beforerenderfirstcomponent', function (evt, page) {
+                }).on('BEFORE_RENDER_FIRST_COMPONENT', function (evt, page) {
                     //如果渲染第一个组件的时候，这个页面是没有加载成功的,hasTplContent = false
                     //这个时候body是没有清空的,需要清空body
                     if (!page.hasTplContent()) {

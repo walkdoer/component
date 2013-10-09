@@ -6,10 +6,7 @@ define(function (require, exports) {
     var _ = require('core/lang'),
         Class = require('lib/class'),
         tpl = require('core/template'),
-        EVENTS = {
-            BEFORE_RENDER: 'beforerender',
-            AFTER_RENDER: 'afterrender',
-        },
+        Event = require('base/event'),
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
         Display;
@@ -96,6 +93,9 @@ define(function (require, exports) {
                 }, delayTime);
             });
         },
+        getEvent: function (eventName) {
+            return Event.get(eventName, this.getType(), this.getName());
+        },
         /**
          * 初始化变量
          * @return {[type]} [description]
@@ -144,7 +144,7 @@ define(function (require, exports) {
             if (this.tplDowloading) {
                 this.waitToRender = true;
             } else if (this.initialized) {
-                this.trigger(EVENTS.BEFORE_RENDER, [this, data]);
+                this.trigger('BEFORE_RENDER', [this, data]);
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
                     if (this.hasTplContent()) {
@@ -158,7 +158,7 @@ define(function (require, exports) {
                             this.display = false;
                         }
                     }
-                    this.trigger(EVENTS.AFTER_RENDER, [this, data]);
+                    this.trigger('AFTER_RENDER', [this, data]);
                     if (typeof callback === 'function') {
                         callback(this, data);
                     } else {
@@ -185,14 +185,6 @@ define(function (require, exports) {
             }
             return html || '';
         },
-        getEvent: function (event) {
-            for (var key in EVENTS) {
-                if (EVENTS[key] === event) {
-                    return [this.getType(), ':', this.getName(), ':', event].join('');
-                }
-            }
-            return event;
-        },
         /**
          * 监听事件
          * @param  {String}   event    [事件名]
@@ -218,7 +210,7 @@ define(function (require, exports) {
             this.$el = null;
         },
         finishRender: function () {
-            this.trigger(this.getType() + 'rendered', [this]);
+            this.trigger('RENDERED', [this]);
         }
     });
     //扩展方法
@@ -228,6 +220,5 @@ define(function (require, exports) {
             this.$el[method].apply(this.$el, args);
         };
     });
-    Display.EVENTS = EVENTS;
     return Display;
 });

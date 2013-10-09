@@ -5,10 +5,10 @@ define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
         Display = require('base/display'),
+        Event = require('base/event'),
         Component;
-    Display.EVENTS = $.extend(Display.EVENTS, {
-        BEFORE_RENDER_FIRST_COMPONENT: 'beforerenderfirstcomponent'
-    });
+    //添加事件
+    Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
     /**
      * 获取组件在组件列表中的序号
      * @param  {Array} components     [组件数组]
@@ -39,12 +39,6 @@ define(function (require, exports) {
         _components: null,
         _componentsWaitToRender: null,
         _data: null,  //页面数据
-        /*
-        _each: function (components, callback) {
-            for (var i = 0, len = components.length; i < len; i++) {
-                callback(components[i], i);
-            }
-        },*/
         removeFromWaitQueue: function (component) {
             var pos = getComponentPosition(this._componentsWaitToRender, component);
             if (pos >= 0) {
@@ -138,7 +132,7 @@ define(function (require, exports) {
                 cp = new Component($.extend({
                     parent: this.$el
                 }, cItm.option));
-                cp.on('beforerender', function (event, component) {
+                cp.on('BEFORE_RENDER', function (event, component) {
                     //还没有轮到，插入等待序列
                     if (!self.allowToRender(component)) {
                         console.debug(component.getType() + component.getName() + '还不能渲染');
@@ -152,7 +146,7 @@ define(function (require, exports) {
                         }
                     } else {
                         if (self.getComponentPosition(component) === 0) {
-                            self.trigger('beforerenderfirstcomponent', [self]);
+                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
                             // if (!self.rendered) {
                             //     self.$el.appendTo(self.parent);
                             // }
@@ -160,7 +154,7 @@ define(function (require, exports) {
                         // isContinueRender 表示不会执行下面的Render
                         component.isContinueRender = true;
                     }
-                }).on('afterrender', function (event, component) {
+                }).on('AFTER_RENDER', function (event, component) {
                     console.debug('成功渲染组件:' + component.getType() + component.getName());
                     //组件渲染成功后，移除自己在等待渲染队列的引用
                     self.removeFromWaitQueue(component);
