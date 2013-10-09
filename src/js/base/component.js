@@ -145,6 +145,7 @@ define(function (require, exports) {
                         //组件不在等待渲染的序列中，就插入到等待序列
                         if (!self.isInWaitQueue(component)) {
                             self._componentsWaitToRender.push(component);
+                            // isContinueRender 表示不会执行下面的Render
                             component.isContinueRender = false;
                         } else {
                             //console.debug('组件' + component.getName() + '已经在渲染序列中');
@@ -156,6 +157,7 @@ define(function (require, exports) {
                             //     self.el.appendTo(self.parent);
                             // }
                         }
+                        // isContinueRender 表示不会执行下面的Render
                         component.isContinueRender = true;
                     }
                 }).on('afterrender', function (event, component) {
