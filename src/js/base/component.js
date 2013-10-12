@@ -32,7 +32,8 @@ define(function (require, exports) {
      * @return {Boolean}
      */
     function isSameComponent(cpA, cpB) {
-        return cpA.name === cpB.name && cpA.num === cpB.num;
+        console.debug(cpA.type, cpB.type);
+        return cpA.type === cpB.type && cpA.num === cpB.num;
     }
     Component = Display.extend({
         type: 'component',
@@ -118,7 +119,7 @@ define(function (require, exports) {
                 //不是构造函数,而是
                 //{
                 //    _constructor: Class,
-                //    class: '',
+                //    className: '',
                 //    id: '',
                 //}
                 if (typeof cItm === 'function') {

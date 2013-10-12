@@ -29,8 +29,8 @@ define(function (require, exports) {
                 var menu = this.getCmp('nav-menu');
                 menu.toggle();
             },
-            'menu:click': function () {
-
+            'menu:click': function (a, b, c) {
+                console.log(a, b, c);
             },
         }
     });

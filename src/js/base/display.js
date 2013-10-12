@@ -63,8 +63,9 @@ define(function (require, exports) {
          * 下载模板文件
          */
         _initTpl: function () {
-            var self = this;
-            if (!this.tpl && !this.tplContent) {
+            var self = this,
+                tpl = this.tpl;
+            if (!tpl && !this.tplContent) {
                 throw new Error('no template config for ' + this.getType() + '-' + this.getName() +
                     'please check your option');
             }
@@ -72,25 +73,24 @@ define(function (require, exports) {
             if (this.tplContent) {
                 return;
             }
+            //使用HTML文件中的<script type="template" id="{id}"></script>
+            if (tpl.indexOf('#') === 0) {
+                this.tplContent = $(tpl).html();
+                return;
+            }
             this.tplDowloading = true;
+            var startDownloadTime = Date.now();
             require.async('tpl/' + this.tpl, function (res) {
-                var delayTime = /*{
-                    'com.navigator': 2000,
-                    'com.footer': 4000,
-                    'com.list': 6000
-                }*/Math.round(Math.random() * 10900),
-                    timer;
-                console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
-                timer = setTimeout(function () {
-                    //console.debug(self.tpl + '模板加载成功', res);
+                var totalTime = Date.now() - startDownloadTime;
+                console.debug('下载模板文件' + self.tpl + '耗时' + totalTime);
+                if (res) {
                     self.tplContent = res;
-                    self.tplDowloading = false;
-                    if (self.waitToRender) {
-                        self.render(self._data);
-                        self.waitToRender = false;
-                    }
-                    clearTimeout(timer);
-                }, delayTime);
+                }
+                self.tplDowloading = false;
+                if (self.waitToRender) {
+                    self.render(self._data);
+                    self.waitToRender = false;
+                }
             });
         },
         getEvent: function (eventName) {
@@ -121,7 +121,7 @@ define(function (require, exports) {
                 this.startInit();
             }
             //将option的配置初始化到对象中
-            this._initVariable(option, ['tpl', 'parent', 'class', 'id']);
+            this._initVariable(option, ['tpl', 'parent', 'className', 'id']);
             this.setNum(Date.now().toString());
             if (!option.parent) {
                 throw new Error('no parent in init option');
@@ -147,18 +147,20 @@ define(function (require, exports) {
                 this.trigger('BEFORE_RENDER', [this, data]);
                 if (this.isContinueRender !== false) {
                     this.isContinueRender = true;
+                    //有模板内容才会进行渲染
                     if (this.hasTplContent()) {
                         this.$el = $(this.tmpl(data));
+                        //给予id以及Class
                         this.$el.attr('id', this.id);
-                        this.$el.attr('class', this.class);
+                        this.$el.attr('class', this.className);
                         this.$el.appendTo(this.parent);
                         this.rendered = true; //标志已经渲染完毕
                         this.display = true; //已添加到parent中，默认就是已显示
                         if (this.$el.css('display') === 'none') {
                             this.display = false;
                         }
+                        this.trigger('AFTER_RENDER', [this, data]);
                     }
-                    this.trigger('AFTER_RENDER', [this, data]);
                     if (typeof callback === 'function') {
                         callback(this, data);
                     } else {
@@ -181,7 +183,7 @@ define(function (require, exports) {
             if (tplCont) {
                 html = tpl.tmpl(tplCont, data, this.helper);
             } else {
-                console.warn(this.tpl + '模板的内容为空，请检查模板文件是否存在,或者模板加载失败');
+                console.warn(tpl + '模板的内容为空，请检查模板文件是否存在,或者模板加载失败');
             }
             return html || '';
         },
