@@ -47,6 +47,11 @@ define(function (require, exports) {
                 //console.debug('将' + component.getName() + '移出待渲染序列', this._componentsWaitToRender.length);
             }
         },
+        /**
+         * 检查Component是不是已经在等待渲染队列中
+         * @param  {Component}  component 组件
+         * @return {Boolean}
+         */
         isInWaitQueue: function (component) {
             var components = this._componentsWaitToRender;
             for (var i = 0; i < components.length; i++) {
@@ -56,6 +61,10 @@ define(function (require, exports) {
             }
             return false;
         },
+        /**
+         * 是否所有的组件都已渲染完毕
+         * @return {Boolean}
+         */
         isAllComponentRendered: function () {
             var components = this._components;
             for (var i = 0; i < components.length; i++) {
