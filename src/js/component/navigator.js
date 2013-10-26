@@ -15,13 +15,13 @@ define(function (require, exports) {
             _constructor_: Button,
             option: {
                 id: 'btn-config',
-                class: 'btn-config'
+                className: 'btn-config'
             }
         }, {
             _constructor_: Menu,
             option: {
                 id: 'nav-menu',
-                class: 'menu'
+                className: 'menu'
             }
         }],
         listeners: {

@@ -82,7 +82,7 @@ define(function (require, exports) {
             var startDownloadTime = Date.now();
             require.async('tpl/' + this.tpl, function (res) {
                 var totalTime = Date.now() - startDownloadTime;
-                console.debug('下载模板文件' + self.tpl + '耗时' + totalTime);
+                //console.debug('下载模板文件' + self.tpl + '耗时' + totalTime);
                 if (res) {
                     self.tplContent = res;
                 }

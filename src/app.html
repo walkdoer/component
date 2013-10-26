@@ -20,8 +20,10 @@ seajs.config({
         'zepto': 'lib/zepto.min.js'
     }
 });
-seajs.use('app', function () {
-    console.log('app init');
+seajs.use('app', function (app) {
+    app.init({
+        beforeLoad: '.welcome-msg', //加载中提示
+    });
 });
 </script>
 </html>
