@@ -9,8 +9,11 @@ define(function (require, exports) {
         Event = require('base/event'),
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
+        UserError = require('base/userError'),
         Display;
+
     Display = Class.extend({
+        type: 'display',
         tpl: null,
         tplContent: null,
         $parent: null,
@@ -66,13 +69,11 @@ define(function (require, exports) {
         _initTpl: function () {
             var self = this,
                 tpl = this.tpl;
-            if (!tpl && !this.tplContent) {
-                throw new Error(['Has no template(tpl,tplContent) or el config for', this.getType(), this.getName(),
+            if (!tpl) {
+                throw new UserError('noTpl', ['Has no template(tpl) or element(el) config for',
+                    '[', this.getType() || '[unknow type]', ']',
+                    '[', this.getName() || '[unknow name]', ']',
                     'please check your option'].join(' '));
-            }
-            //内置了模板文件，不需要请求模板文件
-            if (this.tplContent) {
-                return;
             }
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl.indexOf('#') === 0) {
@@ -93,6 +94,11 @@ define(function (require, exports) {
                     self.waitToRender = false;
                 }
             });
+        },
+        createError: function (code, msg) {
+            var err = new Error(msg);
+            err.code = code;
+            return err;
         },
         getEvent: function (eventName) {
             return Event.get(eventName, this.getType(), this.getName());
@@ -131,16 +137,15 @@ define(function (require, exports) {
             this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el']);
             this.setNum(Date.now().toString());
             if (option.parent !== false && !option.parent) {
-                throw new Error(['parent is not config in the option of', this.getType(), this.getName()].join(' '));
+                throw new UserError('noParent', ['parent is not config in the option of', this.getType(), this.getName()].join(' '));
             }
             this.id = option.id ||
                 [this.getType(), '-', name ? name + '-' : '',
                   this.getNum()].join('');
             //保存用户原始配置，已备用
             this.originOption = $.extend(true, {}, option);
-            //用户指定了元素，则不进行模板渲染
-            if (this.el === null && this.$el === null) {
-                //初始化模板
+            //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
+            if (this.el === null && this.$el === null && !this.tplContent) {
                 this._initTpl();
             }
             if (!flagSilent) {

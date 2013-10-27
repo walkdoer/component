@@ -6,6 +6,7 @@ define(function (require, exports) {
     var $ = require('core/selector'),
         Display = require('base/display'),
         Event = require('base/event'),
+        UserError = require('base/userError'),
         Component;
     //添加事件
     Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
@@ -24,7 +25,6 @@ define(function (require, exports) {
         }
         return -1;//not found
     }
-
     /**
      * 比较两个组件是不是同一个
      * @param  {Component}  cpA
@@ -135,12 +135,16 @@ define(function (require, exports) {
                 //    className: '',
                 //    id: '',
                 //}
-                if (typeof cItm === 'function') {
+
+                if (typeof cItm === 'function') { //构造函数
                     Component = cItm;
-                } else if (typeof cItm === 'object' && cItm._constructor_) {
+                } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
                     Component = cItm._constructor_;
-                } else {
-                    throw new Error(this.getType() + ' Component\'s component config is not right');
+                } else if (cItm instanceof Display) { //已经创建好的组件实例
+                    components.push(cItm);
+                    continue;
+                } else { //检查到错误，提示使用者
+                    throw new UserError('compNotRight', this.getType() + ' Component\'s component config is not right');
                 }
                 prevCp = cp;
                 //创建组件
@@ -192,7 +196,15 @@ define(function (require, exports) {
         init: function (option) {
             this.startInit();
             this._initVariable(option, ['name']);
-            this._super(option, true);
+            try {
+                this._super(option, true);
+            } catch (e) {
+                if (e.code === 'noTpl') {
+                    if (!this.originOption.components) {
+                        throw new UserError('noComponents', 'components is not config');
+                    }
+                }
+            }
             this._listen();
             this.finishInit();
         },

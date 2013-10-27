@@ -69,14 +69,13 @@ define(function(require, exports) {
                 var defaultOption = {
                     parent: self.el
                 };
-                var tmp = pageOption;
                 pageOption = $.extend({}, defaultOption, pageOption);
                 var pg = new PageClass(pageOption);
                 self.pages = pg;
                 pg.on('BEFORE_RENDER', function (evt, page) {
                     //如果要加载的页面没有页面模板，则不清空Body
                     if (page.hasTplContent() && self._firstInitial) {
-                        $(self.beforeLoad).empty();
+                        $(self.beforeLoad).hide();
                     }
                     console.debug('准备渲染页面' + page.getName());
                 }).on('AFTER_RENDER', function (evt, page) {
