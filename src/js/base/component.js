@@ -145,7 +145,7 @@ define(function (require, exports) {
                 prevCp = cp;
                 //创建组件
                 cp = new Component($.extend({
-                    parent: this.$el
+                    parent: this.el
                 }, cItm.option));
                 cp.prevNode = prevCp;
                 if (prevCp) {
@@ -167,7 +167,7 @@ define(function (require, exports) {
                         if (self.getComponentPosition(component) === 0) {
                             self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
                             // if (!self.rendered) {
-                            //     self.$el.appendTo(self.parent);
+                            //     self.$el.appendTo(self.$parent);
                             // }
                         }
                         // isContinueRender 表示不会执行下面的Render

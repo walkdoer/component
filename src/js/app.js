@@ -22,7 +22,8 @@ define(function(require, exports) {
             this.startInit();
             this._super(option, true);
             this._initVariable(option, ['beforeLoad']);
-            this.pagesOption = this.originOption.pages;
+            this._pagesOption = this.originOption.pages;
+            this.pages = {};
             this._router();
             this.finishInit();
         },
@@ -31,7 +32,7 @@ define(function(require, exports) {
          */
         _router: function () {
             var self = this;
-            $.each(this.pagesOption, function (pageName) {
+            $.each(this._pagesOption, function (pageName) {
                 router(['/', pageName].join(''), getData, function (ctx) {
                     self.changePage(ctx.pageName, ctx.data);
                 });
@@ -52,6 +53,9 @@ define(function(require, exports) {
                 });
             }
         },
+        isPageCreated: function (pageName) {
+            return !!this.pages[pageName];
+        },
         _getOption: function (pageName) {
             return this._pagesOption[pageName] || null;
         },
@@ -61,6 +65,11 @@ define(function(require, exports) {
             //读取类文件
             require.async('page/' + pageName, function (PageClass) {
                 //创建类
+                var defaultOption = {
+                    parent: this.el
+                };
+                var tmp = pageOption;
+                pageOption = $.extend({}, defaultOption, pageOption);
                 var pg = new PageClass(pageOption);
                 this.pages = pg;
                 pg.on('BEFORE_RENDER', function (evt, page) {

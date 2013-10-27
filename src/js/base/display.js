@@ -13,7 +13,7 @@ define(function (require, exports) {
     Display = Class.extend({
         tpl: null,
         tplContent: null,
-        parent: null,
+        $parent: null,
         num: null,  //编号
         el: null,
         $el: null,  //该展示区域的容器
@@ -64,10 +64,6 @@ define(function (require, exports) {
          * 下载模板文件
          */
         _initTpl: function () {
-            //用户指定了元素，则不进行模板渲染
-            if (this.el !== null || this.$el !== null) {
-                return;
-            }
             var self = this,
                 tpl = this.tpl;
             if (!tpl && !this.tplContent) {
@@ -114,6 +110,12 @@ define(function (require, exports) {
                     this[v] = option[v];
                 }
             }
+            if (this.parent) {
+                this.$parent = $(this.parent);
+            }
+            if (this.el) {
+                this.$el = $(this.el);
+            }
         },
         /**
          * 初始化Display
@@ -134,9 +136,13 @@ define(function (require, exports) {
             this.id = option.id ||
                 [this.getType(), '-', name ? name + '-' : '',
                   this.getNum()].join('');
+            //保存用户原始配置，已备用
             this.originOption = $.extend(true, {}, option);
-            //初始化模板
-            this._initTpl();
+            //用户指定了元素，则不进行模板渲染
+            if (this.el === null && this.$el === null) {
+                //初始化模板
+                this._initTpl();
+            }
             if (!flagSilent) {
                 this.finishInit();
             }
@@ -158,9 +164,9 @@ define(function (require, exports) {
                         //给予id以及Class
                         this.$el.attr('id', this.id);
                         this.$el.attr('class', this.className);
-                        this.$el.appendTo(this.parent);
+                        this.$el.appendTo(this.$parent);
                         this.rendered = true; //标志已经渲染完毕
-                        this.display = true; //已添加到parent中，默认就是已显示
+                        this.display = true; //已添加到$parent中，默认就是已显示
                         if (this.$el.css('display') === 'none') {
                             this.display = false;
                         }
@@ -198,7 +204,7 @@ define(function (require, exports) {
         on: function () {
             var args = slice.call(arguments, 0);
             args[0] = this.getEvent(args[0]);
-            this.parent.on.apply(this.parent, args);
+            this.$parent.on.apply(this.$parent, args);
             return this;
         },
         /**
@@ -207,7 +213,7 @@ define(function (require, exports) {
         trigger: function () {
             var args = slice.call(arguments, 0);
             args[0] = this.getEvent(args[0]);
-            this.parent.trigger.apply(this.parent, args);
+            this.$parent.trigger.apply(this.$parent, args);
             return this;
         },
         /**
