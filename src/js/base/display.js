@@ -67,7 +67,7 @@ define(function (require, exports) {
             var self = this,
                 tpl = this.tpl;
             if (!tpl && !this.tplContent) {
-                throw new Error(['Have no template config for', this.getType(), this.getName() +
+                throw new Error(['Has no template(tpl,tplContent) or el config for', this.getType(), this.getName(),
                     'please check your option'].join(' '));
             }
             //内置了模板文件，不需要请求模板文件

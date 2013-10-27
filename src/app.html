@@ -10,6 +10,8 @@
 </head>
 <body>
 <section id="welcome-page" class="welcome-msg"><p>加载应用中...</p></section>
+<div class="app1"></div>
+<div class="app2"></div>
 </body>
 <!-- SCRIPT -->
 <script src="js/seajs/sea.js"></script>
@@ -27,8 +29,7 @@ seajs.use('app', function (App) {
         el: document.body,
         beforeLoad: '#welcome-page', //加载中提示
         pages: {
-            index: {
-            },
+            index: {},
             info: {},
             help: {}
         }
