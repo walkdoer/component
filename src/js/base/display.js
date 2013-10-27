@@ -15,6 +15,7 @@ define(function (require, exports) {
         tplContent: null,
         parent: null,
         num: null,  //编号
+        el: null,
         $el: null,  //该展示区域的容器
         updating: false,  //更新中
         tplDowloading: false, //下载模板中
@@ -63,11 +64,15 @@ define(function (require, exports) {
          * 下载模板文件
          */
         _initTpl: function () {
+            //用户指定了元素，则不进行模板渲染
+            if (this.el !== null || this.$el !== null) {
+                return;
+            }
             var self = this,
                 tpl = this.tpl;
             if (!tpl && !this.tplContent) {
-                throw new Error('no template config for ' + this.getType() + '-' + this.getName() +
-                    'please check your option');
+                throw new Error(['Have no template config for', this.getType(), this.getName() +
+                    'please check your option'].join(' '));
             }
             //内置了模板文件，不需要请求模板文件
             if (this.tplContent) {
@@ -79,9 +84,9 @@ define(function (require, exports) {
                 return;
             }
             this.tplDowloading = true;
-            var startDownloadTime = Date.now();
+            //var startDownloadTime = Date.now();
             require.async('tpl/' + this.tpl, function (res) {
-                var totalTime = Date.now() - startDownloadTime;
+                //var totalTime = Date.now() - startDownloadTime;
                 //console.debug('下载模板文件' + self.tpl + '耗时' + totalTime);
                 if (res) {
                     self.tplContent = res;
@@ -121,10 +126,10 @@ define(function (require, exports) {
                 this.startInit();
             }
             //将option的配置初始化到对象中
-            this._initVariable(option, ['tpl', 'parent', 'className', 'id']);
+            this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el']);
             this.setNum(Date.now().toString());
-            if (!option.parent) {
-                throw new Error('no parent in init option');
+            if (option.parent !== false && !option.parent) {
+                throw new Error(['parent is not config in option of', this.getType(), this.getName()].join(' '));
             }
             this.id = option.id ||
                 [this.getType(), '-', name ? name + '-' : '',

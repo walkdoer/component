@@ -97,7 +97,7 @@ define(function (require, exports) {
         getComponentPosition: function (component) {
             return getComponentPosition(this._components, component);
         },
-        initVariable: function (option, variables) {
+        _initVariable: function (option, variables) {
             this._components = [];
             this._componentsWaitToRender = [];
             this._super(option, variables);
@@ -191,7 +191,7 @@ define(function (require, exports) {
         },
         init: function (option) {
             this.startInit();
-            this.initVariable(option, ['name']);
+            this._initVariable(option, ['name']);
             this._super(option, true);
             this._listen();
             this.finishInit();
