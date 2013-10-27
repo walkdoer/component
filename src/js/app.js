@@ -18,6 +18,7 @@ define(function(require, exports) {
     var App = Component.extend({
         type: 'application',
         _pages: null,
+        _firstInitial: true,
         init: function (option) {
             this.startInit();
             this._super(option, true);
@@ -66,15 +67,15 @@ define(function(require, exports) {
             require.async('page/' + pageName, function (PageClass) {
                 //创建类
                 var defaultOption = {
-                    parent: this.el
+                    parent: self.el
                 };
                 var tmp = pageOption;
                 pageOption = $.extend({}, defaultOption, pageOption);
                 var pg = new PageClass(pageOption);
-                this.pages = pg;
+                self.pages = pg;
                 pg.on('BEFORE_RENDER', function (evt, page) {
                     //如果要加载的页面没有页面模板，则不清空Body
-                    if (page.hasTplContent && self.firstInitial) {
+                    if (page.hasTplContent() && self._firstInitial) {
                         $(self.beforeLoad).empty();
                     }
                     console.debug('准备渲染页面' + page.getName());
@@ -84,7 +85,7 @@ define(function(require, exports) {
                     //如果渲染第一个组件的时候，这个页面是没有加载成功的,hasTplContent = false
                     //这个时候body是没有清空的,需要清空body
                     if (!page.hasTplContent()) {
-                        if (self.firstInitial && self.beforeLoad) {
+                        if (self._firstInitial && self.beforeLoad) {
                             //加载中提示...
                             $(self.beforeLoad).remove();
                         }
@@ -96,7 +97,7 @@ define(function(require, exports) {
                     console.log('渲染第一个组件' + page.getName());
                 }).on('RENDERED', function (evt, page) {
                     console.debug('渲染页面' + page.getName() + '结束');
-                    self.firstInitial = false;
+                    self._firstInitial = false;
                 });
                 if (typeof callback === 'function') {
                     callback(pg);

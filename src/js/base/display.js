@@ -131,7 +131,7 @@ define(function (require, exports) {
             this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el']);
             this.setNum(Date.now().toString());
             if (option.parent !== false && !option.parent) {
-                throw new Error(['parent is not config in option of', this.getType(), this.getName()].join(' '));
+                throw new Error(['parent is not config in the option of', this.getType(), this.getName()].join(' '));
             }
             this.id = option.id ||
                 [this.getType(), '-', name ? name + '-' : '',
@@ -161,6 +161,7 @@ define(function (require, exports) {
                     //有模板内容才会进行渲染
                     if (this.hasTplContent()) {
                         this.$el = $(this.tmpl(data));
+                        this.el = this.$el[0];
                         //给予id以及Class
                         this.$el.attr('id', this.id);
                         this.$el.attr('class', this.className);
