@@ -70,10 +70,11 @@ define(function (require, exports) {
             var self = this,
                 tpl = this.tpl;
             if (!tpl) {
-                throw new UserError('noTpl', ['Has no template(tpl) or element(el) config for',
+                console.warn(['Has no template(tpl) or element(el) config for',
                     '[', this.getType() || '[unknow type]', ']',
                     '[', this.getName() || '[unknow name]', ']',
                     'please check your option'].join(' '));
+                return;
             }
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl.indexOf('#') === 0) {
@@ -122,6 +123,10 @@ define(function (require, exports) {
             if (this.el) {
                 this.$el = $(this.el);
             }
+            if (typeof this.selector === 'string') {
+                this.$el = this.$parent.find(this.selector);
+                this.el = this.$el[0];
+            }
         },
         /**
          * 初始化Display
@@ -134,7 +139,7 @@ define(function (require, exports) {
                 this.startInit();
             }
             //将option的配置初始化到对象中
-            this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el']);
+            this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el', 'selector']);
             this.setNum(Date.now().toString());
             if (option.parent !== false && !option.parent) {
                 throw new UserError('noParent', ['parent is not config in the option of', this.getType(), this.getName()].join(' '));
@@ -146,7 +151,11 @@ define(function (require, exports) {
             this.originOption = $.extend(true, {}, option);
             //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
             if (this.el === null && this.$el === null && !this.tplContent) {
-                this._initTpl();
+                //没有初始化成功, 需要初始化一个页面的Element
+                if (!this._initTpl()) {
+                    this.el = document.createElement('section');
+                    this.$el = $(this.el).appendTo(this.$parent);
+                }
             }
             if (!flagSilent) {
                 this.finishInit();
@@ -156,35 +165,38 @@ define(function (require, exports) {
          * 渲染组件
          */
         render: function (data, callback) {
-            this._data = data;
-            if (this.tplDowloading) {
-                this.waitToRender = true;
-            } else if (this.initialized) {
-                this.trigger('BEFORE_RENDER', [this, data]);
-                if (this.isContinueRender !== false) {
-                    this.isContinueRender = true;
-                    //有模板内容才会进行渲染
-                    if (this.hasTplContent()) {
-                        this.$el = $(this.tmpl(data));
-                        this.el = this.$el[0];
-                        //给予id以及Class
-                        this.$el.attr('id', this.id);
-                        this.$el.attr('class', this.className);
-                        this.$el.appendTo(this.$parent);
-                        this.rendered = true; //标志已经渲染完毕
-                        this.display = true; //已添加到$parent中，默认就是已显示
-                        if (this.$el.css('display') === 'none') {
-                            this.display = false;
+            //如果有selector则表明该元素已经在页面上了，不需要再渲染
+            if (!this.selector) {
+                this._data = data;
+                if (this.tplDowloading) {
+                    this.waitToRender = true;
+                } else if (this.initialized) {
+                    this.trigger('BEFORE_RENDER', [this, data]);
+                    if (this.isContinueRender !== false) {
+                        this.isContinueRender = true;
+                        //有模板内容才会进行渲染
+                        if (this.hasTplContent()) {
+                            this.$el = $(this.tmpl(data));
+                            this.el = this.$el[0];
+                            this.$el.appendTo(this.$parent);
+                            this.rendered = true; //标志已经渲染完毕
+                            this.display = true; //已添加到$parent中，默认就是已显示
+                            if (this.$el.css('display') === 'none') {
+                                this.display = false;
+                            }
+                            this.trigger('AFTER_RENDER', [this, data]);
                         }
-                        this.trigger('AFTER_RENDER', [this, data]);
-                    }
-                    if (typeof callback === 'function') {
-                        callback(this, data);
-                    } else {
-                        this.finishRender();
+                        if (typeof callback === 'function') {
+                            callback(this, data);
+                        } else {
+                            this.finishRender();
+                        }
                     }
                 }
             }
+            //给予id以及Class
+            this.$el.attr('id', this.id);
+            this.$el.attr('class', this.className);
             return this;
         },
         update: function () {
@@ -208,9 +220,10 @@ define(function (require, exports) {
          * 监听事件,与jQuery 和 Zepto 同理
          */
         on: function () {
-            var args = slice.call(arguments, 0);
+            var args = slice.call(arguments, 0),
+                el = this.$parent || this.$el;
             args[0] = this.getEvent(args[0]);
-            this.$parent.on.apply(this.$parent, args);
+            el.on.apply(el, args);
             return this;
         },
         /**

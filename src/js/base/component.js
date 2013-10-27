@@ -195,16 +195,8 @@ define(function (require, exports) {
         },
         init: function (option) {
             this.startInit();
-            this._initVariable(option, ['name']);
-            try {
-                this._super(option, true);
-            } catch (e) {
-                if (e.code === 'noTpl') {
-                    if (!this.originOption.components) {
-                        throw new UserError('noComponents', 'components is not config');
-                    }
-                }
-            }
+            this._initVariable(option, ['name', 'components']);
+            this._super(option, true);
             this._listen();
             this.finishInit();
         },
@@ -231,6 +223,11 @@ define(function (require, exports) {
         },
         _renderComponents: function (components, data) {
             var cp;
+            if (!data) {
+                console.warn(['There is no data for', this.getType(),
+                    this.getName(), 'when render it.'].join(' '));
+                data = {};
+            }
             for (var i = 0, len = components.length; i < len; i++) {
                 cp = components[i];
                 if (cp) {

@@ -4,9 +4,6 @@ define(function(require, exports) {
         index: {
             navigator: {
                 title: '沿途',
-                button: {
-                    title: '栏目'
-                },
                 menu: [{
                     title: '国外', 
                     url: 'italy'

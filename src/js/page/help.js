@@ -4,18 +4,31 @@
 define(function (require, exports) {
     'use strict';
     var Page = require('base/page'),
-        Display = require('base/display'),
+        Component = require('base/component'),
+        Button = require('component/button'),
         Footer = require('component/footer'),
-        Index;
-    Index = Page.extend({
+        Help;
+    Help = Page.extend({
         name: 'help',
         components: [{
-            _constructor_: Display,
+            _constructor_: Component,
             option: {
                 tpl: 'page.help',
-                className: 'help'
+                className: 'help',
+                components: [{
+                    _constructor_: Button,
+                    option: {
+                        name: 'back',
+                        selector: '.back'
+                    }
+                }]
             }
-        }, Footer]
+        }, Footer],
+        listeners: {
+            'button:back:click': function () {
+                history.back();
+            }
+        }
     });
-    return Index;
+    return Help;
 });

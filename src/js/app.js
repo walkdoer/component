@@ -26,7 +26,14 @@ define(function(require, exports) {
             this._pagesOption = this.originOption.pages;
             this.pages = {};
             this._router();
+            this._globalListen();
             this.finishInit();
+        },
+        _globalListen: function () {
+            this.on('click', '.route', function (e) {
+                var url = e.target.dataset.url;
+                router.route(url);
+            });
         },
         /**
          * 根据用户配置的PageOption进行Router绑定
@@ -44,15 +51,27 @@ define(function(require, exports) {
          * 切换页面
          */
         changePage: function (pageName, data) {
+            var self = this,
+                curPg = this.getPage(this.currentPage);
+            //隐藏当前页
+            if (curPg) {
+                curPg.hide();
+            }
             //如果页面已经建立就直接显示页面
             if (this.isPageCreated(pageName)) {
                 this.getPage(pageName).show();
+                this.currentPage = pageName;
             } else {
                 //页面没有建立，创建页面
                 this._createPage(pageName, function (page) {
+                    //记录当前页
+                    self.currentPage = pageName;
                     page.render(data);
                 });
             }
+        },
+        getPage: function (pageName) {
+            return this.pages[pageName];
         },
         isPageCreated: function (pageName) {
             return !!this.pages[pageName];
@@ -71,7 +90,7 @@ define(function(require, exports) {
                 };
                 pageOption = $.extend({}, defaultOption, pageOption);
                 var pg = new PageClass(pageOption);
-                self.pages = pg;
+                self.pages[pageName] = pg;
                 pg.on('BEFORE_RENDER', function (evt, page) {
                     //如果要加载的页面没有页面模板，则不清空Body
                     if (page.hasTplContent() && self._firstInitial) {

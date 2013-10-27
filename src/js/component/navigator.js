@@ -14,8 +14,9 @@ define(function (require, exports) {
         components: [{
             _constructor_: Button,
             option: {
-                id: 'btn-config',
-                className: 'btn-config'
+                name: 'cate',
+                className: 'btn-cate',
+                title: '栏目'
             }
         }, {
             _constructor_: Menu,
@@ -25,7 +26,7 @@ define(function (require, exports) {
             }
         }],
         listeners: {
-            'button:click': function () {
+            'button:cate:click': function () {
                 var menu = this.getCmp('nav-menu');
                 menu.toggle();
             },
