@@ -8,13 +8,16 @@ define(function (require, exports) {
 
     Button = Component.extend({
         type: 'button',
-        tplContent: '<button><%=data.title%></button>',
+        tplContent: '<button><%=data%></button>',
         init: function (option) {
             var self = this;
             this._super(option);
-            this.on('click', 'button', function (event) {
-                self.trigger(self.getType() + ':click', [self, event]);
+            this.on('click', '#' + self.id, function (event) {
+                self.trigger([self.getType(), self.getName(), 'click'].join(':'), [self, event]);
             });
+        },
+        render: function () {
+            this._super(this.originOption.title);
         }
     });
     return Button;

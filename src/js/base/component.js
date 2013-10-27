@@ -6,6 +6,7 @@ define(function (require, exports) {
     var $ = require('core/selector'),
         Display = require('base/display'),
         Event = require('base/event'),
+        UserError = require('base/userError'),
         Component;
     //添加事件
     Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
@@ -24,7 +25,6 @@ define(function (require, exports) {
         }
         return -1;//not found
     }
-
     /**
      * 比较两个组件是不是同一个
      * @param  {Component}  cpA
@@ -32,13 +32,17 @@ define(function (require, exports) {
      * @return {Boolean}
      */
     function isSameComponent(cpA, cpB) {
-        return cpA.name === cpB.name && cpA.num === cpB.num;
+        //console.debug(cpA.type, cpB.type);
+        return cpA.type === cpB.type && cpA.num === cpB.num;
     }
+
     Component = Display.extend({
         type: 'component',
         _components: null,
         _componentsWaitToRender: null,
         _data: null,  //页面数据
+        nextNode: null,
+        prevNode: null,
         removeFromWaitQueue: function (component) {
             var pos = getComponentPosition(this._componentsWaitToRender, component);
             if (pos >= 0) {
@@ -46,6 +50,11 @@ define(function (require, exports) {
                 //console.debug('将' + component.getName() + '移出待渲染序列', this._componentsWaitToRender.length);
             }
         },
+        /**
+         * 检查Component是不是已经在等待渲染队列中
+         * @param  {Component}  component 组件
+         * @return {Boolean}
+         */
         isInWaitQueue: function (component) {
             var components = this._componentsWaitToRender;
             for (var i = 0; i < components.length; i++) {
@@ -55,6 +64,10 @@ define(function (require, exports) {
             }
             return false;
         },
+        /**
+         * 是否所有的组件都已渲染完毕
+         * @return {Boolean}
+         */
         isAllComponentRendered: function () {
             var components = this._components;
             for (var i = 0; i < components.length; i++) {
@@ -84,7 +97,7 @@ define(function (require, exports) {
         getComponentPosition: function (component) {
             return getComponentPosition(this._components, component);
         },
-        initVariable: function (option, variables) {
+        _initVariable: function (option, variables) {
             this._components = [];
             this._componentsWaitToRender = [];
             this._super(option, variables);
@@ -111,31 +124,41 @@ define(function (require, exports) {
                 self = this,
                 Component,
                 cItm,
-                cp;
+                prevCp = null,
+                cp = null;
             //构造子组件（sub Component）
             for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
                 cItm = cpConstructors[i];
                 //不是构造函数,而是
                 //{
                 //    _constructor: Class,
-                //    class: '',
+                //    className: '',
                 //    id: '',
                 //}
-                if (typeof cItm === 'function') {
+
+                if (typeof cItm === 'function') { //构造函数
                     Component = cItm;
-                } else if (typeof cItm === 'object' && cItm._constructor_) {
+                } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
                     Component = cItm._constructor_;
-                } else {
-                    throw new Error(this.getType() + ' Component\'s component config is not right');
+                } else if (cItm instanceof Display) { //已经创建好的组件实例
+                    components.push(cItm);
+                    continue;
+                } else { //检查到错误，提示使用者
+                    throw new UserError('compNotRight', this.getType() + ' Component\'s component config is not right');
                 }
+                prevCp = cp;
                 //创建组件
                 cp = new Component($.extend({
-                    parent: this.$el
+                    parent: this.el
                 }, cItm.option));
+                cp.prevNode = prevCp;
+                if (prevCp) {
+                    prevCp.nextNode = cp;
+                }
                 cp.on('BEFORE_RENDER', function (event, component) {
                     //还没有轮到，插入等待序列
                     if (!self.allowToRender(component)) {
-                        console.debug(component.getType() + component.getName() + '还不能渲染');
+                        //console.debug(component.getType() + component.getName() + '还不能渲染');
                         //组件不在等待渲染的序列中，就插入到等待序列
                         if (!self.isInWaitQueue(component)) {
                             self._componentsWaitToRender.push(component);
@@ -148,14 +171,14 @@ define(function (require, exports) {
                         if (self.getComponentPosition(component) === 0) {
                             self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
                             // if (!self.rendered) {
-                            //     self.$el.appendTo(self.parent);
+                            //     self.$el.appendTo(self.$parent);
                             // }
                         }
                         // isContinueRender 表示不会执行下面的Render
                         component.isContinueRender = true;
                     }
                 }).on('AFTER_RENDER', function (event, component) {
-                    console.debug('成功渲染组件:' + component.getType() + component.getName());
+                    //console.debug('成功渲染组件:' + component.getType() + component.getName());
                     //组件渲染成功后，移除自己在等待渲染队列的引用
                     self.removeFromWaitQueue(component);
                     //判断是否渲染结束
@@ -172,7 +195,7 @@ define(function (require, exports) {
         },
         init: function (option) {
             this.startInit();
-            this.initVariable(option, ['name']);
+            this._initVariable(option, ['name', 'components']);
             this._super(option, true);
             this._listen();
             this.finishInit();
@@ -200,6 +223,11 @@ define(function (require, exports) {
         },
         _renderComponents: function (components, data) {
             var cp;
+            if (!data) {
+                console.warn(['There is no data for', this.getType(),
+                    this.getName(), 'when render it.'].join(' '));
+                data = {};
+            }
             for (var i = 0, len = components.length; i < len; i++) {
                 cp = components[i];
                 if (cp) {

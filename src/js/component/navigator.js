@@ -14,23 +14,24 @@ define(function (require, exports) {
         components: [{
             _constructor_: Button,
             option: {
-                id: 'btn-config',
-                class: 'btn-config'
+                name: 'cate',
+                className: 'btn-cate',
+                title: '栏目'
             }
         }, {
             _constructor_: Menu,
             option: {
                 id: 'nav-menu',
-                class: 'menu'
+                className: 'menu'
             }
         }],
         listeners: {
-            'button:click': function () {
+            'button:cate:click': function () {
                 var menu = this.getCmp('nav-menu');
                 menu.toggle();
             },
-            'menu:click': function () {
-
+            'menu:click': function (a, b, c) {
+                console.log(a, b, c);
             },
         }
     });

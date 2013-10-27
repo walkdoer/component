@@ -22,11 +22,21 @@
     background-image: -webkit-gradient(linear, center top, center bottom, from(#F3F3F3), to(#DFDFDF));
     text-align: center;
 }
-.top-nav .btn-config {
+.top-nav .btn-cate {
     height: 32px;
     position: absolute;
     top: 4px;
     right: 4px;
+    padding: 5px 12px;
+    display: block;
+    background: #FFF;
+    border: 1px solid #CCC;
+}
+.top-nav .btn-help {
+    height: 32px;
+    position: absolute;
+    top: 4px;
+    left: 4px;
     padding: 5px 12px;
     display: block;
     background: #FFF;
@@ -92,4 +102,15 @@ footer{
 }
 .help-img{
     width: 100%;
+}
+.help .back{
+    height: 32px;
+    position: absolute;
+    top: 4px;
+    color: #FFF;
+    left: 4px;
+    padding: 5px 12px;
+    display: block;
+    background: rgba(29, 27, 27, 0.36);
+    border: 1px solid #585151;
 }

@@ -9,12 +9,16 @@ define(function (require, exports) {
         Event = require('base/event'),
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
+        UserError = require('base/userError'),
         Display;
+
     Display = Class.extend({
+        type: 'display',
         tpl: null,
         tplContent: null,
-        parent: null,
+        $parent: null,
         num: null,  //编号
+        el: null,
         $el: null,  //该展示区域的容器
         updating: false,  //更新中
         tplDowloading: false, //下载模板中
@@ -63,35 +67,39 @@ define(function (require, exports) {
          * 下载模板文件
          */
         _initTpl: function () {
-            var self = this;
-            if (!this.tpl && !this.tplContent) {
-                throw new Error('no template config for ' + this.getType() + '-' + this.getName() +
-                    'please check your option');
+            var self = this,
+                tpl = this.tpl;
+            if (!tpl) {
+                console.warn(['Has no template(tpl) or element(el) config for',
+                    '[', this.getType() || '[unknow type]', ']',
+                    '[', this.getName() || '[unknow name]', ']',
+                    'please check your option'].join(' '));
+                return;
             }
-            //内置了模板文件，不需要请求模板文件
-            if (this.tplContent) {
+            //使用HTML文件中的<script type="template" id="{id}"></script>
+            if (tpl.indexOf('#') === 0) {
+                this.tplContent = $(tpl).html();
                 return;
             }
             this.tplDowloading = true;
+            //var startDownloadTime = Date.now();
             require.async('tpl/' + this.tpl, function (res) {
-                var delayTime = /*{
-                    'com.navigator': 2000,
-                    'com.footer': 4000,
-                    'com.list': 6000
-                }*/Math.round(Math.random() * 10900),
-                    timer;
-                console.log('下载模板文件[' + self.tpl + ']共耗时', delayTime);
-                timer = setTimeout(function () {
-                    //console.debug(self.tpl + '模板加载成功', res);
+                //var totalTime = Date.now() - startDownloadTime;
+                //console.debug('下载模板文件' + self.tpl + '耗时' + totalTime);
+                if (res) {
                     self.tplContent = res;
-                    self.tplDowloading = false;
-                    if (self.waitToRender) {
-                        self.render(self._data);
-                        self.waitToRender = false;
-                    }
-                    clearTimeout(timer);
-                }, delayTime);
+                }
+                self.tplDowloading = false;
+                if (self.waitToRender) {
+                    self.render(self._data);
+                    self.waitToRender = false;
+                }
             });
+        },
+        createError: function (code, msg) {
+            var err = new Error(msg);
+            err.code = code;
+            return err;
         },
         getEvent: function (eventName) {
             return Event.get(eventName, this.getType(), this.getName());
@@ -109,6 +117,16 @@ define(function (require, exports) {
                     this[v] = option[v];
                 }
             }
+            if (this.parent) {
+                this.$parent = $(this.parent);
+            }
+            if (this.el) {
+                this.$el = $(this.el);
+            }
+            if (typeof this.selector === 'string') {
+                this.$el = this.$parent.find(this.selector);
+                this.el = this.$el[0];
+            }
         },
         /**
          * 初始化Display
@@ -121,17 +139,24 @@ define(function (require, exports) {
                 this.startInit();
             }
             //将option的配置初始化到对象中
-            this._initVariable(option, ['tpl', 'parent', 'class', 'id']);
+            this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el', 'selector']);
             this.setNum(Date.now().toString());
-            if (!option.parent) {
-                throw new Error('no parent in init option');
+            if (option.parent !== false && !option.parent) {
+                throw new UserError('noParent', ['parent is not config in the option of', this.getType(), this.getName()].join(' '));
             }
             this.id = option.id ||
                 [this.getType(), '-', name ? name + '-' : '',
                   this.getNum()].join('');
+            //保存用户原始配置，已备用
             this.originOption = $.extend(true, {}, option);
-            //初始化模板
-            this._initTpl();
+            //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
+            if (this.el === null && this.$el === null && !this.tplContent) {
+                //没有初始化成功, 需要初始化一个页面的Element
+                if (!this._initTpl()) {
+                    this.el = document.createElement('section');
+                    this.$el = $(this.el).appendTo(this.$parent);
+                }
+            }
             if (!flagSilent) {
                 this.finishInit();
             }
@@ -140,32 +165,38 @@ define(function (require, exports) {
          * 渲染组件
          */
         render: function (data, callback) {
-            this._data = data;
-            if (this.tplDowloading) {
-                this.waitToRender = true;
-            } else if (this.initialized) {
-                this.trigger('BEFORE_RENDER', [this, data]);
-                if (this.isContinueRender !== false) {
-                    this.isContinueRender = true;
-                    if (this.hasTplContent()) {
-                        this.$el = $(this.tmpl(data));
-                        this.$el.attr('id', this.id);
-                        this.$el.attr('class', this.class);
-                        this.$el.appendTo(this.parent);
-                        this.rendered = true; //标志已经渲染完毕
-                        this.display = true; //已添加到parent中，默认就是已显示
-                        if (this.$el.css('display') === 'none') {
-                            this.display = false;
+            //如果有selector则表明该元素已经在页面上了，不需要再渲染
+            if (!this.selector) {
+                this._data = data;
+                if (this.tplDowloading) {
+                    this.waitToRender = true;
+                } else if (this.initialized) {
+                    this.trigger('BEFORE_RENDER', [this, data]);
+                    if (this.isContinueRender !== false) {
+                        this.isContinueRender = true;
+                        //有模板内容才会进行渲染
+                        if (this.hasTplContent()) {
+                            this.$el = $(this.tmpl(data));
+                            this.el = this.$el[0];
+                            this.$el.appendTo(this.$parent);
+                            this.rendered = true; //标志已经渲染完毕
+                            this.display = true; //已添加到$parent中，默认就是已显示
+                            if (this.$el.css('display') === 'none') {
+                                this.display = false;
+                            }
+                            this.trigger('AFTER_RENDER', [this, data]);
                         }
-                    }
-                    this.trigger('AFTER_RENDER', [this, data]);
-                    if (typeof callback === 'function') {
-                        callback(this, data);
-                    } else {
-                        this.finishRender();
+                        if (typeof callback === 'function') {
+                            callback(this, data);
+                        } else {
+                            this.finishRender();
+                        }
                     }
                 }
             }
+            //给予id以及Class
+            this.$el.attr('id', this.id);
+            this.$el.attr('class', this.className);
             return this;
         },
         update: function () {
@@ -181,7 +212,7 @@ define(function (require, exports) {
             if (tplCont) {
                 html = tpl.tmpl(tplCont, data, this.helper);
             } else {
-                console.warn(this.tpl + '模板的内容为空，请检查模板文件是否存在,或者模板加载失败');
+                console.warn(tpl + '模板的内容为空，请检查模板文件是否存在,或者模板加载失败');
             }
             return html || '';
         },
@@ -189,9 +220,10 @@ define(function (require, exports) {
          * 监听事件,与jQuery 和 Zepto 同理
          */
         on: function () {
-            var args = slice.call(arguments, 0);
+            var args = slice.call(arguments, 0),
+                el = this.$parent || this.$el;
             args[0] = this.getEvent(args[0]);
-            this.parent.on.apply(this.parent, args);
+            el.on.apply(el, args);
             return this;
         },
         /**
@@ -200,7 +232,7 @@ define(function (require, exports) {
         trigger: function () {
             var args = slice.call(arguments, 0);
             args[0] = this.getEvent(args[0]);
-            this.parent.trigger.apply(this.parent, args);
+            this.$parent.trigger.apply(this.$parent, args);
             return this;
         },
         /**
