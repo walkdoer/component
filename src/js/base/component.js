@@ -40,7 +40,7 @@ define(function (require, exports) {
         type: 'component',
         _components: null,
         _componentsWaitToRender: null,
-        _data: null,  //页面数据
+        data: null,  //页面数据
         nextNode: null,
         prevNode: null,
         removeFromWaitQueue: function (component) {
@@ -94,7 +94,7 @@ define(function (require, exports) {
                 eventType = tmp[0];
                 elementSelector = tmp[1];
                 callback =  evts[evt];
-                this.$parent.on(eventType, elementSelector, (function (callback, context) {
+                this.on(eventType, elementSelector, (function (callback, context) {
                     return function () {
                         callback.apply(context, arguments);
                     };
@@ -113,7 +113,7 @@ define(function (require, exports) {
             return null;
         },
         hasComponent: function () {
-            return !!this.components && this.components.length > 0;
+            return !!this._cpConstructors && this._cpConstructors.length > 0;
         },
         getComponentPosition: function (component) {
             return getComponentPosition(this._components, component);
@@ -123,24 +123,8 @@ define(function (require, exports) {
             this._componentsWaitToRender = [];
             this._super(option, variables);
         },
-        _listen: function () {
-            var self = this,
-                listeners = this.listeners;
-            if (!listeners) {
-                return;
-            }
-            for (var event in listeners) {
-                if (listeners.hasOwnProperty(event)) {
-                    this.on(event, (function (event) {
-                        return function () {
-                            listeners[event].apply(self, arguments);
-                        };
-                    })(event));
-                }
-            }
-        },
         _buildComponents: function () {
-            var cpConstructors = this.components,//组件构造函数列表
+            var cpConstructors = this._cpConstructors,//组件构造函数列表
                 components = this._components,
                 self = this,
                 Component,
@@ -150,13 +134,6 @@ define(function (require, exports) {
             //构造子组件（sub Component）
             for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
                 cItm = cpConstructors[i];
-                //不是构造函数,而是
-                //{
-                //    _constructor: Class,
-                //    className: '',
-                //    id: '',
-                //}
-
                 if (typeof cItm === 'function') { //构造函数
                     Component = cItm;
                 } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
@@ -171,55 +148,66 @@ define(function (require, exports) {
                 //创建组件
                 cp = new Component($.extend({
                     parent: this.el,
-                    params: this.params
+                    params: this.params,
+                    data: this.data,
+                    render: false,
+                    listeners: {
+                        'BEFORE_RENDER': function (event, component) {
+                            //还没有轮到，插入等待序列
+                            if (!self.allowToRender(component)) {
+                                //console.debug(component.getType() + component.getName() + '还不能渲染');
+                                //组件不在等待渲染的序列中，就插入到等待序列
+                                if (!self.isInWaitQueue(component)) {
+                                    self._componentsWaitToRender.push(component);
+                                    // isContinueRender 表示不会执行下面的Render
+                                    component.isContinueRender = false;
+                                } else {
+                                    //console.debug('组件' + component.getName() + '已经在渲染序列中');
+                                }
+                            } else {
+                                if (self.getComponentPosition(component) === 0) {
+                                    self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
+                                    // if (!self.rendered) {
+                                    //     self.$el.appendTo(self.$parent);
+                                    // }
+                                }
+                                // isContinueRender 表示执行下面的Render
+                                component.isContinueRender = true;
+                            }
+                        },
+                        'AFTER_RENDER': function (event, component) {
+                            //console.debug('成功渲染组件:' + component.getType() + component.getName());
+                            //组件渲染成功后，移除自己在等待渲染队列的引用
+                            self.removeFromWaitQueue(component);
+                            //判断是否渲染结束
+                            if (!self.isAllComponentRendered()) {
+                                //渲染等待序列中的其他组件
+                                $.each(self._componentsWaitToRender, function (i, component) {
+                                    component.render();
+                                });
+                            } else {
+                                //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
+                                self.finishRender();
+                            }
+                        }
+                    }
                 }, cItm.option/*cItm.option为组件的配置*/));
                 cp.prevNode = prevCp;
                 if (prevCp) {
                     prevCp.nextNode = cp;
                 }
-                cp.on('BEFORE_RENDER', function (event, component) {
-                    //还没有轮到，插入等待序列
-                    if (!self.allowToRender(component)) {
-                        //console.debug(component.getType() + component.getName() + '还不能渲染');
-                        //组件不在等待渲染的序列中，就插入到等待序列
-                        if (!self.isInWaitQueue(component)) {
-                            self._componentsWaitToRender.push(component);
-                            // isContinueRender 表示不会执行下面的Render
-                            component.isContinueRender = false;
-                        } else {
-                            //console.debug('组件' + component.getName() + '已经在渲染序列中');
-                        }
-                    } else {
-                        if (self.getComponentPosition(component) === 0) {
-                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
-                            // if (!self.rendered) {
-                            //     self.$el.appendTo(self.$parent);
-                            // }
-                        }
-                        // isContinueRender 表示不会执行下面的Render
-                        component.isContinueRender = true;
-                    }
-                }).on('AFTER_RENDER', function (event, component) {
-                    //console.debug('成功渲染组件:' + component.getType() + component.getName());
-                    //组件渲染成功后，移除自己在等待渲染队列的引用
-                    self.removeFromWaitQueue(component);
-                    //判断是否渲染结束
-                    if (!self.isAllComponentRendered()) {
-                        //渲染等待序列中的其他组件
-                        self._renderComponents(self._componentsWaitToRender, self._data);
-                    } else {
-                        //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
-                        self.finishRender();
-                    }
-                });
                 components.push(cp);
             }
+            $.each(components, function (i, cp) {
+                cp.render();
+            });
         },
         init: function (option) {
             this.startInit();
-            this._initVariable(option, ['name', 'components', 'params']);
+            this._initVariable(option, ['name', 'components', 'params', 'data']);
+            $.extend(this.listeners || (this.listeners = {}), option.listeners);
+            this._cpConstructors = this.components;
             this._super(option, true);
-            this._listen();
             this._bindUIEvent();
             this.finishInit();
         },
@@ -244,42 +232,18 @@ define(function (require, exports) {
                 }
             }
         },
-        _renderComponents: function (components, data) {
-            var cp;
-            if (!data) {
-                console.warn(['There is no data for', this.getType(),
-                    this.getName(), 'when render it.'].join(' '));
-                data = {};
-            }
-            for (var i = 0, len = components.length; i < len; i++) {
-                cp = components[i];
-                if (cp) {
-                    //数据的返回格式
-                    // {
-                    //     navigator: { data... },
-                    //     list: { data... },
-                    //     footer: { data... }
-                    // }
-                    cp.render(data[cp.getType() + cp.getName()]);
-                }
-            }
-        },
-        render: function (data) {
-            //this._data = data;
+        render: function () {
             //这里写成回调的原因：渲染组件默认模板成功之后再渲染子组件
-            this._super(data, (function (component) {
+            this._super(/*注意这里是一个自执行函数*/(function (component) {
                 //如果有组件再进行渲染，没有则返回undefined
                 if (component.hasComponent()) {
-                    return function (component, data) {
+                    return function (component) {
                         //渲染该组件的子组件
                         component._buildComponents();
-                        component._renderComponents(component._components, data);
                     };
                 }
             })(this));
         }
     });
-
-
     return Component;
 });

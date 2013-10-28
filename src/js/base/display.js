@@ -9,7 +9,6 @@ define(function (require, exports) {
         Event = require('base/event'),
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
-        UserError = require('base/userError'),
         Display;
     Display = Class.extend({
         type: 'display',
@@ -27,12 +26,20 @@ define(function (require, exports) {
         display: false, //是否已显示
         waitToRender: false, //等待被选人
         startInit: function () {
-            this.initialized = false;
-            this.initializing = true;
+            if (!this._startInit) {
+                //console.log('标志初始化旗帜1:' + this.getType());
+                this.initialized = false;
+                this.initializing = true;
+                this._startInit = true;
+            }
         },
         finishInit: function () {
-            this.initializing = false;
-            this.initialized = true;
+            if (!this._finishInit) {
+                //console.log('标志初始化旗帜2:' + this.getType());
+                this.initializing = false;
+                this.initialized = true;
+                this._finishInit = true;
+            }
         },
         hasTplContent: function () {
             return !!this.tplContent;
@@ -78,7 +85,7 @@ define(function (require, exports) {
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl.indexOf('#') === 0) {
                 this.tplContent = $(tpl).html();
-                return;
+                return true;
             }
             this.tplDowloading = true;
             //var startDownloadTime = Date.now();
@@ -90,10 +97,11 @@ define(function (require, exports) {
                 }
                 self.tplDowloading = false;
                 if (self.waitToRender) {
-                    self.render(self._data);
+                    self.render();
                     self.waitToRender = false;
                 }
             });
+            return true;
         },
         createError: function (code, msg) {
             var err = new Error(msg);
@@ -102,7 +110,7 @@ define(function (require, exports) {
         },
         _appendElToParent: function () {
             if (this.parent) {
-                this.$el.append(this.parent);
+                this.$el.appendTo(this.parent);
             }
         },
         getEvent: function (eventName) {
@@ -113,12 +121,14 @@ define(function (require, exports) {
          * @return {[type]} [description]
          */
         _initVariable: function (option, variables) {
-            var v;
+            var tmp, optionKey, realKey;
             for (var i = 0, len = variables.length; i < len; i++) {
-                v = variables[i];
+                tmp = variables[i].split('->');
+                optionKey = tmp[0];
+                realKey = tmp[1] || optionKey;
                 //option的v属性会覆盖对象的v属性
-                if ((!this[v] || this.hasOwnProperty(v)) && option[v]) {
-                    this[v] = option[v];
+                if ((!this[realKey] || this.hasOwnProperty(realKey)) && option[optionKey]) {
+                    this[realKey] = option[optionKey];
                 }
             }
             if (this.parent) {
@@ -132,16 +142,30 @@ define(function (require, exports) {
                 this.el = this.$el[0];
             }
         },
+        _listen: function () {
+            var self = this,
+                listeners = this.listeners;
+            if (!listeners) {
+                return;
+            }
+            for (var event in listeners) {
+                if (listeners.hasOwnProperty(event)) {
+                    this.on(event, (function (event) {
+                        return function () {
+                            listeners[event].apply(self, arguments);
+                        };
+                    })(event));
+                }
+            }
+        },
         /**
          * 初始化Display
          * @param  {Object} option      Display所需配置
          * @param  {Boolean} flagSilent 是否改变状态量 true:改变,false:不改变
          */
-        init: function (option, flagSilent) {
+        init: function (option) {
             var name = this.getName();
-            if (!flagSilent) {
-                this.startInit();
-            }
+            this.startInit();
             //将option的配置初始化到对象中
             this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el', 'selector']);
             this.setNum(Date.now().toString());
@@ -156,40 +180,38 @@ define(function (require, exports) {
                 if (!this._initTpl()) {
                     this.el = document.createElement('section');
                     this.$el = $(this.el);
-                    this._appendElToParent();
                 }
             }
-            if (!flagSilent) {
-                this.finishInit();
+            this.finishInit();
+            //模板没有下载介绍前不进行渲染
+            if (!this.tplDowloading) {
+                this._listen();
+                //用户强制不渲染
+                if (option.render !== false) {
+                    this.render();
+                }
             }
         },
         /**
          * 渲染组件
          */
-        render: function (data, callback) {
+        render: function (callback) {
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
-            if (!this.selector) {
-                this._data = data;
+            if (!this.selector || this.rendered) {
                 if (this.tplDowloading) {
                     this.waitToRender = true;
                 } else if (this.initialized) {
-                    this.trigger('BEFORE_RENDER', [this, data]);
+                    this.trigger('BEFORE_RENDER', [this]);
                     if (this.isContinueRender !== false) {
                         this.isContinueRender = true;
                         //有模板内容才会进行渲染
                         if (this.hasTplContent()) {
-                            this.$el = $(this.tmpl(data));
-                            this.el = this.$el[0];
-                            this._appendElToParent();
-                            this.rendered = true; //标志已经渲染完毕
-                            this.display = true; //已添加到$parent中，默认就是已显示
-                            if (this.$el.css('display') === 'none') {
-                                this.display = false;
-                            }
-                            this.trigger('AFTER_RENDER', [this, data]);
+                            this.$el = $(this.tmpl());
                         }
+                        this.el = this.$el[0];
+                        this._appendElToParent();
                         if (typeof callback === 'function') {
-                            callback(this, data);
+                            callback(this);
                         } else {
                             this.finishRender();
                         }
@@ -219,12 +241,13 @@ define(function (require, exports) {
             return html || '';
         },
         /**
-         * 监听事件,与jQuery 和 Zepto 同理
+         * 监听事件,糅合了 jQuery或者Zepto的事件机制，所以使用与上述类库同理
          */
         on: function () {
             var args = slice.call(arguments, 0),
                 el = this.$parent || this.$el;
             args[0] = this.getEvent(args[0]);
+            //console.debug('on:' + args[0]);
             el.on.apply(el, args);
             return this;
         },
@@ -232,9 +255,11 @@ define(function (require, exports) {
          * 触发事件，同上
          */
         trigger: function () {
-            var args = slice.call(arguments, 0);
+            var args = slice.call(arguments, 0),
+                el = this.$parent || this.$el;
             args[0] = this.getEvent(args[0]);
-            this.$parent.trigger.apply(this.$parent, args);
+            //console.debug('trigger:' + args[0]);
+            el.trigger.apply(el, args);
             return this;
         },
         /**
@@ -245,6 +270,12 @@ define(function (require, exports) {
             this.$el = null;
         },
         finishRender: function () {
+            this.rendered = true; //标志已经渲染完毕
+            this.display = true; //已添加到$parent中，默认就是已显示
+            if (this.$el.css('display') === 'none') {
+                this.display = false;
+            }
+            this.trigger('AFTER_RENDER', [this]);
             this.trigger('RENDERED', [this]);
         }
     });
