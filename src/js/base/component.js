@@ -80,6 +80,27 @@ define(function (require, exports) {
             }
             return false;
         },
+        _bindUIEvent: function () {
+            var evts = this.uiEvents,
+                elementSelector,
+                eventType,
+                callback,
+                tmp;
+            if (!evts) {
+                return;
+            }
+            for (var evt in evts) {
+                tmp = evt.split(' ');
+                eventType = tmp[0];
+                elementSelector = tmp[1];
+                callback =  evts[evt];
+                this.$parent.on(eventType, elementSelector, (function (callback, context) {
+                    return function () {
+                        callback.apply(context, arguments);
+                    };
+                })(callback, this));
+            }
+        },
         getCmp : function (id) {
             var components = this._components,
                 itm;
@@ -112,7 +133,7 @@ define(function (require, exports) {
                 if (listeners.hasOwnProperty(event)) {
                     this.on(event, (function (event) {
                         return function () {
-                            listeners[event].call(self, arguments);
+                            listeners[event].apply(self, arguments);
                         };
                     })(event));
                 }
@@ -149,8 +170,9 @@ define(function (require, exports) {
                 prevCp = cp;
                 //创建组件
                 cp = new Component($.extend({
-                    parent: this.el
-                }, cItm.option));
+                    parent: this.el,
+                    params: this.params
+                }, cItm.option/*cItm.option为组件的配置*/));
                 cp.prevNode = prevCp;
                 if (prevCp) {
                     prevCp.nextNode = cp;
@@ -195,9 +217,10 @@ define(function (require, exports) {
         },
         init: function (option) {
             this.startInit();
-            this._initVariable(option, ['name', 'components']);
+            this._initVariable(option, ['name', 'components', 'params']);
             this._super(option, true);
             this._listen();
+            this._bindUIEvent();
             this.finishInit();
         },
         allowToRender: function (component) {

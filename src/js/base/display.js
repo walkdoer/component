@@ -11,7 +11,6 @@ define(function (require, exports) {
         methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
         UserError = require('base/userError'),
         Display;
-
     Display = Class.extend({
         type: 'display',
         tpl: null,
@@ -101,6 +100,11 @@ define(function (require, exports) {
             err.code = code;
             return err;
         },
+        _appendElToParent: function () {
+            if (this.parent) {
+                this.$el.append(this.parent);
+            }
+        },
         getEvent: function (eventName) {
             return Event.get(eventName, this.getType(), this.getName());
         },
@@ -141,9 +145,6 @@ define(function (require, exports) {
             //将option的配置初始化到对象中
             this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el', 'selector']);
             this.setNum(Date.now().toString());
-            if (option.parent !== false && !option.parent) {
-                throw new UserError('noParent', ['parent is not config in the option of', this.getType(), this.getName()].join(' '));
-            }
             this.id = option.id ||
                 [this.getType(), '-', name ? name + '-' : '',
                   this.getNum()].join('');
@@ -154,7 +155,8 @@ define(function (require, exports) {
                 //没有初始化成功, 需要初始化一个页面的Element
                 if (!this._initTpl()) {
                     this.el = document.createElement('section');
-                    this.$el = $(this.el).appendTo(this.$parent);
+                    this.$el = $(this.el);
+                    this._appendElToParent();
                 }
             }
             if (!flagSilent) {
@@ -178,7 +180,7 @@ define(function (require, exports) {
                         if (this.hasTplContent()) {
                             this.$el = $(this.tmpl(data));
                             this.el = this.$el[0];
-                            this.$el.appendTo(this.$parent);
+                            this._appendElToParent();
                             this.rendered = true; //标志已经渲染完毕
                             this.display = true; //已添加到$parent中，默认就是已显示
                             if (this.$el.css('display') === 'none') {
@@ -192,11 +194,11 @@ define(function (require, exports) {
                             this.finishRender();
                         }
                     }
+                    //给予id以及Class
+                    this.$el.attr('id', this.id)
+                            .attr('class', this.className);
                 }
             }
-            //给予id以及Class
-            this.$el.attr('id', this.id);
-            this.$el.attr('class', this.className);
             return this;
         },
         update: function () {
