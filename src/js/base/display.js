@@ -142,9 +142,9 @@ define(function (require, exports) {
                 this.el = this.$el[0];
             }
         },
-        _listen: function () {
-            var self = this,
-                listeners = this.listeners;
+        _listen: function (listeners) {
+            var self = this;
+            listeners = listeners || this.listeners;
             if (!listeners) {
                 return;
             }
@@ -185,7 +185,10 @@ define(function (require, exports) {
             this.finishInit();
             //模板没有下载介绍前不进行渲染
             if (!this.tplDowloading) {
+                //监听组件原生listener
                 this._listen();
+                //用户创建的Listener
+                this._listen(option.listeners);
                 //用户强制不渲染
                 if (option.render !== false) {
                     this.render();

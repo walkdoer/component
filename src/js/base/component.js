@@ -167,15 +167,13 @@ define(function (require, exports) {
                             } else {
                                 if (self.getComponentPosition(component) === 0) {
                                     self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
-                                    // if (!self.rendered) {
-                                    //     self.$el.appendTo(self.$parent);
-                                    // }
                                 }
                                 // isContinueRender 表示执行下面的Render
                                 component.isContinueRender = true;
                             }
                         },
                         'AFTER_RENDER': function (event, component) {
+                            console.log(component.getType() + ' afterrender');
                             //console.debug('成功渲染组件:' + component.getType() + component.getName());
                             //组件渲染成功后，移除自己在等待渲染队列的引用
                             self.removeFromWaitQueue(component);
@@ -205,7 +203,7 @@ define(function (require, exports) {
         init: function (option) {
             this.startInit();
             this._initVariable(option, ['name', 'components', 'params', 'data']);
-            $.extend(this.listeners || (this.listeners = {}), option.listeners);
+            //$.extend(this.listeners || (this.listeners = {}), option.listeners);
             this._cpConstructors = this.components;
             this._super(option, true);
             this._bindUIEvent();
