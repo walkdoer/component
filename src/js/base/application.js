@@ -60,7 +60,8 @@ define(function(require, exports) {
          */
         changePage: function (pageName, params, data) {
             var self = this,
-                curPg = this.getCmp(this.currentPage);
+                curPg = this.getCmp(this.currentPage),
+                newPg = this.getCmp(pageName);
             //当前页面与要切换的页面相同，不需要切换
             if (curPg && curPg.getName() === pageName) {
                 this.update(params, data);
@@ -71,18 +72,15 @@ define(function(require, exports) {
                 curPg.hide();
             }
             //如果页面已经建立就直接显示页面
-            if (this.isPageCreated(pageName)) {
+            if (newPg) {
                 this.getCmp(pageName).show();
-                this.currentPage = pageName;
             } else {
                 //页面没有建立，创建页面
                 this._createPage(pageName, params, data, function (pg) {
                     self.addCmp(pg);
                 });
             }
-        },
-        isPageCreated: function (pageName) {
-            return !!this.pages[pageName];
+            this.currentPage = pageName;
         },
         _getOption: function (pageName) {
             return this._pagesOption[pageName] || null;
@@ -94,6 +92,7 @@ define(function(require, exports) {
             require.async('page/' + pageName, function (PageClass) {
                 //创建类
                 var defaultOption = {
+                    id: pageName,
                     parent: self.el,
                     data: data,
                     params: params,
