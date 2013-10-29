@@ -133,7 +133,7 @@ define(function (require, exports) {
          * @return {String}           list:myList:beforerender
          */
         getEvent: function (eventName) {
-            return Event.get(eventName, this.getType(), this.getName());
+            return Event.get(eventName, this.getType(), this.getName(), this.getNum());
         },
         /**
          * 初始化变量
@@ -168,18 +168,16 @@ define(function (require, exports) {
          * @param  {Object} listeners 事件配置
          */
         _listen: function (listeners) {
-            var self = this;
-            listeners = listeners || this.listeners;
             if (!listeners) {
                 return;
             }
             for (var event in listeners) {
                 if (listeners.hasOwnProperty(event)) {
-                    this.on(event, (function (event) {
+                    this.on(event, (function (event, self) {
                         return function () {
                             listeners[event].apply(self, arguments);
                         };
-                    })(event));
+                    })(event, this));
                 }
             }
         },
@@ -217,7 +215,7 @@ define(function (require, exports) {
             //模板没有下载介绍前不进行渲染
             if (!this.tplDowloading) {
                 //监听组件原生listener
-                this._listen();
+                this._listen(this.listeners);
                 //用户创建的Listener
                 this._listen(option.listeners);
                 //用户强制不渲染
@@ -261,6 +259,7 @@ define(function (require, exports) {
          */
         tmpl: function (data, tplCont) {
             var html;
+            data = data || this.data;
             tplCont = tplCont || this.tplContent;
             if (tplCont) {
                 html = tpl.tmpl(tplCont, data, this.helper);
@@ -276,7 +275,6 @@ define(function (require, exports) {
             var args = slice.call(arguments, 0),
                 el = this.$parent || this.$el;
             args[0] = this.getEvent(args[0]);
-            //console.debug('on:' + args[0]);
             el.on.apply(el, args);
             return this;
         },
@@ -287,7 +285,6 @@ define(function (require, exports) {
             var args = slice.call(arguments, 0),
                 el = this.$parent || this.$el;
             args[0] = this.getEvent(args[0]);
-            //console.debug('trigger:' + args[0]);
             el.trigger.apply(el, args);
             return this;
         },
