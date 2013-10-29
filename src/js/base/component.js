@@ -108,8 +108,38 @@ define(function (require, exports) {
          * @param {Display/Component/Array} components
          */
         addCmp: function (components) {
+            var self = this;
             if (!components) { return; }
             this._componentsWaitToRender = this._componentsWaitToRender.concat(components);
+            $.each(this._componentsWaitToRender, function (i, comp) {
+                
+                comp.on('BEFORE_RENDER', function (event, component) {
+                    //还没有轮到，插入等待序列
+                    if (!self.allowToRender(component)) {
+                        component.isContinueRender = false;
+                    } else {
+                        if (self._components.length === 0) {
+                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
+                        }
+                        // isContinueRender 表示执行下面的Render
+                        component.isContinueRender = true;
+                    }
+                }).on('AFTER_RENDER', function (event, component) {
+                    //console.debug('成功渲染组件:' + component.getType() + component.getName());
+                    //组件渲染成功后，移除自己在等待渲染队列
+                    self._popWaitQueue();
+                    self._components.push(component);
+                    //通知下一个组件渲染
+                    if (component.nextNode) {
+                        component.nextNode.render();
+                    }
+                    //判断是否渲染结束
+                    if (self.isAllComponentRendered()) {
+                        //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
+                        self.finishRender();
+                    }
+                });
+            });
             this.render();
             return this;
         },
@@ -124,7 +154,7 @@ define(function (require, exports) {
         _buildComponents: function () {
             var self = this,
                 cpConstructors = self._cpConstructors,//组件构造函数列表
-                components = self._componentsWaitToRender,
+                components = [],
                 Component,
                 cItm,
                 prevCp = null,
@@ -149,36 +179,7 @@ define(function (require, exports) {
                         parent: this.el,
                         params: this.params,
                         data: this.data,
-                        renderAfterInit: false,
-                        listeners: {
-                            'BEFORE_RENDER': function (event, component) {
-                                //还没有轮到，插入等待序列
-                                if (!self.allowToRender(component)) {
-                                    component.isContinueRender = false;
-                                } else {
-                                    if (self._components.length === 0) {
-                                        self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
-                                    }
-                                    // isContinueRender 表示执行下面的Render
-                                    component.isContinueRender = true;
-                                }
-                            },
-                            'AFTER_RENDER': function (event, component) {
-                                //console.debug('成功渲染组件:' + component.getType() + component.getName());
-                                //组件渲染成功后，移除自己在等待渲染队列
-                                self._popWaitQueue();
-                                self._components.push(component);
-                                //通知下一个组件渲染
-                                if (component.nextNode) {
-                                    component.nextNode.render();
-                                }
-                                //判断是否渲染结束
-                                if (self.isAllComponentRendered()) {
-                                    //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
-                                    self.finishRender();
-                                }
-                            }
-                        }
+                        renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));
                     cp.prevNode = prevCp;
                     if (prevCp) {
@@ -192,13 +193,13 @@ define(function (require, exports) {
                 //表示所有的组件都是由该类型组件构成
                 //todo 由于这里的应用场景有限，所以为了代码大小考虑，
                 //为了保证功能尽可能简单，暂时不做这部分开发（考虑传入的是构造函数和组件文件地址的情况）
+                return null;
             }
             return null;
         },
         init: function (option) {
             console.log('init ' + this.type + ' ' + this.name);
-            var self = this,
-                compList;
+            var self = this;
             self.startInit();
             self.initVariable(option, initVar);
             self._components = [];
@@ -207,7 +208,7 @@ define(function (require, exports) {
             //$.extend(self.listeners || (self.listeners = {}), option.listeners);
             self._super(option, true);
             //添加新建的子组件到组件中
-            self._buildComponents();
+            self.addCmp(self._buildComponents());
             self._bindUIEvent();
             self.finishInit();
         },
