@@ -275,8 +275,10 @@ define(function (require, exports) {
          */
         on: function () {
             var args = slice.call(arguments, 0),
-                el = this.$parent || this.$el;
-            args[0] = this.getEvent(args[0]);
+                el,
+                evt;
+            el = (evt = this.getEvent(args[0])) ? this.$parent : this.$el;
+            if (evt) { args[0] = evt; }
             el.on.apply(el, args);
             return this;
         },
@@ -285,8 +287,10 @@ define(function (require, exports) {
          */
         trigger: function () {
             var args = slice.call(arguments, 0),
-                el = this.$parent || this.$el;
-            args[0] = this.getEvent(args[0]);
+                el,
+                evt;
+            el = (evt = this.getEvent(args[0])) ? this.$parent || this.$el : this.$el;
+            if (evt) { args[0] = evt; }
             el.trigger.apply(el, args);
             return this;
         },

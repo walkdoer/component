@@ -66,12 +66,6 @@ define(function (require, exports) {
          * @return {Boolean}
          */
         isAllComponentRendered: function () {
-            // var components = this._components;
-            // for (var i = 0; i < components.length; i++) {
-            //     if (!components[i].rendered) {
-            //         return false;
-            //     }
-            // }
             if (this._componentsWaitToRender.length === 0) {
                 return true;
             }
@@ -160,14 +154,6 @@ define(function (require, exports) {
                             'BEFORE_RENDER': function (event, component) {
                                 //还没有轮到，插入等待序列
                                 if (!self.allowToRender(component)) {
-                                    // //console.debug(component.getType() + component.getName() + '还不能渲染');
-                                    // //组件不在等待渲染的序列中，就插入到等待序列
-                                    // if (!self.isInWaitQueue(component)) {
-                                    //     // isContinueRender 表示不会执行下面的Render
-                                    //     component.isContinueRender = false;
-                                    // } else {
-                                    //     //console.debug('组件' + component.getName() + '已经在渲染序列中');
-                                    // }
                                     component.isContinueRender = false;
                                 } else {
                                     if (self._components.length === 0) {
@@ -235,16 +221,7 @@ define(function (require, exports) {
                 return true;
             } else {
                 return false;
-            } //else { //不是第一个需要检查他的上一个是不是已经渲染
-                // if (components[pos - 1].rendered) {
-                //     //console.log('前面的组件' + components[pos - 1].name + '已经渲染好了，当前组件 ' +
-                //     //    component.getName() + '可以渲染');
-                //     //如果当前组件的前一个已经渲染，当前可以进行渲染
-                //     return true;
-                // } else {
-                //     return false;
-                // }
-            //}
+            }
         },
         render: function () {
             //这里写成回调的原因：渲染组件默认模板成功之后再渲染子组件,
