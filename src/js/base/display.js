@@ -9,12 +9,13 @@ define(function (require, exports) {
         Event = require('base/event'),
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
+        initVar = ['tpl', 'parent', 'className', 'id', 'el', 'selector'],
         Display;
     Display = Class.extend({
         type: 'display',
         tpl: null,
         tplContent: null,
-        $parent: null,
+        parent: null,
         num: null,  //编号
         el: null,
         $el: null,  //该展示区域的容器
@@ -27,7 +28,6 @@ define(function (require, exports) {
         waitToRender: false, //等待被选人
         startInit: function () {
             if (!this._startInit) {
-                //console.log('标志初始化旗帜1:' + this.getType());
                 this.initialized = false;
                 this.initializing = true;
                 this._startInit = true;
@@ -35,12 +35,15 @@ define(function (require, exports) {
         },
         finishInit: function () {
             if (!this._finishInit) {
-                //console.log('标志初始化旗帜2:' + this.getType());
                 this.initializing = false;
                 this.initialized = true;
                 this._finishInit = true;
             }
         },
+        /**
+         * 是否有模板内容
+         * @return {Boolean}
+         */
         hasTplContent: function () {
             return !!this.tplContent;
         },
@@ -62,9 +65,17 @@ define(function (require, exports) {
         getType: function () {
             return this.type;
         },
+        /**
+         * 获取单元的名称
+         * @return {String}
+         */
         getName: function () {
             return this.name || '';
         },
+        /**
+         * 设置单元名称
+         * @param {String} name
+         */
         setName: function (name) {
             this.name = name;
         },
@@ -108,11 +119,19 @@ define(function (require, exports) {
             err.code = code;
             return err;
         },
+        /**
+         * {Private} 添加到父亲节点
+         */
         _appendElToParent: function () {
             if (this.parent) {
                 this.$el.appendTo(this.parent);
             }
         },
+        /**
+         * 获取事件的实际名称
+         * @param  {String} eventName 事件代号 BEFORE_RENDER
+         * @return {String}           list:myList:beforerender
+         */
         getEvent: function (eventName) {
             return Event.get(eventName, this.getType(), this.getName());
         },
@@ -120,20 +139,22 @@ define(function (require, exports) {
          * 初始化变量
          * @return {[type]} [description]
          */
-        _initVariable: function (option, variables) {
+        initVariable: function (option, variables) {
             var tmp, optionKey, realKey;
             for (var i = 0, len = variables.length; i < len; i++) {
                 tmp = variables[i].split('->');
                 optionKey = tmp[0];
                 realKey = tmp[1] || optionKey;
                 //option的v属性会覆盖对象的v属性
-                if ((!this[realKey] || this.hasOwnProperty(realKey)) && option[optionKey]) {
+                if (option[optionKey]) {
                     this[realKey] = option[optionKey];
                 }
             }
+            //创建parent的$(object)对象
             if (this.parent) {
                 this.$parent = $(this.parent);
             }
+            //创建el的$(object)对象
             if (this.el) {
                 this.$el = $(this.el);
             }
@@ -142,6 +163,10 @@ define(function (require, exports) {
                 this.el = this.$el[0];
             }
         },
+        /**
+         * {Private} 监听事件
+         * @param  {Object} listeners 事件配置
+         */
         _listen: function (listeners) {
             var self = this;
             listeners = listeners || this.listeners;
@@ -167,7 +192,7 @@ define(function (require, exports) {
             var name = this.getName();
             this.startInit();
             //将option的配置初始化到对象中
-            this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el', 'selector']);
+            this.initVariable(option, initVar);
             this.setNum(Date.now().toString());
             this.id = option.id ||
                 [this.getType(), '-', name ? name + '-' : '',
@@ -180,6 +205,12 @@ define(function (require, exports) {
                 if (!this._initTpl()) {
                     this.el = document.createElement('section');
                     this.$el = $(this.el);
+                } else {
+                    //有模板内容才会进行渲染
+                    if (this.hasTplContent()) {
+                        this.$el = $(this.tmpl());
+                    }
+                    this.el = this.$el[0];
                 }
             }
             this.finishInit();
@@ -207,11 +238,6 @@ define(function (require, exports) {
                     this.trigger('BEFORE_RENDER', [this]);
                     if (this.isContinueRender !== false) {
                         this.isContinueRender = true;
-                        //有模板内容才会进行渲染
-                        if (this.hasTplContent()) {
-                            this.$el = $(this.tmpl());
-                        }
-                        this.el = this.$el[0];
                         this._appendElToParent();
                         if (typeof callback === 'function') {
                             callback(this);
@@ -233,9 +259,9 @@ define(function (require, exports) {
         /**
          * 渲染模板
          */
-        tmpl: function (data) {
-            var tplCont = this.tplContent,
-                html;
+        tmpl: function (data, tplCont) {
+            var html;
+            tplCont = tplCont || this.tplContent;
             if (tplCont) {
                 html = tpl.tmpl(tplCont, data, this.helper);
             } else {
@@ -272,6 +298,9 @@ define(function (require, exports) {
             this.$el.remove();
             this.$el = null;
         },
+        /**
+         * 结束渲染
+         */
         finishRender: function () {
             this.rendered = true; //标志已经渲染完毕
             this.display = true; //已添加到$parent中，默认就是已显示
@@ -282,7 +311,7 @@ define(function (require, exports) {
             this.trigger('RENDERED', [this]);
         }
     });
-    //扩展方法
+    //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
     _.each(methods, function (method) {
         Display.prototype[method] = function () {
             var args = slice.call(arguments);

@@ -7,6 +7,7 @@ define(function (require, exports) {
         Display = require('base/display'),
         Event = require('base/event'),
         UserError = require('base/userError'),
+        initVar = ['name', 'components', 'params', 'data'],
         Component;
     //添加事件
     Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
@@ -37,12 +38,12 @@ define(function (require, exports) {
     }
 
     Component = Display.extend({
-        type: 'component',
-        _components: null,
-        _componentsWaitToRender: null,
+        type: 'component', //组件类型
+        _components: null, //组件实例数组
+        _componentsWaitToRender: null, //等待渲染序列
         data: null,  //页面数据
-        nextNode: null,
-        prevNode: null,
+        nextNode: null,  //下一个组件
+        prevNode: null,  //上一个组件
         removeFromWaitQueue: function (component) {
             var pos = getComponentPosition(this._componentsWaitToRender, component);
             if (pos >= 0) {
@@ -118,11 +119,6 @@ define(function (require, exports) {
         getComponentPosition: function (component) {
             return getComponentPosition(this._components, component);
         },
-        _initVariable: function (option, variables) {
-            this._components = [];
-            this._componentsWaitToRender = [];
-            this._super(option, variables);
-        },
         _buildComponents: function () {
             var cpConstructors = this._cpConstructors,//组件构造函数列表
                 components = this._components,
@@ -173,7 +169,6 @@ define(function (require, exports) {
                             }
                         },
                         'AFTER_RENDER': function (event, component) {
-                            console.log(component.getType() + ' afterrender');
                             //console.debug('成功渲染组件:' + component.getType() + component.getName());
                             //组件渲染成功后，移除自己在等待渲染队列的引用
                             self.removeFromWaitQueue(component);
@@ -202,7 +197,9 @@ define(function (require, exports) {
         },
         init: function (option) {
             this.startInit();
-            this._initVariable(option, ['name', 'components', 'params', 'data']);
+            this.initVariable(option, initVar);
+            this._components = [];
+            this._componentsWaitToRender = [];
             //$.extend(this.listeners || (this.listeners = {}), option.listeners);
             this._cpConstructors = this.components;
             this._super(option, true);
