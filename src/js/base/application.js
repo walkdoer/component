@@ -25,6 +25,7 @@ define(function(require, exports) {
         type: 'application',
         _pages: null,
         _firstInitial: true,
+        renderAfterInit: false,
         init: function (option) {
             this.startInit();
             this._super(option, true);
@@ -58,7 +59,8 @@ define(function(require, exports) {
          * 切换页面
          */
         changePage: function (pageName, params, data) {
-            var curPg = this.getPage(this.currentPage);
+            var self = this,
+                curPg = this.getCmp(this.currentPage);
             //当前页面与要切换的页面相同，不需要切换
             if (curPg && curPg.getName() === pageName) {
                 this.update(params, data);
@@ -70,15 +72,14 @@ define(function(require, exports) {
             }
             //如果页面已经建立就直接显示页面
             if (this.isPageCreated(pageName)) {
-                this.getPage(pageName).show();
+                this.getCmp(pageName).show();
                 this.currentPage = pageName;
             } else {
                 //页面没有建立，创建页面
-                this._createPage(pageName, params, data);
+                this._createPage(pageName, params, data, function (pg) {
+                    self.addCmp(pg);
+                });
             }
-        },
-        getPage: function (pageName) {
-            return this.pages[pageName];
         },
         isPageCreated: function (pageName) {
             return !!this.pages[pageName];
@@ -130,9 +131,6 @@ define(function(require, exports) {
                 };
                 pageOption = $.extend({}, defaultOption, pageOption);
                 var pg = new PageClass(pageOption);
-                self.pages[pageName] = pg;
-
-                self.currentPage = pageName;
                 if (typeof callback === 'function') {
                     callback(pg);
                 }

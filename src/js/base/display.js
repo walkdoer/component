@@ -8,8 +8,8 @@ define(function (require, exports) {
         tpl = require('core/template'),
         Event = require('base/event'),
         slice = Array.prototype.slice,
-        methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
-        initVar = ['tpl', 'parent', 'className', 'id', 'el', 'selector'],
+        methods = ['show', 'hide', 'toggle', 'empty'],
+        initVar = ['tpl', 'parent', 'className', 'id', 'el', 'selector', 'renderAfterInit'],
         Display;
     Display = Class.extend({
         type: 'display',
@@ -107,7 +107,9 @@ define(function (require, exports) {
                     self.tplContent = res;
                 }
                 self.tplDowloading = false;
-                if (self.waitToRender) {
+                //组件之前被通知渲染，但是由于还没有下载结束不能渲染
+                //下载结束之后继续渲染
+                if (self.waitToRender && !self.rendered) {
                     self.render();
                     self.waitToRender = false;
                 }
@@ -218,10 +220,6 @@ define(function (require, exports) {
                 this._listen(this.listeners);
                 //用户创建的Listener
                 this._listen(option.listeners);
-                //用户强制不渲染
-                if (option.render !== false) {
-                    this.render();
-                }
             }
         },
         /**
@@ -246,6 +244,10 @@ define(function (require, exports) {
                     //给予id以及Class
                     this.$el.attr('id', this.id)
                             .attr('class', this.className);
+                }
+            } else {
+                if (typeof callback === 'function') {
+                    callback(this);
                 }
             }
             return this;
