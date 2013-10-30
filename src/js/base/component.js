@@ -108,11 +108,20 @@ define(function (require, exports) {
          * @param {Display/Component/Array} components
          */
         addCmp: function (components) {
-            var self = this;
+            var self = this,
+                addList = $.isArray(components) ? components : [components],
+                renderedList = this._components,
+                waitList = this._componentsWaitToRender,
+                prevCmp;
             if (!components) { return; }
-            this._componentsWaitToRender = this._componentsWaitToRender.concat(components);
-            $.each(this._componentsWaitToRender, function (i, comp) {
-                
+            var lastComponent = waitList[waitList.length - 1] || renderedList[renderedList.length - 1];
+            //绑定事件
+            $.each(addList, function (i, comp) {
+                if (prevCmp) {
+                    prevCmp.nextNode = comp;
+                }
+                comp.prevNode = lastComponent;
+                prevCmp = comp;
                 comp.on('BEFORE_RENDER', function (event, component) {
                     //还没有轮到，插入等待序列
                     if (!self.allowToRender(component)) {
@@ -140,6 +149,7 @@ define(function (require, exports) {
                     }
                 });
             });
+            this._componentsWaitToRender = this._componentsWaitToRender.concat(addList);
             this.render();
             return this;
         },

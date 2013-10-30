@@ -6,20 +6,7 @@ define(function(require, exports) {
     'use strict';
     var router = require('core/router'),
         Component = require('base/component'),
-        model = require('model'),
-        getData;
-
-    getData = function (ctx, next) {
-        var pathname = ctx.pathname,
-            pageName = pathname.split('/')[1];
-        model.get(pathname, {}, function success(data) {
-            ctx.data = data;
-            ctx.pageName = pageName;
-            next();
-        }, function error() {
-
-        });
-    };
+        model = require('model');
 
     var App = Component.extend({
         type: 'application',
@@ -49,8 +36,10 @@ define(function(require, exports) {
         _router: function () {
             var self = this;
             $.each(this._pagesOption, function (path) {
-                router(path, getData, function (ctx) {
-                    self.changePage(ctx.pageName, ctx.params, ctx.data);
+                router(path, function (ctx) {
+                    var pathname = ctx.pathname,
+                        pageName = pathname.split('/')[1];
+                    self.changePage(pageName, ctx.params);
                 });
             });
             router();
@@ -64,7 +53,7 @@ define(function(require, exports) {
                 newPg = this.getCmp(pageName);
             //当前页面与要切换的页面相同，不需要切换
             if (curPg && curPg.getName() === pageName) {
-                this.update(params, data);
+                curPg.update(params, data);
                 return;
             }
             //隐藏当前页
