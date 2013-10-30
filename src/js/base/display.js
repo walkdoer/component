@@ -183,7 +183,7 @@ define(function (require, exports) {
          * @param  {Object} option      Display所需配置
          * @param  {Boolean} flagSilent 是否改变状态量 true:改变,false:不改变
          */
-        init: function (option) {
+        init: function (option, callback) {
             var self = this,
                 name = self.getName();
             self.startInit();
@@ -209,7 +209,14 @@ define(function (require, exports) {
                     self._listen(self.listeners);
                     //用户创建的Listener
                     self._listen(option.listeners);
-                    self.finishInit();
+                    if (typeof callback === 'function') {
+                        callback();
+                    } else { //如果没有callback，则直接结束初始化
+                        self.finishInit();
+                    }
+                    if (self.needToRender) {
+                        self.render();
+                    }
                 });
             }
         },
@@ -233,6 +240,9 @@ define(function (require, exports) {
                     //给予id以及Class
                     this.$el.attr('id', this.id)
                             .attr('class', this.className);
+                } else {
+                    //异步情况下，用户通知渲染时尚未初始化结束
+                    this.needToRender = true;
                 }
             } else {
                 if (typeof callback === 'function') {

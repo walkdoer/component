@@ -211,11 +211,13 @@ define(function (require, exports) {
             self._components = [];
             self._componentsWaitToRender = [];
             self._cpConstructors = self.components;
-            self._super(option);
-            //添加新建的子组件到组件中
-            self.addCmp(self._buildComponents());
-            self._bindUIEvent();
-            self.finishInit();
+            //初始化父类Display
+            self._super(option, function () {
+                //添加新建的子组件到组件中
+                self.addCmp(self._buildComponents());
+                self._bindUIEvent();
+                self.finishInit();
+            });
             //console.log('finishInit ' + this.type);
         },
         allowToRender: function (component) {
