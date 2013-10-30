@@ -118,9 +118,8 @@ define(function (require, exports) {
                 addList = $.isArray(components) ? components : [components],
                 renderedList = this._components,
                 waitList = this._componentsWaitToRender,
-                prevCmp;
+                prevCmp = waitList[waitList.length - 1] || renderedList[renderedList.length - 1];
             if (!components) { return; }
-            var lastComponent = waitList[waitList.length - 1] || renderedList[renderedList.length - 1];
             //绑定组件渲染各个阶段的事件: BEFORE_RENDER：渲染前, AFTER_RENDER: 渲染后
             $.each(addList, function (i, comp) {
                 //链接组件的关系
@@ -140,21 +139,21 @@ define(function (require, exports) {
                 }).on('AFTER_RENDER', function (event, component) {
                     //console.debug('成功渲染组件:' + component.getType() + component.getName());
                     //组件渲染成功后，移除自己在等待渲染队列
+                    console.log('pop up ' + component.type);
                     self._popWaitQueue();
                     self._components.push(component);
-                    //通知下一个组件渲染
-                    if (component.nextNode) {
-                        component.nextNode.render();
-                    }
                     //判断是否渲染结束
                     if (self.isAllComponentRendered()) {
                         //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
+                        console.log(self.type + '渲染结束');
                         self.finishRender();
+                    } else {
+                        //通知下一个组件渲染
+                        self._componentsWaitToRender[0].render();
                     }
                 });
             });
             this._componentsWaitToRender = this._componentsWaitToRender.concat(addList);
-            this.render();
             return this;
         },
         /**
@@ -216,8 +215,7 @@ define(function (require, exports) {
             self._components = [];
             self._componentsWaitToRender = [];
             self._cpConstructors = self.components;
-            //$.extend(self.listeners || (self.listeners = {}), option.listeners);
-            self._super(option, true);
+            self._super(option);
             //添加新建的子组件到组件中
             self.addCmp(self._buildComponents());
             self._bindUIEvent();

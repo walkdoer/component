@@ -25,7 +25,6 @@ define(function (require, exports) {
         initializing: false,  //初始化进行中
         initialized: false,  //已初始化
         display: false, //是否已显示
-        waitToRender: false, //等待被选人
         startInit: function () {
             if (!this._startInit) {
                 this.initialized = false;
@@ -83,7 +82,10 @@ define(function (require, exports) {
          * 初始化模板
          * 下载模板文件
          */
-        _initTpl: function () {
+        _initTpl: function (callback) {
+            if (typeof callback !== 'function') {
+                callback = function () {};
+            }
             var self = this,
                 tpl = this.tpl;
             if (!tpl) {
@@ -91,30 +93,23 @@ define(function (require, exports) {
                     '[', this.getType() || '[unknow type]', ']',
                     '[', this.getName() || '[unknow name]', ']',
                     'please check your option'].join(' '));
+                callback(false);
                 return;
             }
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl.indexOf('#') === 0) {
                 this.tplContent = $(tpl).html();
-                return true;
+                callback(true, this.tplContent);
+                return;
             }
-            this.tplDowloading = true;
-            //var startDownloadTime = Date.now();
             require.async('tpl/' + this.tpl, function (res) {
-                //var totalTime = Date.now() - startDownloadTime;
-                //console.debug('下载模板文件' + self.tpl + '耗时' + totalTime);
                 if (res) {
                     self.tplContent = res;
-                }
-                self.tplDowloading = false;
-                //组件之前被通知渲染，但是由于还没有下载结束不能渲染
-                //下载结束之后继续渲染
-                if (self.waitToRender && !self.rendered) {
-                    self.render();
-                    self.waitToRender = false;
+                    callback(true, res);
+                } else {
+                    callback(false, res);
                 }
             });
-            return true;
         },
         createError: function (code, msg) {
             var err = new Error(msg);
@@ -189,37 +184,33 @@ define(function (require, exports) {
          * @param  {Boolean} flagSilent 是否改变状态量 true:改变,false:不改变
          */
         init: function (option) {
-            var name = this.getName();
-            this.startInit();
+            var self = this,
+                name = self.getName();
+            self.startInit();
             //将option的配置初始化到对象中
-            this.initVariable(option, initVar);
-            this.setNum(Date.now().toString());
-            this.id = option.id ||
-                [this.getType(), '-', name ? name + '-' : '',
-                  this.getNum()].join('');
+            self.initVariable(option, initVar);
+            self.setNum(Date.now().toString());
+            self.id = option.id ||
+                [self.getType(), '-', name ? name + '-' : '',
+                  self.getNum()].join('');
             //保存用户原始配置，已备用
-            this.originOption = $.extend(true, {}, option);
+            self.originOption = $.extend(true, {}, option);
             //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
-            if (this.el === null && this.$el === null && !this.tplContent) {
-                //没有初始化成功, 需要初始化一个页面的Element
-                if (!this._initTpl()) {
-                    this.el = document.createElement('section');
-                    this.$el = $(this.el);
-                } else {
-                    //有模板内容才会进行渲染
-                    if (this.hasTplContent()) {
-                        this.$el = $(this.tmpl());
+            if (self.el === null && self.$el === null && !self.tplContent) {
+                self._initTpl(function (success) {
+                    if (success) {
+                        self.$el = $(self.tmpl());
+                        self.el = self.$el[0];
+                    } else { //没有初始化成功, 需要初始化一个页面的Element
+                        self.el = document.createElement('section');
+                        self.$el = $(self.el);
                     }
-                    this.el = this.$el[0];
-                }
-            }
-            this.finishInit();
-            //模板没有下载介绍前不进行渲染
-            if (!this.tplDowloading) {
-                //监听组件原生listener
-                this._listen(this.listeners);
-                //用户创建的Listener
-                this._listen(option.listeners);
+                    //监听组件原生listener
+                    self._listen(self.listeners);
+                    //用户创建的Listener
+                    self._listen(option.listeners);
+                    self.finishInit();
+                });
             }
         },
         /**
@@ -228,9 +219,7 @@ define(function (require, exports) {
         render: function (callback) {
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!this.selector || this.rendered) {
-                if (this.tplDowloading) {
-                    this.waitToRender = true;
-                } else if (this.initialized) {
+                if (this.initialized) {
                     this.trigger('BEFORE_RENDER', [this]);
                     if (this.isContinueRender !== false) {
                         this.isContinueRender = true;
@@ -290,6 +279,9 @@ define(function (require, exports) {
                 el,
                 evt;
             el = (evt = this.getEvent(args[0])) ? this.$parent || this.$el : this.$el;
+            if (this.type === 'page' && args[0] === 'AFTER_RENDER') { 
+                console.log(el[0]);
+            }
             if (evt) { args[0] = evt; }
             el.trigger.apply(el, args);
             return this;

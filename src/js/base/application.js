@@ -4,45 +4,17 @@
  */
 define(function(require, exports) {
     'use strict';
-    var router = require('core/router'),
-        Component = require('base/component'),
-        model = require('model');
+    var Component = require('base/component');
 
     var App = Component.extend({
         type: 'application',
         _pages: null,
         _firstInitial: true,
-        renderAfterInit: false,
         init: function (option) {
             this.startInit();
             this._super(option, true);
             this.initVariable(option, ['beforeLoad']);
-            this._pagesOption = this.originOption.pages;
-            this.pages = {};
-            model.init(option.api);
-            this._router();
-            this._globalListen();
             this.finishInit();
-        },
-        _globalListen: function () {
-            this.on('click', '.route', function (e) {
-                var url = e.target.dataset.url;
-                router.route(url);
-            });
-        },
-        /**
-         * 根据用户配置的PageOption进行Router绑定
-         */
-        _router: function () {
-            var self = this;
-            $.each(this._pagesOption, function (path) {
-                router(path, function (ctx) {
-                    var pathname = ctx.pathname,
-                        pageName = pathname.split('/')[1];
-                    self.changePage(pageName, ctx.params);
-                });
-            });
-            router();
         },
         /**
          * 切换页面
@@ -66,24 +38,22 @@ define(function(require, exports) {
             } else {
                 //页面没有建立，创建页面
                 this._createPage(pageName, params, data, function (pg) {
+                    console.debug('add page' + pageName);
                     self.addCmp(pg);
+                    self.render();
                 });
             }
             this.currentPage = pageName;
+            return this;
         },
-        _getOption: function (pageName) {
-            return this._pagesOption[pageName] || null;
-        },
-        _createPage: function (pageName, params, data, callback) {
-            var self = this,
-                pageOption = this._getOption(pageName);
+        _createPage: function (pageName, params, pageOption, callback) {
+            var self = this;
             //读取类文件
             require.async('page/' + pageName, function (PageClass) {
                 //创建类
                 var defaultOption = {
                     id: pageName,
                     parent: self.el,
-                    data: data,
                     params: params,
                     listeners: {
                         'BEFORE_RENDER': function (evt, page) {
@@ -123,11 +93,6 @@ define(function(require, exports) {
                     callback(pg);
                 }
             });
-        },
-        listeners: {
-            'route': function (evt, path) {
-                router.route(path);
-            }
         }
     });
     return App;
