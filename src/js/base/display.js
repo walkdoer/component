@@ -279,9 +279,6 @@ define(function (require, exports) {
                 el,
                 evt;
             el = (evt = this.getEvent(args[0])) ? this.$parent || this.$el : this.$el;
-            if (this.type === 'page' && args[0] === 'AFTER_RENDER') { 
-                console.log(el[0]);
-            }
             if (evt) { args[0] = evt; }
             el.trigger.apply(el, args);
             return this;
@@ -304,6 +301,7 @@ define(function (require, exports) {
             }
             this.trigger('AFTER_RENDER', [this]);
             this.trigger('RENDERED', [this]);
+            console.debug(this.type + '渲染结束');
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'

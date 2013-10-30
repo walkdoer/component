@@ -142,12 +142,8 @@ define(function (require, exports) {
                     console.log('pop up ' + component.type);
                     self._popWaitQueue();
                     self._components.push(component);
-                    //判断是否渲染结束
-                    if (self.isAllComponentRendered()) {
-                        //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
-                        console.log(self.type + '渲染结束');
-                        self.finishRender();
-                    } else {
+                    //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
+                    if (!self.isAllComponentRendered()) {
                         //通知下一个组件渲染
                         self._componentsWaitToRender[0].render();
                     }
@@ -208,7 +204,7 @@ define(function (require, exports) {
             return null;
         },
         init: function (option) {
-            console.log('init ' + this.type);
+            //console.log('init ' + this.type);
             var self = this;
             self.startInit();
             self.initVariable(option, initVar);
@@ -220,7 +216,7 @@ define(function (require, exports) {
             self.addCmp(self._buildComponents());
             self._bindUIEvent();
             self.finishInit();
-            console.log('finishInit ' + this.type);
+            //console.log('finishInit ' + this.type);
         },
         allowToRender: function (component) {
             if (!component) {
