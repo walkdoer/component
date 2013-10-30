@@ -139,7 +139,7 @@ define(function (require, exports) {
                 }).on('AFTER_RENDER', function (event, component) {
                     //console.debug('成功渲染组件:' + component.getType() + component.getName());
                     //组件渲染成功后，移除自己在等待渲染队列
-                    console.log('pop up ' + component.type);
+                    //console.log('pop up ' + component.type);
                     self._popWaitQueue();
                     self._components.push(component);
                     //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束

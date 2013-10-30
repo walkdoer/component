@@ -278,8 +278,6 @@ define(function (require, exports) {
                 evt;
             el = (evt = this.getEvent(args[0])) ? this.$parent : this.$el;
             if (evt) { args[0] = evt; }
-            if (this.type ==='page')
-                console.debug('on:' + args[0], el[0]);
             el.on.apply(el, args);
             return this;
         },
@@ -292,8 +290,6 @@ define(function (require, exports) {
                 evt;
             evt = this.getEvent(args[0]);
             if (evt) { args[0] = evt; }
-            if (this.type ==='tab')
-                console.debug('trigger:' + args[0], el[0]);
             el.trigger.apply(el, args);
             return this;
         },
@@ -315,7 +311,7 @@ define(function (require, exports) {
             }
             this.trigger('AFTER_RENDER', [this]);
             this.trigger('RENDERED', [this]);
-            console.debug(this.type + '渲染结束');
+            //console.debug(this.type + '渲染结束');
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
