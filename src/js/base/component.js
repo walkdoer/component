@@ -7,6 +7,7 @@ define(function (require, exports) {
         Display = require('base/display'),
         Event = require('base/event'),
         UserError = require('base/userError'),
+        initVar = ['name', 'components', 'params', 'data'],
         Component;
     //添加事件
     Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
@@ -37,18 +38,14 @@ define(function (require, exports) {
     }
 
     Component = Display.extend({
-        type: 'component',
-        _components: null,
-        _componentsWaitToRender: null,
-        _data: null,  //页面数据
-        nextNode: null,
-        prevNode: null,
-        removeFromWaitQueue: function (component) {
-            var pos = getComponentPosition(this._componentsWaitToRender, component);
-            if (pos >= 0) {
-                this._componentsWaitToRender.splice(pos, 1);
-                //console.debug('将' + component.getName() + '移出待渲染序列', this._componentsWaitToRender.length);
-            }
+        type: 'component', //组件类型
+        _components: null, //组件实例数组
+        _componentsWaitToRender: null, //等待渲染序列
+        data: null,  //页面数据
+        nextNode: null,  //下一个组件
+        prevNode: null,  //上一个组件
+        _popWaitQueue: function () {
+            return this._componentsWaitToRender.splice(0, 1)[0];
         },
         /**
          * 检查Component是不是已经在等待渲染队列中
@@ -69,16 +66,31 @@ define(function (require, exports) {
          * @return {Boolean}
          */
         isAllComponentRendered: function () {
-            var components = this._components;
-            for (var i = 0; i < components.length; i++) {
-                if (!components[i].rendered) {
-                    return false;
-                }
-            }
             if (this._componentsWaitToRender.length === 0) {
                 return true;
             }
             return false;
+        },
+        _bindUIEvent: function () {
+            var evts = this.uiEvents,
+                elementSelector,
+                eventType,
+                callback,
+                tmp;
+            if (!evts) {
+                return;
+            }
+            for (var evt in evts) {
+                tmp = evt.split(' ');
+                eventType = tmp[0];
+                elementSelector = tmp[1];
+                callback =  evts[evt];
+                this.on(eventType, elementSelector, (function (callback, context) {
+                    return function () {
+                        callback.apply(context, arguments);
+                    };
+                })(callback, this));
+            }
         },
         getCmp : function (id) {
             var components = this._components,
@@ -91,172 +103,146 @@ define(function (require, exports) {
             }
             return null;
         },
-        hasComponent: function () {
-            return !!this.components && this.components.length > 0;
+        _linkCmp: function (curCmp, prevCmp) {
+            if (prevCmp) {
+                prevCmp.nextNode = curCmp;
+            }
+            curCmp.prevNode = prevCmp;
         },
-        getComponentPosition: function (component) {
-            return getComponentPosition(this._components, component);
-        },
-        _initVariable: function (option, variables) {
-            this._components = [];
-            this._componentsWaitToRender = [];
-            this._super(option, variables);
-        },
-        _listen: function () {
+        /**
+         * 添加子组件
+         * @param {Display/Component/Array} components
+         */
+        addCmp: function (components) {
             var self = this,
-                listeners = this.listeners;
-            if (!listeners) {
-                return;
-            }
-            for (var event in listeners) {
-                if (listeners.hasOwnProperty(event)) {
-                    this.on(event, (function (event) {
-                        return function () {
-                            listeners[event].call(self, arguments);
-                        };
-                    })(event));
-                }
-            }
+                addList = $.isArray(components) ? components : [components],
+                renderedList = this._components,
+                waitList = this._componentsWaitToRender,
+                prevCmp = waitList[waitList.length - 1] || renderedList[renderedList.length - 1];
+            if (!components) { return; }
+            //绑定组件渲染各个阶段的事件: BEFORE_RENDER：渲染前, AFTER_RENDER: 渲染后
+            $.each(addList, function (i, comp) {
+                //链接组件的关系
+                self._linkCmp(comp, prevCmp);
+                prevCmp = comp;
+                comp.on('BEFORE_RENDER', function (event, component) {
+                    //还没有轮到，插入等待序列
+                    if (!self.allowToRender(component)) {
+                        component.isContinueRender = false;
+                    } else {
+                        if (self._components.length === 0) {
+                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
+                        }
+                        // isContinueRender 表示执行下面的Render
+                        component.isContinueRender = true;
+                    }
+                }).on('AFTER_RENDER', function (event, component) {
+                    //console.debug('成功渲染组件:' + component.getType() + component.getName());
+                    //组件渲染成功后，移除自己在等待渲染队列
+                    //console.log('pop up ' + component.type);
+                    self._popWaitQueue();
+                    self._components.push(component);
+                    //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
+                    if (!self.isAllComponentRendered()) {
+                        //通知下一个组件渲染
+                        self._componentsWaitToRender[0].render();
+                    }
+                });
+            });
+            this._componentsWaitToRender = this._componentsWaitToRender.concat(addList);
+            return this;
+        },
+        /**
+         * 查询该组件是否由其他组件组成
+         * @return {Boolean}
+         */
+        hasComponent: function () {
+            var cpCs = this._cpConstructors;
+            return !!cpCs && cpCs.length > 0;
         },
         _buildComponents: function () {
-            var cpConstructors = this.components,//组件构造函数列表
-                components = this._components,
-                self = this,
+            var self = this,
+                cpConstructors = self._cpConstructors,//组件构造函数列表
+                components = [],
                 Component,
                 cItm,
                 prevCp = null,
                 cp = null;
             //构造子组件（sub Component）
-            for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
-                cItm = cpConstructors[i];
-                //不是构造函数,而是
-                //{
-                //    _constructor: Class,
-                //    className: '',
-                //    id: '',
-                //}
-
-                if (typeof cItm === 'function') { //构造函数
-                    Component = cItm;
-                } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
-                    Component = cItm._constructor_;
-                } else if (cItm instanceof Display) { //已经创建好的组件实例
-                    components.push(cItm);
-                    continue;
-                } else { //检查到错误，提示使用者
-                    throw new UserError('compNotRight', this.getType() + ' Component\'s component config is not right');
-                }
-                prevCp = cp;
-                //创建组件
-                cp = new Component($.extend({
-                    parent: this.el
-                }, cItm.option));
-                cp.prevNode = prevCp;
-                if (prevCp) {
-                    prevCp.nextNode = cp;
-                }
-                cp.on('BEFORE_RENDER', function (event, component) {
-                    //还没有轮到，插入等待序列
-                    if (!self.allowToRender(component)) {
-                        //console.debug(component.getType() + component.getName() + '还不能渲染');
-                        //组件不在等待渲染的序列中，就插入到等待序列
-                        if (!self.isInWaitQueue(component)) {
-                            self._componentsWaitToRender.push(component);
-                            // isContinueRender 表示不会执行下面的Render
-                            component.isContinueRender = false;
-                        } else {
-                            //console.debug('组件' + component.getName() + '已经在渲染序列中');
-                        }
-                    } else {
-                        if (self.getComponentPosition(component) === 0) {
-                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
-                            // if (!self.rendered) {
-                            //     self.$el.appendTo(self.$parent);
-                            // }
-                        }
-                        // isContinueRender 表示不会执行下面的Render
-                        component.isContinueRender = true;
+            if ($.isArray(cpConstructors)) {
+                for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
+                    cItm = cpConstructors[i];
+                    if (typeof cItm === 'function') { //构造函数
+                        Component = cItm;
+                    } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
+                        Component = cItm._constructor_;
+                    } else if (cItm instanceof Display) { //已经创建好的组件实例
+                        components.push(cItm);
+                        continue;
+                    } else { //检查到错误，提示使用者
+                        throw new UserError('compNotRight', this.getType() + ' Component\'s component config is not right');
                     }
-                }).on('AFTER_RENDER', function (event, component) {
-                    //console.debug('成功渲染组件:' + component.getType() + component.getName());
-                    //组件渲染成功后，移除自己在等待渲染队列的引用
-                    self.removeFromWaitQueue(component);
-                    //判断是否渲染结束
-                    if (!self.isAllComponentRendered()) {
-                        //渲染等待序列中的其他组件
-                        self._renderComponents(self._componentsWaitToRender, self._data);
-                    } else {
-                        //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
-                        self.finishRender();
-                    }
-                });
-                components.push(cp);
+                    //创建组件
+                    cp = new Component($.extend({
+                        parent: this.el,
+                        params: this.params,
+                        data: this.data,
+                        renderAfterInit: false
+                    }, cItm.option/*cItm.option为组件的配置*/));
+                    self._linkCmp(cp, prevCp);
+                    prevCp = cp;
+                    components.push(cp);
+                }
+                return components;
+            } else {
+                //对于配置: components 'component/componentName'
+                //表示所有的组件都是由该类型组件构成
+                //todo 由于这里的应用场景有限，所以为了代码大小考虑，
+                //为了保证功能尽可能简单，暂时不做这部分开发（考虑传入的是构造函数和组件文件地址的情况）
+                return null;
             }
+            return null;
         },
         init: function (option) {
-            this.startInit();
-            this._initVariable(option, ['name', 'components']);
-            this._super(option, true);
-            this._listen();
-            this.finishInit();
+            //console.log('init ' + this.type);
+            var self = this;
+            self.startInit();
+            self.initVariable(option, initVar);
+            self._components = [];
+            self._componentsWaitToRender = [];
+            self._cpConstructors = self.components;
+            //初始化父类Display
+            self._super(option, function () {
+                //添加新建的子组件到组件中
+                self.addCmp(self._buildComponents());
+                self._bindUIEvent();
+                self.finishInit();
+            });
+            //console.log('finishInit ' + this.type);
         },
         allowToRender: function (component) {
-            var components = this._components,
-                pos = this.getComponentPosition(component);
             if (!component) {
+                //Todo 这里考虑要不要throw Error呢？
                 return false;
             }
-            if (pos < 0) {
-                return false;
-            } else if (pos === 0) {
+            var pos = getComponentPosition(this._componentsWaitToRender, component);
+            if (pos === 0) { //如果组件处于待渲染队列的队头
                 return true;
             } else {
-                if (components[pos - 1].rendered) {
-                    //console.log('前面的组件' + components[pos - 1].name + '已经渲染好了，当前组件 ' +
-                    //    component.getName() + '可以渲染');
-                    //如果当前组件的前一个已经渲染，当前可以进行渲染
-                    return true;
-                } else {
-                    return false;
-                }
+                return false;
             }
         },
-        _renderComponents: function (components, data) {
-            var cp;
-            if (!data) {
-                console.warn(['There is no data for', this.getType(),
-                    this.getName(), 'when render it.'].join(' '));
-                data = {};
+        render: function () {
+            //这里写成回调的原因：渲染组件默认模板成功之后再渲染子组件,
+            //最后返回this
+            var self = this;
+            //先渲染组件的子组件
+            if (self._componentsWaitToRender.length > 0) {
+                self._componentsWaitToRender[0].render();
             }
-            for (var i = 0, len = components.length; i < len; i++) {
-                cp = components[i];
-                if (cp) {
-                    //数据的返回格式
-                    // {
-                    //     navigator: { data... },
-                    //     list: { data... },
-                    //     footer: { data... }
-                    // }
-                    cp.render(data[cp.getType() + cp.getName()]);
-                }
-            }
-        },
-        render: function (data) {
-            //this._data = data;
-            //这里写成回调的原因：渲染组件默认模板成功之后再渲染子组件
-            this._super(data, (function (component) {
-                //如果有组件再进行渲染，没有则返回undefined
-                if (component.hasComponent()) {
-                    return function (component, data) {
-                        //渲染该组件的子组件
-                        component._buildComponents();
-                        component._renderComponents(component._components, data);
-                    };
-                }
-            })(this));
+            //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
+            this._super();
         }
     });
-
-
     return Component;
 });

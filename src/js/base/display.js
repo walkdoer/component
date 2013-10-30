@@ -8,15 +8,14 @@ define(function (require, exports) {
         tpl = require('core/template'),
         Event = require('base/event'),
         slice = Array.prototype.slice,
-        methods = ['show', 'hide', 'toggle', 'appendTo', 'append', 'empty'],
-        UserError = require('base/userError'),
+        methods = ['show', 'hide', 'toggle', 'empty'],
+        initVar = ['tpl', 'parent', 'className', 'id', 'el', 'selector', 'renderAfterInit'],
         Display;
-
     Display = Class.extend({
         type: 'display',
         tpl: null,
         tplContent: null,
-        $parent: null,
+        parent: null,
         num: null,  //编号
         el: null,
         $el: null,  //该展示区域的容器
@@ -26,15 +25,24 @@ define(function (require, exports) {
         initializing: false,  //初始化进行中
         initialized: false,  //已初始化
         display: false, //是否已显示
-        waitToRender: false, //等待被选人
         startInit: function () {
-            this.initialized = false;
-            this.initializing = true;
+            if (!this._startInit) {
+                this.initialized = false;
+                this.initializing = true;
+                this._startInit = true;
+            }
         },
         finishInit: function () {
-            this.initializing = false;
-            this.initialized = true;
+            if (!this._finishInit) {
+                this.initializing = false;
+                this.initialized = true;
+                this._finishInit = true;
+            }
         },
+        /**
+         * 是否有模板内容
+         * @return {Boolean}
+         */
         hasTplContent: function () {
             return !!this.tplContent;
         },
@@ -56,9 +64,17 @@ define(function (require, exports) {
         getType: function () {
             return this.type;
         },
+        /**
+         * 获取单元的名称
+         * @return {String}
+         */
         getName: function () {
             return this.name || '';
         },
+        /**
+         * 设置单元名称
+         * @param {String} name
+         */
         setName: function (name) {
             this.name = name;
         },
@@ -66,7 +82,10 @@ define(function (require, exports) {
          * 初始化模板
          * 下载模板文件
          */
-        _initTpl: function () {
+        _initTpl: function (callback) {
+            if (typeof callback !== 'function') {
+                callback = function () {};
+            }
             var self = this,
                 tpl = this.tpl;
             if (!tpl) {
@@ -74,25 +93,21 @@ define(function (require, exports) {
                     '[', this.getType() || '[unknow type]', ']',
                     '[', this.getName() || '[unknow name]', ']',
                     'please check your option'].join(' '));
+                callback(false);
                 return;
             }
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl.indexOf('#') === 0) {
                 this.tplContent = $(tpl).html();
+                callback(true, this.tplContent);
                 return;
             }
-            this.tplDowloading = true;
-            //var startDownloadTime = Date.now();
             require.async('tpl/' + this.tpl, function (res) {
-                //var totalTime = Date.now() - startDownloadTime;
-                //console.debug('下载模板文件' + self.tpl + '耗时' + totalTime);
                 if (res) {
                     self.tplContent = res;
-                }
-                self.tplDowloading = false;
-                if (self.waitToRender) {
-                    self.render(self._data);
-                    self.waitToRender = false;
+                    callback(true, res);
+                } else {
+                    callback(false, res);
                 }
             });
         },
@@ -101,25 +116,42 @@ define(function (require, exports) {
             err.code = code;
             return err;
         },
+        /**
+         * {Private} 添加到父亲节点
+         */
+        _appendElToParent: function () {
+            if (this.parent) {
+                this.$el.appendTo(this.parent);
+            }
+        },
+        /**
+         * 获取事件的实际名称
+         * @param  {String} eventName 事件代号 BEFORE_RENDER
+         * @return {String}           list:myList:beforerender
+         */
         getEvent: function (eventName) {
-            return Event.get(eventName, this.getType(), this.getName());
+            return Event.get(eventName, this.getType(), this.getName(), this.getNum());
         },
         /**
          * 初始化变量
          * @return {[type]} [description]
          */
-        _initVariable: function (option, variables) {
-            var v;
+        initVariable: function (option, variables) {
+            var tmp, optionKey, realKey;
             for (var i = 0, len = variables.length; i < len; i++) {
-                v = variables[i];
+                tmp = variables[i].split('->');
+                optionKey = tmp[0];
+                realKey = tmp[1] || optionKey;
                 //option的v属性会覆盖对象的v属性
-                if ((!this[v] || this.hasOwnProperty(v)) && option[v]) {
-                    this[v] = option[v];
+                if (option[optionKey]) {
+                    this[realKey] = option[optionKey];
                 }
             }
+            //创建parent的$(object)对象
             if (this.parent) {
                 this.$parent = $(this.parent);
             }
+            //创建el的$(object)对象
             if (this.el) {
                 this.$el = $(this.el);
             }
@@ -129,74 +161,94 @@ define(function (require, exports) {
             }
         },
         /**
+         * {Private} 监听事件
+         * @param  {Object} listeners 事件配置
+         */
+        _listen: function (listeners) {
+            if (!listeners) {
+                return;
+            }
+            for (var event in listeners) {
+                if (listeners.hasOwnProperty(event)) {
+                    this.on(event, (function (event, self) {
+                        return function () {
+                            listeners[event].apply(self, arguments);
+                        };
+                    })(event, this));
+                }
+            }
+        },
+        /**
          * 初始化Display
          * @param  {Object} option      Display所需配置
          * @param  {Boolean} flagSilent 是否改变状态量 true:改变,false:不改变
          */
-        init: function (option, flagSilent) {
-            var name = this.getName();
-            if (!flagSilent) {
-                this.startInit();
-            }
+        init: function (option, callback) {
+            var self = this,
+                name = self.getName();
+            self.startInit();
             //将option的配置初始化到对象中
-            this._initVariable(option, ['tpl', 'parent', 'className', 'id', 'el', 'selector']);
-            this.setNum(Date.now().toString());
-            if (option.parent !== false && !option.parent) {
-                throw new UserError('noParent', ['parent is not config in the option of', this.getType(), this.getName()].join(' '));
-            }
-            this.id = option.id ||
-                [this.getType(), '-', name ? name + '-' : '',
-                  this.getNum()].join('');
+            self.initVariable(option, initVar);
+            self.setNum(Date.now().toString());
+            self.id = option.id ||
+                [self.getType(), '-', name ? name + '-' : '',
+                  self.getNum()].join('');
             //保存用户原始配置，已备用
-            this.originOption = $.extend(true, {}, option);
+            self.originOption = $.extend(true, {}, option);
             //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
-            if (this.el === null && this.$el === null && !this.tplContent) {
-                //没有初始化成功, 需要初始化一个页面的Element
-                if (!this._initTpl()) {
-                    this.el = document.createElement('section');
-                    this.$el = $(this.el).appendTo(this.$parent);
-                }
-            }
-            if (!flagSilent) {
-                this.finishInit();
+            if (self.el === null && self.$el === null && !self.tplContent) {
+                self._initTpl(function (success) {
+                    if (success) {
+                        self.$el = $(self.tmpl());
+                        self.el = self.$el[0];
+                    } else { //没有初始化成功, 需要初始化一个页面的Element
+                        self.el = document.createElement('section');
+                        self.$el = $(self.el);
+                    }
+                    //监听组件原生listener
+                    self._listen(self.listeners);
+                    //用户创建的Listener
+                    self._listen(option.listeners);
+                    if (typeof callback === 'function') {
+                        callback();
+                    } else { //如果没有callback，则直接结束初始化
+                        self.finishInit();
+                    }
+                    if (self.needToRender) {
+                        self.render();
+                    }
+                });
             }
         },
         /**
          * 渲染组件
          */
-        render: function (data, callback) {
+        render: function (callback) {
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
-            if (!this.selector) {
-                this._data = data;
-                if (this.tplDowloading) {
-                    this.waitToRender = true;
-                } else if (this.initialized) {
-                    this.trigger('BEFORE_RENDER', [this, data]);
+            if (!this.selector || this.rendered) {
+                if (this.initialized) {
+                    this.trigger('BEFORE_RENDER', [this]);
                     if (this.isContinueRender !== false) {
                         this.isContinueRender = true;
-                        //有模板内容才会进行渲染
-                        if (this.hasTplContent()) {
-                            this.$el = $(this.tmpl(data));
-                            this.el = this.$el[0];
-                            this.$el.appendTo(this.$parent);
-                            this.rendered = true; //标志已经渲染完毕
-                            this.display = true; //已添加到$parent中，默认就是已显示
-                            if (this.$el.css('display') === 'none') {
-                                this.display = false;
-                            }
-                            this.trigger('AFTER_RENDER', [this, data]);
-                        }
+                        this._appendElToParent();
                         if (typeof callback === 'function') {
-                            callback(this, data);
+                            callback(this);
                         } else {
                             this.finishRender();
                         }
                     }
+                    //给予id以及Class
+                    this.$el.attr('id', this.id)
+                            .attr('class', this.className);
+                } else {
+                    //异步情况下，用户通知渲染时尚未初始化结束
+                    this.needToRender = true;
+                }
+            } else {
+                if (typeof callback === 'function') {
+                    callback(this);
                 }
             }
-            //给予id以及Class
-            this.$el.attr('id', this.id);
-            this.$el.attr('class', this.className);
             return this;
         },
         update: function () {
@@ -206,9 +258,10 @@ define(function (require, exports) {
         /**
          * 渲染模板
          */
-        tmpl: function (data) {
-            var tplCont = this.tplContent,
-                html;
+        tmpl: function (data, tplCont) {
+            var html;
+            data = data || this.data;
+            tplCont = tplCont || this.tplContent;
             if (tplCont) {
                 html = tpl.tmpl(tplCont, data, this.helper);
             } else {
@@ -217,12 +270,14 @@ define(function (require, exports) {
             return html || '';
         },
         /**
-         * 监听事件,与jQuery 和 Zepto 同理
+         * 监听事件,糅合了 jQuery或者Zepto的事件机制，所以使用与上述类库同理
          */
         on: function () {
             var args = slice.call(arguments, 0),
-                el = this.$parent || this.$el;
-            args[0] = this.getEvent(args[0]);
+                el,
+                evt;
+            el = (evt = this.getEvent(args[0])) ? this.$parent : this.$el;
+            if (evt) { args[0] = evt; }
             el.on.apply(el, args);
             return this;
         },
@@ -230,9 +285,12 @@ define(function (require, exports) {
          * 触发事件，同上
          */
         trigger: function () {
-            var args = slice.call(arguments, 0);
-            args[0] = this.getEvent(args[0]);
-            this.$parent.trigger.apply(this.$parent, args);
+            var args = slice.call(arguments, 0),
+                el = this.$parent,
+                evt;
+            evt = this.getEvent(args[0]);
+            if (evt) { args[0] = evt; }
+            el.trigger.apply(el, args);
             return this;
         },
         /**
@@ -242,11 +300,21 @@ define(function (require, exports) {
             this.$el.remove();
             this.$el = null;
         },
+        /**
+         * 结束渲染
+         */
         finishRender: function () {
+            this.rendered = true; //标志已经渲染完毕
+            this.display = true; //已添加到$parent中，默认就是已显示
+            if (this.$el.css('display') === 'none') {
+                this.display = false;
+            }
+            this.trigger('AFTER_RENDER', [this]);
             this.trigger('RENDERED', [this]);
+            //console.debug(this.type + '渲染结束');
         }
     });
-    //扩展方法
+    //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
     _.each(methods, function (method) {
         Display.prototype[method] = function () {
             var args = slice.call(arguments);

@@ -18,7 +18,7 @@ define(function (require, exports) {
             itm;
         if (!event) {
             //如果不是自定义事件，直接返回
-            return key;
+            return null;
         }
         for (var i = 0, len = args.length; i < len; i++) {
             itm = args[i];
