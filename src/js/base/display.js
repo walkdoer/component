@@ -278,6 +278,8 @@ define(function (require, exports) {
                 evt;
             el = (evt = this.getEvent(args[0])) ? this.$parent : this.$el;
             if (evt) { args[0] = evt; }
+            if (this.type ==='page')
+                console.debug('on:' + args[0], el[0]);
             el.on.apply(el, args);
             return this;
         },
@@ -286,10 +288,12 @@ define(function (require, exports) {
          */
         trigger: function () {
             var args = slice.call(arguments, 0),
-                el,
+                el = this.$parent,
                 evt;
-            el = (evt = this.getEvent(args[0])) ? this.$parent || this.$el : this.$el;
+            evt = this.getEvent(args[0]);
             if (evt) { args[0] = evt; }
+            if (this.type ==='tab')
+                console.debug('trigger:' + args[0], el[0]);
             el.trigger.apply(el, args);
             return this;
         },

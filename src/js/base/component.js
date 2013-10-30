@@ -236,9 +236,11 @@ define(function (require, exports) {
             //这里写成回调的原因：渲染组件默认模板成功之后再渲染子组件,
             //最后返回this
             var self = this;
+            //先渲染组件的子组件
             if (self._componentsWaitToRender.length > 0) {
                 self._componentsWaitToRender[0].render();
             }
+            //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             this._super();
         }
     });
