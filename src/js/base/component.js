@@ -103,6 +103,12 @@ define(function (require, exports) {
             }
             return null;
         },
+        _linkCmp: function (curCmp, prevCmp) {
+            if (prevCmp) {
+                prevCmp.nextNode = curCmp;
+            }
+            curCmp.prevNode = prevCmp;
+        },
         /**
          * 添加子组件
          * @param {Display/Component/Array} components
@@ -115,12 +121,10 @@ define(function (require, exports) {
                 prevCmp;
             if (!components) { return; }
             var lastComponent = waitList[waitList.length - 1] || renderedList[renderedList.length - 1];
-            //绑定事件
+            //绑定组件渲染各个阶段的事件: BEFORE_RENDER：渲染前, AFTER_RENDER: 渲染后
             $.each(addList, function (i, comp) {
-                if (prevCmp) {
-                    prevCmp.nextNode = comp;
-                }
-                comp.prevNode = lastComponent;
+                //链接组件的关系
+                self._linkCmp(comp, prevCmp);
                 prevCmp = comp;
                 comp.on('BEFORE_RENDER', function (event, component) {
                     //还没有轮到，插入等待序列
@@ -183,7 +187,6 @@ define(function (require, exports) {
                     } else { //检查到错误，提示使用者
                         throw new UserError('compNotRight', this.getType() + ' Component\'s component config is not right');
                     }
-                    prevCp = cp;
                     //创建组件
                     cp = new Component($.extend({
                         parent: this.el,
@@ -191,10 +194,8 @@ define(function (require, exports) {
                         data: this.data,
                         renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));
-                    cp.prevNode = prevCp;
-                    if (prevCp) {
-                        prevCp.nextNode = cp;
-                    }
+                    self._linkCmp(cp, prevCp);
+                    prevCp = cp;
                     components.push(cp);
                 }
                 return components;
@@ -208,7 +209,7 @@ define(function (require, exports) {
             return null;
         },
         init: function (option) {
-            console.log('init ' + this.type + ' ' + this.name);
+            console.log('init ' + this.type);
             var self = this;
             self.startInit();
             self.initVariable(option, initVar);
@@ -221,6 +222,7 @@ define(function (require, exports) {
             self.addCmp(self._buildComponents());
             self._bindUIEvent();
             self.finishInit();
+            console.log('finishInit ' + this.type);
         },
         allowToRender: function (component) {
             if (!component) {
