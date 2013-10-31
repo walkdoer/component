@@ -26,12 +26,12 @@ define(function (require, exports) {
                 var $target = $(e.target);
                 this.trigger(this.events.CLICK, [this, $target.attr('data-target')]);
                 this.activeTab($target);
-            },
+            }
         },
         activeTab: function ($tab) {
             var self = this;
             var next = {};
-            if (self.state === $tab.attr('data-target')) {
+            if (self.tabName === $tab.attr('data-target')) {
                 //console.debug('点击同一个tab, 无需切换');
                 return;
             }
@@ -79,7 +79,7 @@ define(function (require, exports) {
                     //显示新页 编写代码时 zepto .show()有bug,如果元素未添加到Dom树中,show是无效的
                     $pane.css('display', 'block');
                     this.$curPane = $pane;
-                    this.state = target;
+                    this.tabName = target;
                     this.trigger(this.events.CHANGED, [this]);
                 }
             }

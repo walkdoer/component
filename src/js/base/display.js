@@ -9,7 +9,7 @@ define(function (require, exports) {
         Event = require('base/event'),
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'empty'],
-        initVar = ['tpl', 'parent', 'className', 'id', 'el', 'selector', 'renderAfterInit'],
+        initVar = ['tpl', 'parent', 'className', 'id', 'display', 'el', 'selector', 'renderAfterInit'],
         Display;
     Display = Class.extend({
         type: 'display',
@@ -24,7 +24,7 @@ define(function (require, exports) {
         rendered: false,  //已渲染
         initializing: false,  //初始化进行中
         initialized: false,  //已初始化
-        display: false, //是否已显示
+        display: true, //是否显示
         startInit: function () {
             if (!this._startInit) {
                 this.initialized = false;
@@ -93,7 +93,11 @@ define(function (require, exports) {
                     '[', this.getType() || '[unknow type]', ']',
                     '[', this.getName() || '[unknow name]', ']',
                     'please check your option'].join(' '));
-                callback(false);
+                if (this.tplContent) {
+                    callback(true);
+                } else {
+                    callback(false);
+                }
                 return;
             }
             //使用HTML文件中的<script type="template" id="{id}"></script>
@@ -143,7 +147,7 @@ define(function (require, exports) {
                 optionKey = tmp[0];
                 realKey = tmp[1] || optionKey;
                 //option的v属性会覆盖对象的v属性
-                if (option[optionKey]) {
+                if (option[optionKey] !== undefined) {
                     this[realKey] = option[optionKey];
                 }
             }
@@ -196,7 +200,7 @@ define(function (require, exports) {
             //保存用户原始配置，已备用
             self.originOption = $.extend(true, {}, option);
             //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
-            if (self.el === null && self.$el === null && !self.tplContent) {
+            if (self.el === null && self.$el === null) {
                 self._initTpl(function (success) {
                     if (success) {
                         self.$el = $(self.tmpl());
@@ -231,6 +235,9 @@ define(function (require, exports) {
                     this.trigger('BEFORE_RENDER', [this]);
                     if (this.isContinueRender !== false) {
                         this.isContinueRender = true;
+                        if (this.display === false) {
+                            this.$el.css('display', 'none');
+                        }
                         this._appendElToParent();
                         if (typeof callback === 'function') {
                             callback(this);
@@ -279,6 +286,7 @@ define(function (require, exports) {
                 evt;
             el = (evt = this.getEvent(args[0])) ? this.$parent : this.$el;
             if (evt) { args[0] = evt; }
+            console.log(this.type);
             el.on.apply(el, args);
             return this;
         },
@@ -306,10 +314,6 @@ define(function (require, exports) {
          */
         finishRender: function () {
             this.rendered = true; //标志已经渲染完毕
-            this.display = true; //已添加到$parent中，默认就是已显示
-            if (this.$el.css('display') === 'none') {
-                this.display = false;
-            }
             this.trigger('AFTER_RENDER', [this]);
             //this.trigger('RENDERED', [this]);
             //console.debug(this.type + '渲染结束');
