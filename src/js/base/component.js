@@ -267,16 +267,10 @@ define(function (require, exports) {
         update: function (state, data) {
             var cmp = this._components[0];
             while (cmp) {
-                //状态改变，则需要更新，否则保持原样
-                if (cmp.isStateChange(state) && cmp.rendered) {
+                //组件有状态，且状态改变，则需要更新，否则保持原样
+                if (cmp.state && cmp.isStateChange(state) && cmp.rendered) {
                     console.debug('update ' + cmp.getType()  + ':' + cmp.getName());
                     cmp.update(state, data);
-                } else {
-                    if (!cmp.isStateChange(state)) {
-                        console.log('组件' + cmp.getType()  + ':' + cmp.getName() + '没有改变，不需要更新');
-                    } else {
-                        console.log('组件' + cmp.getType()  + ':' + cmp.getName() + '还没有渲染，不需要');
-                    }
                 }
                 cmp = cmp.nextNode;
             }
