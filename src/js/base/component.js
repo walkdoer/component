@@ -8,7 +8,7 @@ define(function (require, exports) {
         Display = require('base/display'),
         Event = require('base/event'),
         UserError = require('base/userError'),
-        initVar = ['name', 'components', 'params', 'data', 'queries'],
+        initVar = ['name', 'components', 'params', 'data', 'queries', 'state'],
         Component;
     //添加事件
     Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
@@ -32,6 +32,33 @@ define(function (require, exports) {
         prevNode: null,  //上一个组件
         _popWaitQueue: function () {
             return this._componentsWaitToRender.splice(0, 1)[0];
+        },
+        getState: function (params) {
+            var self = this,
+                newState = {},
+                state = self.state;
+            if ($.isArray(state)) {
+                $.each(state, function (index, stateItm) {
+                    var hierarchy = stateItm.split('.'),
+                        tmp = params,
+                        stateKey;
+                    $.each(hierarchy, function (index, key) {
+                        tmp = tmp[key];
+                        stateKey = key;
+                    });
+                    newState[stateKey] = tmp;
+                });
+            }
+            return newState;
+        },
+        isStateChange: function (newParams) {
+            var state = this.getState(newParams);
+            if (!_.equal(state, this.params)) {
+                this.params = state;
+                return true;
+            } else {
+                return false;
+            }
         },
         /**
          * 检查Component是不是已经在等待渲染队列中
@@ -195,6 +222,10 @@ define(function (require, exports) {
             var self = this;
             self.startInit();
             self.initVariable(option, initVar);
+            self.params = self.getState({
+                params: self.params,
+                queries: self.queries
+            });
             self._components = [];
             self._componentsWaitToRender = [];
             self._cpConstructors = self.components;
@@ -237,12 +268,11 @@ define(function (require, exports) {
             var cmp = this._components[0];
             while (cmp) {
                 //状态改变，则需要更新，否则保持原样
-                if (!_.equal(cmp.oldState, state) && cmp.rendered) {
+                if (cmp.isStateChange(state) && cmp.rendered) {
                     console.debug('update ' + cmp.getType()  + ':' + cmp.getName());
                     cmp.update(state, data);
-                    cmp.oldState = state;
                 } else {
-                    if (!_.equal(cmp.oldState, state)) {
+                    if (!cmp.isStateChange(state)) {
                         console.log('组件' + cmp.getType()  + ':' + cmp.getName() + '没有改变，不需要更新');
                     } else {
                         console.log('组件' + cmp.getType()  + ':' + cmp.getName() + '还没有渲染，不需要');

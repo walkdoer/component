@@ -214,6 +214,7 @@ define(function (require, exports) {
                     } else { //如果没有callback，则直接结束初始化
                         self.finishInit();
                     }
+                    //之前被通知过render，模板准备好之后进行渲染
                     if (self.needToRender) {
                         self.render();
                     }
@@ -310,7 +311,7 @@ define(function (require, exports) {
                 this.display = false;
             }
             this.trigger('AFTER_RENDER', [this]);
-            this.trigger('RENDERED', [this]);
+            //this.trigger('RENDERED', [this]);
             //console.debug(this.type + '渲染结束');
         }
     });
