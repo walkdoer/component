@@ -319,6 +319,7 @@ define(function (require, exports) {
         Display.prototype[method] = function () {
             var args = slice.call(arguments);
             this.$el[method].apply(this.$el, args);
+            return this;
         };
     });
     return Display;

@@ -7,7 +7,7 @@ define(function (require, exports) {
         Display = require('base/display'),
         Event = require('base/event'),
         UserError = require('base/userError'),
-        initVar = ['name', 'components', 'params', 'data'],
+        initVar = ['name', 'components', 'params', 'data', 'queries'],
         Component;
     //添加事件
     Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
@@ -186,6 +186,7 @@ define(function (require, exports) {
                     cp = new Component($.extend({
                         parent: this.el,
                         params: this.params,
+                        queries: this.queries,
                         data: this.data,
                         renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));
@@ -242,6 +243,13 @@ define(function (require, exports) {
             }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             this._super();
+        },
+        update: function (state, data) {
+            var cmp = this._components[0];
+            while (cmp) {
+                cmp.update(state, data);
+                cmp = cmp.nextNode;
+            }
         }
     });
     return Component;
