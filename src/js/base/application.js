@@ -19,13 +19,13 @@ define(function(require, exports) {
         /**
          * 切换页面
          */
-        changePage: function (pageName, params, data) {
+        changePage: function (pageName, state, data) {
             var self = this,
                 curPg = this.getCmp(this.currentPage),
                 newPg = this.getCmp(pageName);
             //当前页面与要切换的页面相同，不需要切换
             if (curPg && curPg.getName() === pageName) {
-                curPg.update(params, data);
+                curPg.update(state, data);
                 return;
             }
             //隐藏当前页
@@ -34,10 +34,10 @@ define(function(require, exports) {
             }
             //如果页面已经建立就直接显示页面
             if (newPg) {
-                this.getCmp(pageName).show();
+                this.getCmp(pageName).show().update(state, data);
             } else {
                 //页面没有建立，创建页面
-                this._createPage(pageName, params, data, function (pg) {
+                this._createPage(pageName, state, data, function (pg) {
                     //console.debug('add page' + pageName);
                     self.addCmp(pg);
                     self.render();
@@ -46,7 +46,7 @@ define(function(require, exports) {
             this.currentPage = pageName;
             return this;
         },
-        _createPage: function (pageName, params, pageOption, callback) {
+        _createPage: function (pageName, state, pageOption, callback) {
             var self = this;
             //读取类文件
             require.async('page/' + pageName, function (PageClass) {
@@ -54,7 +54,8 @@ define(function(require, exports) {
                 var defaultOption = {
                     id: pageName,
                     parent: self.el,
-                    params: params,
+                    params: state.params,
+                    queries: state.queries,
                     listeners: {
                         'BEFORE_RENDER': function (evt, page) {
                             //如果要加载的页面没有页面模板，则不清空Body

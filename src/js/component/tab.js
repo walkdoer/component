@@ -14,6 +14,7 @@ define(function (require, exports) {
             this._super(option);
         },
         events: {
+            'CLICK': 'tab:click',
             'BEFORE_ACTIVE': 'before:tab:active',
             'BEFORE_CHANGE': 'before:pane:change',
             'ACTIVED': 'tab:actived',
@@ -22,31 +23,37 @@ define(function (require, exports) {
         uiEvents: {
             'click .n-u-l': function (e) {
                 console.log('tab 点击');
-                this.activeTab($(e.target));
-            },
+                var $target = $(e.target);
+                this.trigger(this.events.CLICK, [this, $target.attr('data-target')]);
+                this.activeTab($target);
+            }
         },
         activeTab: function ($tab) {
+            var self = this;
             var next = {};
-            if (this.state === $tab.attr('data-target')) {
+            if (self.tabName === $tab.attr('data-target')) {
                 //console.debug('点击同一个tab, 无需切换');
                 return;
             }
-            this.trigger(this.events.BEFORE_ACTIVE, [this, next]);
+            self.trigger(self.events.BEFORE_ACTIVE, [self, next]);
             if (next.go === false) {
                 //用户取消切换，直接return
                 return;
             } else {
-                this.$tabs.removeClass(this.activeClass);
+                self.$tabs.removeClass(self.activeClass);
                 //激活tab
                 next.go = true;
-                $tab.addClass(this.activeClass);
-                this.$curTab = $tab;
-                this.trigger(this.events.ACTIVED, [this, next]);
+                $tab.addClass(self.activeClass);
+                self.$curTab = $tab;
+                self.trigger(self.events.ACTIVED, [self, next]);
                 if (next.go === false) {
                     return;
                 }
-                //改变Tab也内容
-                this.changePane($tab);
+                //改变Tab主体内容，setTimeout是为了保证程序同步执行
+                //使用router组件的时候出现过程序逻辑不同步的问题
+                setTimeout(function () {
+                    self.changePane($tab);
+                }, 0);
             }
         },
         /**
@@ -72,7 +79,7 @@ define(function (require, exports) {
                     //显示新页 编写代码时 zepto .show()有bug,如果元素未添加到Dom树中,show是无效的
                     $pane.css('display', 'block');
                     this.$curPane = $pane;
-                    this.state = target;
+                    this.tabName = target;
                     this.trigger(this.events.CHANGED, [this]);
                 }
             }

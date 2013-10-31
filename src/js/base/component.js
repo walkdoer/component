@@ -4,28 +4,14 @@
 define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
+        _ = require('core/lang'),
         Display = require('base/display'),
         Event = require('base/event'),
         UserError = require('base/userError'),
-        initVar = ['name', 'components', 'params', 'data'],
+        initVar = ['name', 'components', 'params', 'data', 'queries', 'state'],
         Component;
     //添加事件
     Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
-    /**
-     * 获取组件在组件列表中的序号
-     * @param  {Array} components     [组件数组]
-     * @param  {Component} cp         [组件]
-     * @return {Int}                  [序号 从0开始]
-     */
-    function getComponentPosition(components, targetCp) {
-        for (var i = 0, len = components.length; i < len; i++) {
-            if (isSameComponent(components[i], targetCp)) {
-                //found
-                return i;
-            }
-        }
-        return -1;//not found
-    }
     /**
      * 比较两个组件是不是同一个
      * @param  {Component}  cpA
@@ -46,6 +32,33 @@ define(function (require, exports) {
         prevNode: null,  //上一个组件
         _popWaitQueue: function () {
             return this._componentsWaitToRender.splice(0, 1)[0];
+        },
+        getState: function (params) {
+            var self = this,
+                newState = {},
+                state = self.state;
+            if ($.isArray(state)) {
+                $.each(state, function (index, stateItm) {
+                    var hierarchy = stateItm.split('.'),
+                        tmp = params,
+                        stateKey;
+                    $.each(hierarchy, function (index, key) {
+                        tmp = tmp[key];
+                        stateKey = key;
+                    });
+                    newState[stateKey] = tmp;
+                });
+            }
+            return newState;
+        },
+        isStateChange: function (newParams) {
+            var state = this.getState(newParams);
+            if (!_.equal(state, this.params)) {
+                this.params = state;
+                return true;
+            } else {
+                return false;
+            }
         },
         /**
          * 检查Component是不是已经在等待渲染队列中
@@ -126,7 +139,7 @@ define(function (require, exports) {
                 self._linkCmp(comp, prevCmp);
                 prevCmp = comp;
                 comp.on('BEFORE_RENDER', function (event, component) {
-                    //还没有轮到，插入等待序列
+                    //组件还没有渲染
                     if (!self.allowToRender(component)) {
                         component.isContinueRender = false;
                     } else {
@@ -165,6 +178,7 @@ define(function (require, exports) {
                 cpConstructors = self._cpConstructors,//组件构造函数列表
                 components = [],
                 Component,
+                option = this.originOption,
                 cItm,
                 prevCp = null,
                 cp = null;
@@ -185,7 +199,8 @@ define(function (require, exports) {
                     //创建组件
                     cp = new Component($.extend({
                         parent: this.el,
-                        params: this.params,
+                        params: option.params,
+                        queries: option.queries,
                         data: this.data,
                         renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));
@@ -208,6 +223,10 @@ define(function (require, exports) {
             var self = this;
             self.startInit();
             self.initVariable(option, initVar);
+            self.params = self.getState({
+                params: self.params,
+                queries: self.queries
+            });
             self._components = [];
             self._componentsWaitToRender = [];
             self._cpConstructors = self.components;
@@ -225,8 +244,11 @@ define(function (require, exports) {
                 //Todo 这里考虑要不要throw Error呢？
                 return false;
             }
-            var pos = getComponentPosition(this._componentsWaitToRender, component);
-            if (pos === 0) { //如果组件处于待渲染队列的队头
+            if (this._componentsWaitToRender.length === 0) {
+                return false;
+            }
+            //如果组件处于待渲染队列的队头
+            if (isSameComponent(this._componentsWaitToRender[0], component)) {
                 return true;
             } else {
                 return false;
@@ -241,7 +263,18 @@ define(function (require, exports) {
                 self._componentsWaitToRender[0].render();
             }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
-            this._super();
+            return this._super();
+        },
+        update: function (state, data) {
+            var cmp = this._components[0];
+            while (cmp) {
+                //组件有状态，且状态改变，则需要更新，否则保持原样
+                if (cmp.state && cmp.isStateChange(state) && cmp.rendered) {
+                    console.debug('update ' + cmp.getType()  + ':' + cmp.getName());
+                    cmp.update(state, data);
+                }
+                cmp = cmp.nextNode;
+            }
         }
     });
     return Component;
