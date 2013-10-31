@@ -178,6 +178,7 @@ define(function (require, exports) {
                 cpConstructors = self._cpConstructors,//组件构造函数列表
                 components = [],
                 Component,
+                option = this.originOption,
                 cItm,
                 prevCp = null,
                 cp = null;
@@ -198,8 +199,8 @@ define(function (require, exports) {
                     //创建组件
                     cp = new Component($.extend({
                         parent: this.el,
-                        params: this.params,
-                        queries: this.queries,
+                        params: option.params,
+                        queries: option.queries,
                         data: this.data,
                         renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));
