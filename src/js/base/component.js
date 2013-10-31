@@ -231,21 +231,21 @@ define(function (require, exports) {
                 self._componentsWaitToRender[0].render();
             }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
-            this._super();
+            return this._super();
         },
         update: function (state, data) {
             var cmp = this._components[0];
             while (cmp) {
                 //状态改变，则需要更新，否则保持原样
                 if (!_.equal(cmp.oldState, state) && cmp.rendered) {
-                    console.debug('update ' + cmp.getType());
+                    console.debug('update ' + cmp.getType()  + ':' + cmp.getName());
                     cmp.update(state, data);
                     cmp.oldState = state;
                 } else {
                     if (!_.equal(cmp.oldState, state)) {
-                        console.log('组件' + cmp.getType + '没有改变，不需要更新');
+                        console.log('组件' + cmp.getType()  + ':' + cmp.getName() + '没有改变，不需要更新');
                     } else {
-                        console.log('组件' + cmp.getType + '还没有渲染，不需要');
+                        console.log('组件' + cmp.getType()  + ':' + cmp.getName() + '还没有渲染，不需要');
                     }
                 }
                 cmp = cmp.nextNode;
