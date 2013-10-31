@@ -4,6 +4,7 @@
 define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
+        _ = require('core/lang'),
         Display = require('base/display'),
         Event = require('base/event'),
         UserError = require('base/userError'),
@@ -11,21 +12,6 @@ define(function (require, exports) {
         Component;
     //添加事件
     Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
-    /**
-     * 获取组件在组件列表中的序号
-     * @param  {Array} components     [组件数组]
-     * @param  {Component} cp         [组件]
-     * @return {Int}                  [序号 从0开始]
-     */
-    function getComponentPosition(components, targetCp) {
-        for (var i = 0, len = components.length; i < len; i++) {
-            if (isSameComponent(components[i], targetCp)) {
-                //found
-                return i;
-            }
-        }
-        return -1;//not found
-    }
     /**
      * 比较两个组件是不是同一个
      * @param  {Component}  cpA
@@ -126,7 +112,7 @@ define(function (require, exports) {
                 self._linkCmp(comp, prevCmp);
                 prevCmp = comp;
                 comp.on('BEFORE_RENDER', function (event, component) {
-                    //还没有轮到，插入等待序列
+                    //组件还没有渲染
                     if (!self.allowToRender(component)) {
                         component.isContinueRender = false;
                     } else {
@@ -226,8 +212,11 @@ define(function (require, exports) {
                 //Todo 这里考虑要不要throw Error呢？
                 return false;
             }
-            var pos = getComponentPosition(this._componentsWaitToRender, component);
-            if (pos === 0) { //如果组件处于待渲染队列的队头
+            if (this._componentsWaitToRender.length === 0) {
+                return false;
+            }
+            //如果组件处于待渲染队列的队头
+            if (isSameComponent(this._componentsWaitToRender[0], component)) {
                 return true;
             } else {
                 return false;
@@ -247,7 +236,18 @@ define(function (require, exports) {
         update: function (state, data) {
             var cmp = this._components[0];
             while (cmp) {
-                cmp.update(state, data);
+                //状态改变，则需要更新，否则保持原样
+                if (!_.equal(cmp.oldState, state) && cmp.rendered) {
+                    console.debug('update ' + cmp.getType());
+                    cmp.update(state, data);
+                    cmp.oldState = state;
+                } else {
+                    if (!_.equal(cmp.oldState, state)) {
+                        console.log('组件' + cmp.getType + '没有改变，不需要更新');
+                    } else {
+                        console.log('组件' + cmp.getType + '还没有渲染，不需要');
+                    }
+                }
                 cmp = cmp.nextNode;
             }
         }

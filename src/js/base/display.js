@@ -188,11 +188,11 @@ define(function (require, exports) {
                 name = self.getName();
             self.startInit();
             //将option的配置初始化到对象中
-            self.initVariable(option, initVar);
-            self.setNum(Date.now().toString());
             self.id = option.id ||
                 [self.getType(), '-', name ? name + '-' : '',
                   self.getNum()].join('');
+            self.initVariable(option, initVar);
+            self.setNum(Date.now().toString());
             //保存用户原始配置，已备用
             self.originOption = $.extend(true, {}, option);
             //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
