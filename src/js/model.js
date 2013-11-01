@@ -1,61 +1,74 @@
 define(function(require, exports) {
     'use strict';
-    var data = {
-        index: {
-            navigator: {
-                title: '沿途',
-                menu: [{
-                    title: '国外', 
-                    url: 'italy'
-                }, {
-                    title: '国内', 
-                    url: 'italy'
-                }, {
-                    title: '间隔年', 
-                    url: 'italy'
-                }]
-            },
-            list: {
-                totalCount: 10,
-                data: [{
-                    title: '今天进去了阿里，看了寺庙',
-                    thumb: 'images/index-1.jpg',
-                    content: '美丽的雪山，一望无际的荒漠，无人区上奔跑的藏羚羊'
-                }, {
-                    title: '骑车去西藏！不要告诉我妈妈',
-                    thumb: 'images/index-2.jpg',
-                    content: '年轻无极限，每个人都有一个骑行梦。美丽的雪山，一望无际的荒漠，无人区上奔跑的藏羚羊'
-                }, {
-                    title: '今天进去了阿里，看了寺庙',
-                    thumb: 'images/index-3.jpg',
-                    content: '美丽的雪山，一望无际的荒漠，无人区上奔跑的藏羚羊'
-                }, {
-                    title: '今天进去了阿里，看了寺庙',
-                    thumb: 'images/index-4.jpg',
-                    content: '美丽的雪山，一望无际的荒漠，无人区上奔跑的藏羚羊'
-                }, {
-                    title: '今天进去了阿里，看了寺庙',
-                    thumb: 'images/index-5.jpg',
-                    content: '美丽的雪山，一望无际的荒漠，无人区上奔跑的藏羚羊'
-                }, {
-                    title: '今天进去了阿里，看了寺庙',
-                    thumb: 'images/index-6.jpg',
-                    content: '美丽的雪山，一望无际的荒漠，无人区上奔跑的藏羚羊'
-                }, {
-                    title: '今天进去了阿里，看了寺庙',
-                    thumb: 'images/index-7.jpg',
-                    content: '美丽的雪山，一望无际的荒漠，无人区上奔跑的藏羚羊'
-                }]
-            }
+    var $ = require('zepto'),
+        api = null,
+        callbackReflect = {},
+        useJsonp = false,
+        simulator,// dev code
+        ajax;
+    ajax = function ajax(option) {
+        var url = option.url,
+            type = option.type,
+            success = option.success || function () {},
+            error = option.error || function () {},
+            dataType = option.dataType || 'json',
+            timeout = (option.timeout || 20) * 1000;
+        if (url.indexOf('uc_param_str') < 0) {
+            url += (url.indexOf('?') < 0 ? '?' : '&') + 'uc_param_str=pfnieisivecpmibifrdnla';
         }
+        $.ajax({
+            dataType: dataType,
+            type: type,
+            timeout: timeout, // 秒
+            url: url,
+            data: option.params,
+            success: function (data) {
+                if (data.success) {
+                    success(data);
+                } else {
+                    error(data);
+                }
+            },
+            error: function (err) {
+                error(err);
+            }
+        });
     };
-    exports.getData = function getData(api, callback) {
-        var delayTime = Math.round(Math.random() * 300),
-            timer;
-        //console.log('获取' + api + '数据delay:' + delayTime);
-        timer = setTimeout(function () {
-            callback(data[api]);
-            clearTimeout(timer);
-        }, delayTime);
+    exports.get = function get(path, params, success, error) {
+        console.log('发送数据请求');
+        if (api === null) {
+            throw new Error('[Model] you may not initial model layer');
+        }
+        var url = api[path];
+        if (!url) {
+            throw new Error('[Model] no api for ' + path);
+        }
+        if (simulator) {//dev code
+            params = $.extend({}, params, simulator);
+        }
+        ajax({
+            url: url,
+            type: 'GET',
+            dataType: useJsonp ? 'jsonp' : 'json',
+            params: params,
+            success: function () {
+                var args = Array.prototype.slice.call(arguments, 0);
+                setTimeout(function () {
+                    success.apply(null, args);
+                }, 300);
+            },
+            error: error
+        });
+    };
+    exports.setReflect = function (path, callback) {
+        callbackReflect[path] = callback;
+    };
+    exports.init = function init(_api, jsonp, _simulator) {
+        if (!_api) {
+            throw new Error('[Model] init without api config');
+        }
+        api = _api;
+        useJsonp = jsonp;
+        simulator = _simulator;//dev code
     };
 });

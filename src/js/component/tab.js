@@ -4,27 +4,28 @@
 define(function (require, exports) {
     'use strict';
     var Component = require('base/component'),
+        Event = require('base/event'),
+        typeName = 'tab',
         Tab;
-
+    Event.add(typeName, {
+        'CLICK': 'click',
+        'BEFORE_ACTIVE': 'before:active',
+        'ACTIVED': 'actived',
+        'BEFORE_CHANGE': 'before:change',
+        'CHANGED': 'changed',
+    });
     Tab = Component.extend({
-        type: 'tab',
+        type: typeName,
         tpl: '#tpl-tab',
         init: function (option) {
             this.activeClass = option.activeClass || 'on';
             this._super(option);
         },
-        events: {
-            'CLICK': 'tab:click',
-            'BEFORE_ACTIVE': 'before:tab:active',
-            'BEFORE_CHANGE': 'before:pane:change',
-            'ACTIVED': 'tab:actived',
-            'CHANGED': 'tab:changed',
-        },
         uiEvents: {
             'click .n-u-l': function (e) {
                 console.log('tab 点击');
                 var $target = $(e.target);
-                this.trigger(this.events.CLICK, [this, $target.attr('data-target')]);
+                this.trigger('CLICK', [this, $target.attr('data-target')]);
                 this.activeTab($target);
             }
         },
@@ -35,7 +36,7 @@ define(function (require, exports) {
                 //console.debug('点击同一个tab, 无需切换');
                 return;
             }
-            self.trigger(self.events.BEFORE_ACTIVE, [self, next]);
+            self.trigger('BEFORE_ACTIVE', [self, next]);
             if (next.go === false) {
                 //用户取消切换，直接return
                 return;
@@ -45,7 +46,7 @@ define(function (require, exports) {
                 next.go = true;
                 $tab.addClass(self.activeClass);
                 self.$curTab = $tab;
-                self.trigger(self.events.ACTIVED, [self, next]);
+                self.trigger('ACTIVED', [self, next]);
                 if (next.go === false) {
                     return;
                 }
@@ -67,7 +68,7 @@ define(function (require, exports) {
                 console.warn('tab的data-target为空');
                 return;
             } else {
-                this.trigger(this.events.BEFORE_CHANGE, [this, next]);
+                this.trigger('BEFORE_CHANGE', [this, next]);
                 if (next.go === false) {
                     return;
                 } else {
@@ -80,7 +81,7 @@ define(function (require, exports) {
                     $pane.css('display', 'block');
                     this.$curPane = $pane;
                     this.tabName = target;
-                    this.trigger(this.events.CHANGED, [this]);
+                    this.trigger('CHANGED', [this]);
                 }
             }
         },
