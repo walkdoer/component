@@ -4,20 +4,28 @@
 define(function (require, exports) {
     'use strict';
     var events = {
-            BEFORE_RENDER: 'beforerender',
-            AFTER_RENDER: 'afterrender',
+            BEFORE_RENDER: 'before:render',
+            AFTER_RENDER: 'after:render',
             RENDERED: 'rendered'
         },
         Event = function () {};
-    Event.add = function (key, value) {
+    Event.register = function (key, value) {
         events[key] = value;
     };
-    Event.get = function (key) {
-        var event = events[key],
-            args = Array.prototype.slice.call(arguments, 1),
+    Event.add = function (type, userEvents) {
+        $.each(userEvents, function (evtCode, evtName) {
+            if (events[evtCode]) {
+                throw new Error('[Model] Event Code:' + evtCode + 'is Already in pre-definded event list');
+            }
+            evtCode = [type, evtCode].join('_');
+            Event.register(evtCode, evtName);
+        });
+    };
+    Event.get = function (type, evtCode) {
+        var event = events[evtCode] || events[[type, evtCode].join('_')],
+            args = Array.prototype.slice.call(arguments, 2),
             itm;
         if (!event) {
-            //如果不是自定义事件，直接返回
             return null;
         }
         for (var i = 0, len = args.length; i < len; i++) {

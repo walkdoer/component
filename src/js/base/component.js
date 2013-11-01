@@ -11,7 +11,7 @@ define(function (require, exports) {
         initVar = ['name', 'components', 'params', 'data', 'queries', 'state'],
         Component;
     //添加事件
-    Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
+    Event.register('BEFORE_RENDER_FIRST_COMPONENT', 'before:render:firstcomponent');
     /**
      * 比较两个组件是不是同一个
      * @param  {Component}  cpA
@@ -89,15 +89,26 @@ define(function (require, exports) {
                 elementSelector,
                 eventType,
                 callback,
-                tmp;
+                evtConf;
             if (!evts) {
                 return;
             }
             for (var evt in evts) {
-                tmp = evt.split(' ');
-                eventType = tmp[0];
-                elementSelector = tmp[1];
-                callback =  evts[evt];
+                evtConf = evt.split(' ');
+                if (evtConf.length > 1) {
+                    elementSelector = evtConf.slice(1).join(' ');
+                } else {
+                    //如果没有配置托管的对象，则使用对象本身Id
+                    //例如 {
+                    //    'click': function() {}
+                    //}
+                    //等价于{
+                    //    'click #elementId', function() {}
+                    //}
+                    elementSelector = '#' + this.id;
+                }
+                eventType = evtConf[0];
+                callback = evts[evt];
                 this.on(eventType, elementSelector, (function (callback, context) {
                     return function () {
                         callback.apply(context, arguments);

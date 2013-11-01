@@ -78,22 +78,18 @@ define(function (require, exports) {
         setName: function (name) {
             this.name = name;
         },
-        /**
-         * 初始化模板
-         * 下载模板文件
-         */
         _initTpl: function (callback) {
-            if (typeof callback !== 'function') {
-                callback = function () {};
-            }
             var self = this,
-                tpl = this.tpl;
+                tpl = self.tpl;
+            callback = callback || function () {};
             if (!tpl) {
                 console.warn(['Has no template(tpl) or element(el) config for',
-                    '[', this.getType() || '[unknow type]', ']',
-                    '[', this.getName() || '[unknow name]', ']',
+                    '[', self.getType() || '[unknow type]', ']',
+                    '[', self.getName() || '[unknow name]', ']',
                     'please check your option'].join(' '));
-                if (this.tplContent) {
+                if (self.tplContent) {
+                    self.$el = $(self.tmpl());
+                    self.el = self.$el[0];
                     callback(true);
                 } else {
                     callback(false);
@@ -103,16 +99,41 @@ define(function (require, exports) {
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl.indexOf('#') === 0) {
                 this.tplContent = $(tpl).html();
-                callback(true, this.tplContent);
+                callback(true);
                 return;
             }
-            require.async('tpl/' + this.tpl, function (res) {
+            require.async('tpl/' + tpl, function (res) {
                 if (res) {
                     self.tplContent = res;
-                    callback(true, res);
+                    self.$el = $(self.tmpl());
+                    self.el = self.$el[0];
+                    callback(true);
                 } else {
-                    callback(false, res);
+                    callback(false);
                 }
+            });
+        },
+        /**
+         * 初始化组件元素
+         * 先下载模板文件，然后构建element
+         */
+        _initElement: function (callback) {
+            var self = this;
+            callback = callback || function () {};
+            //已经有元素了，不需要初始化
+            if (self.$el !== null) {
+                callback();
+                return;
+            }
+            this._initTpl(function (success) {
+                if (success) {
+                    self.$el = $(self.tmpl());
+                    self.el = self.$el[0];
+                } else { //没有初始化成功, 需要初始化一个页面的Element
+                    self.el = document.createElement('section');
+                    self.$el = $(self.el);
+                }
+                callback();
             });
         },
         createError: function (code, msg) {
@@ -134,7 +155,7 @@ define(function (require, exports) {
          * @return {String}           list:myList:beforerender
          */
         getEvent: function (eventName) {
-            return Event.get(eventName, this.getType(), this.getName(), this.getNum());
+            return Event.get(this.type, eventName, this.getType(), this.id);
         },
         /**
          * 初始化变量
@@ -200,30 +221,23 @@ define(function (require, exports) {
             //保存用户原始配置，已备用
             self.originOption = $.extend(true, {}, option);
             //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
-            if (self.el === null && self.$el === null) {
-                self._initTpl(function (success) {
-                    if (success) {
-                        self.$el = $(self.tmpl());
-                        self.el = self.$el[0];
-                    } else { //没有初始化成功, 需要初始化一个页面的Element
-                        self.el = document.createElement('section');
-                        self.$el = $(self.el);
-                    }
-                    //监听组件原生listener
-                    self._listen(self.listeners);
-                    //用户创建的Listener
-                    self._listen(option.listeners);
-                    if (typeof callback === 'function') {
-                        callback();
-                    } else { //如果没有callback，则直接结束初始化
-                        self.finishInit();
-                    }
-                    //之前被通知过render，模板准备好之后进行渲染
-                    if (self.needToRender) {
-                        self.render();
-                    }
-                });
-            }
+            self._initElement(function () {
+                self.$el.attr('id', self.id)
+                        .attr('class', self.className);
+                //监听组件原生listener
+                self._listen(self.listeners);
+                //用户创建的Listener
+                self._listen(option.listeners);
+                if (typeof callback === 'function') {
+                    callback();
+                } else { //如果没有callback，则直接结束初始化
+                    self.finishInit();
+                }
+                //之前被通知过render，模板准备好之后进行渲染
+                if (self.needToRender) {
+                    self.render();
+                }
+            });
         },
         /**
          * 渲染组件
@@ -232,6 +246,7 @@ define(function (require, exports) {
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!this.selector || this.rendered) {
                 if (this.initialized) {
+                    //给予id以及Class
                     this.trigger('BEFORE_RENDER', [this]);
                     if (this.isContinueRender !== false) {
                         this.isContinueRender = true;
@@ -245,9 +260,6 @@ define(function (require, exports) {
                             this.finishRender();
                         }
                     }
-                    //给予id以及Class
-                    this.$el.attr('id', this.id)
-                            .attr('class', this.className);
                 } else {
                     //异步情况下，用户通知渲染时尚未初始化结束
                     this.needToRender = true;
@@ -282,11 +294,8 @@ define(function (require, exports) {
          */
         on: function () {
             var args = slice.call(arguments, 0),
-                el,
-                evt;
-            el = (evt = this.getEvent(args[0])) ? this.$parent : this.$el;
-            if (evt) { args[0] = evt; }
-            console.log(this.type);
+                el = this.$parent; //todo this.$el待确定
+            args[0] = this.getEvent(args[0]) || args[0];
             el.on.apply(el, args);
             return this;
         },
@@ -295,10 +304,8 @@ define(function (require, exports) {
          */
         trigger: function () {
             var args = slice.call(arguments, 0),
-                el = this.$parent,
-                evt;
-            evt = this.getEvent(args[0]);
-            if (evt) { args[0] = evt; }
+                el = this.$parent;
+            args[0] = this.getEvent(args[0]) || args[0];
             el.trigger.apply(el, args);
             return this;
         },
