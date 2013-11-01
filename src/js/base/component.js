@@ -7,7 +7,6 @@ define(function (require, exports) {
         _ = require('core/lang'),
         Display = require('base/display'),
         Event = require('base/event'),
-        UserError = require('base/userError'),
         initVar = ['name', 'components', 'params', 'data', 'queries', 'state'],
         Component;
     //添加事件
@@ -205,7 +204,7 @@ define(function (require, exports) {
                         components.push(cItm);
                         continue;
                     } else { //检查到错误，提示使用者
-                        throw new UserError('compNotRight', this.getType() + ' Component\'s component config is not right');
+                        throw new Error('Component\'s component config is not right');
                     }
                     //创建组件
                     cp = new Component($.extend({
