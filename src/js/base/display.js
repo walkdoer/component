@@ -10,7 +10,16 @@ define(function (require, exports) {
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'empty'],
         initVar = ['tpl', 'parent', 'className', 'id', 'display', 'el', 'selector', 'renderAfterInit'],
-        Display;
+        Display,
+        _handleEvent;
+    _handleEvent = function () {
+        var type = arguments[0],
+            args = slice.call(arguments, 1),
+            el = this.$parent;
+        args[0] = this.getEvent(args[0]) || args[0];
+        el[type].apply(el, args);
+        return this;
+    };
     Display = Class.extend({
         type: 'display',
         tpl: null,
@@ -292,23 +301,11 @@ define(function (require, exports) {
         /**
          * 监听事件,糅合了 jQuery或者Zepto的事件机制，所以使用与上述类库同理
          */
-        on: function () {
-            var args = slice.call(arguments, 0),
-                el = this.$parent; //todo this.$el待确定
-            args[0] = this.getEvent(args[0]) || args[0];
-            el.on.apply(el, args);
-            return this;
-        },
+        on: _handleEvent.curry('on'),
         /**
          * 触发事件，同上
          */
-        trigger: function () {
-            var args = slice.call(arguments, 0),
-                el = this.$parent;
-            args[0] = this.getEvent(args[0]) || args[0];
-            el.trigger.apply(el, args);
-            return this;
-        },
+        trigger: _handleEvent.curry('trigger'),
         /**
          * 析构
          */
