@@ -175,6 +175,8 @@ define(function (require, exports) {
         initVariable: function (option, variables) {
             var self = this,
                 tmp, optionKey, realKey;
+            //将option的配置初始化到对象中
+            self.setNum(Date.now().toString());
             for (var i = 0, len = variables.length; i < len; i++) {
                 tmp = variables[i].split('->');
                 optionKey = tmp[0];
@@ -184,6 +186,8 @@ define(function (require, exports) {
                     self[realKey] = option[optionKey];
                 }
             }
+            self.id = option.id ||
+                [self.getType(), self.getNum()].join('-');
         },
         /**
          * {Private} 监听事件
@@ -209,14 +213,8 @@ define(function (require, exports) {
          * @param  {Boolean} flagSilent 是否改变状态量 true:改变,false:不改变
          */
         init: function (option, callback) {
-            var self = this,
-                name = self.getName();
+            var self = this;
             self.startInit();
-            //将option的配置初始化到对象中
-            self.setNum(Date.now().toString());
-            self.id = option.id ||
-                [self.getType(), '-', name ? name + '-' : '',
-                  self.getNum()].join('');
             //初始化变量
             self.initVariable(option, initVar);
             //创建parent的$(object)对象
