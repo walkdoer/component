@@ -35,17 +35,19 @@ define(function (require, exports) {
         initialized: false,  //已初始化
         display: true, //是否显示
         startInit: function () {
-            if (!this._startInit) {
-                this.initialized = false;
-                this.initializing = true;
-                this._startInit = true;
+            var self = this;
+            if (!self._startInit) {
+                self.initialized = false;
+                self.initializing = true;
+                self._startInit = true;
             }
         },
         finishInit: function () {
-            if (!this._finishInit) {
-                this.initializing = false;
-                this.initialized = true;
-                this._finishInit = true;
+            var self = this;
+            if (!self._finishInit) {
+                self.initializing = false;
+                self.initialized = true;
+                self._finishInit = true;
             }
         },
         /**
@@ -107,7 +109,7 @@ define(function (require, exports) {
             }
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl.indexOf('#') === 0) {
-                this.tplContent = $(tpl).html();
+                self.tplContent = $(tpl).html();
                 callback(true);
                 return;
             }
@@ -134,7 +136,7 @@ define(function (require, exports) {
                 callback();
                 return;
             }
-            this._initTpl(function (success) {
+            self._initTpl(function (success) {
                 if (success) {
                     self.$el = $(self.tmpl());
                     self.el = self.$el[0];
@@ -171,27 +173,16 @@ define(function (require, exports) {
          * @return {[type]} [description]
          */
         initVariable: function (option, variables) {
-            var tmp, optionKey, realKey;
+            var self = this,
+                tmp, optionKey, realKey;
             for (var i = 0, len = variables.length; i < len; i++) {
                 tmp = variables[i].split('->');
                 optionKey = tmp[0];
                 realKey = tmp[1] || optionKey;
                 //option的v属性会覆盖对象的v属性
                 if (option[optionKey] !== undefined) {
-                    this[realKey] = option[optionKey];
+                    self[realKey] = option[optionKey];
                 }
-            }
-            //创建parent的$(object)对象
-            if (this.parent) {
-                this.$parent = $(this.parent);
-            }
-            //创建el的$(object)对象
-            if (this.el) {
-                this.$el = $(this.el);
-            }
-            if (typeof this.selector === 'string') {
-                this.$el = this.$parent.find(this.selector);
-                this.el = this.$el[0];
             }
         },
         /**
@@ -226,7 +217,23 @@ define(function (require, exports) {
             self.id = option.id ||
                 [self.getType(), '-', name ? name + '-' : '',
                   self.getNum()].join('');
+            //初始化变量
             self.initVariable(option, initVar);
+            //创建parent的$(object)对象
+            var parent = self.parent;
+            if (parent) {
+                self.$parent = $(parent);
+            }
+            //创建el的$(object)对象
+            var el = self.el;
+            if (el) {
+                self.$el = $(el);
+            }
+            var selector = self.selector;
+            if (typeof selector === 'string') {
+                self.$el = self.$parent.find(selector);
+                self.el = self.$el[0];
+            }
             //保存用户原始配置，已备用
             self.originOption = $.extend(true, {}, option);
             //用户指定了元素，则不进行模板渲染, 内置了模板文件，不需要请求模板文件
@@ -252,33 +259,34 @@ define(function (require, exports) {
          * 渲染组件
          */
         render: function (callback) {
+            var self = this;
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
-            if (!this.selector || this.rendered) {
-                if (this.initialized) {
+            if (!self.selector || self.rendered) {
+                if (self.initialized) {
                     //给予id以及Class
-                    this.trigger('BEFORE_RENDER', [this]);
-                    if (this.isContinueRender !== false) {
-                        this.isContinueRender = true;
-                        if (this.display === false) {
-                            this.$el.css('display', 'none');
+                    self.trigger('BEFORE_RENDER', [self]);
+                    if (self.isContinueRender !== false) {
+                        self.isContinueRender = true;
+                        if (self.display === false) {
+                            self.$el.css('display', 'none');
                         }
-                        this._appendElToParent();
+                        self._appendElToParent();
                         if (typeof callback === 'function') {
-                            callback(this);
+                            callback(self);
                         } else {
-                            this.finishRender();
+                            self.finishRender();
                         }
                     }
                 } else {
                     //异步情况下，用户通知渲染时尚未初始化结束
-                    this.needToRender = true;
+                    self.needToRender = true;
                 }
             } else {
                 if (typeof callback === 'function') {
-                    callback(this);
+                    callback(self);
                 }
             }
-            return this;
+            return self;
         },
         update: function () {
             this.updating = true;
