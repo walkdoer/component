@@ -158,10 +158,11 @@ define(function (require, exports) {
         /**
          * {Private} 添加到父亲节点
          */
-        _appendElToParent: function () {
+        appendToParent: function () {
             if (this.parent) {
                 this.$el.appendTo(this.parent);
             }
+            return this;
         },
         /**
          * 获取事件的实际名称
@@ -271,7 +272,7 @@ define(function (require, exports) {
                         if (self.display === false) {
                             self.$el.css('display', 'none');
                         }
-                        self._appendElToParent();
+                        //self.appendToParent();
                         if (typeof callback === 'function') {
                             callback(self);
                         } else {

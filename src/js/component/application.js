@@ -37,11 +37,7 @@ define(function(require, exports) {
                 this.getCmp(pageName).show().update(state, data);
             } else {
                 //页面没有建立，创建页面
-                this._createPage(pageName, state, data, function (pg) {
-                    //console.debug('add page' + pageName);
-                    self.addCmp(pg);
-                    self.render();
-                });
+                this._createPage(pageName, state, data);
             }
             this.currentPage = pageName;
             return this;
@@ -62,10 +58,6 @@ define(function(require, exports) {
                             if (page.hasTplContent() && self._firstInitial) {
                                 $(self.beforeLoad).hide();
                             }
-                            //console.debug('准备渲染页面' + page.getName());
-                        },
-                        'AFTER_RENDER': function (evt, page) {
-                            //console.debug('成功渲染页面' + page.getName());
                         },
                         'BEFORE_RENDER_FIRST_COMPONENT': function (evt, page) {
                             //如果渲染第一个组件的时候，这个页面是没有加载成功的,hasTplContent = false
@@ -80,19 +72,17 @@ define(function(require, exports) {
                             } else {
                                 page.empty();
                             }
-                            //console.log('渲染第一个组件' + page.getName());
                         },
-                        'RENDERED': function (evt, page) {
-                            //console.debug('渲染页面' + page.getName() + '结束');
+                        'RENDERED': function (/*evt, page*/) {
                             self._firstInitial = false;
                         }
                     }
                 };
                 pageOption = $.extend({}, defaultOption, pageOption);
                 var pg = new PageClass(pageOption);
-                if (typeof callback === 'function') {
-                    callback(pg);
-                }
+                self.addCmp(pg);
+                pg.render().appendToParent();
+                self.render().appendToParent();
             });
         }
     });
