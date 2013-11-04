@@ -49,7 +49,7 @@ define(function(require, exports) {
         _createPage: function (pageName, state, pageOption, callback) {
             var self = this;
             //读取类文件
-            require.async('page/' + pageName, function (PageClass) {
+            require.async('pages/' + pageName, function (PageClass) {
                 //创建类
                 var defaultOption = {
                     id: pageName,
