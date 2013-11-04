@@ -23,17 +23,23 @@ define(function (require, exports) {
         },
         uiEvents: {
             'click .n-u-l': function (e) {
-                console.log('tab 点击');
-                var $target = $(e.target);
-                this.trigger('CLICK', [this, $target.attr('data-target')]);
-                this.activeTab($target);
+                var $target = $(e.target),
+                    tabName = $target.attr('data-target');
+                this.trigger('CLICK', [this, tabName]);
+                this.activeTab(tabName);
             }
         },
-        activeTab: function ($tab) {
+        update: function (state, data) {
+            this.activeTab(this.params.tab);
+            this._super(state, data);
+        },
+        activeTab: function (tabName) {
+            if (!tabName) { return; }
+            var $tab = this.$curTab = this.$parent.find('ul').find('[data-target=' + tabName + ']');
             var self = this;
             var next = {};
             if (self.tabName === $tab.attr('data-target')) {
-                //console.debug('点击同一个tab, 无需切换');
+                console.debug('点击同一个tab, 无需切换');
                 return;
             }
             self.trigger('BEFORE_ACTIVE', [self, next]);
@@ -50,46 +56,37 @@ define(function (require, exports) {
                 if (next.go === false) {
                     return;
                 }
-                //改变Tab主体内容，setTimeout是为了保证程序同步执行
-                //使用router组件的时候出现过程序逻辑不同步的问题
-                setTimeout(function () {
-                    self.changePane($tab);
-                }, 0);
+                //切换Tab主体内容
+                self.changePane(tabName);
             }
         },
         /**
          * 切换Tab页面内容
          */
-        changePane: function ($tab) {
-            var target = $tab.attr('data-target'),
+        changePane: function (tabName) {
+            var self = this,
                 $pane,
                 next = {};
-            if (!target) {
-                console.warn('tab的data-target为空');
+            self.trigger('BEFORE_CHANGE', [self, next]);
+            if (next.go === false) {
                 return;
             } else {
-                this.trigger('BEFORE_CHANGE', [this, next]);
-                if (next.go === false) {
-                    return;
-                } else {
-                    //隐藏当前页
-                    if (this.$curPane) {
-                        this.$curPane.hide();
-                    }
-                    $pane = this.$el.find('.' + target);
-                    //显示新页 编写代码时 zepto .show()有bug,如果元素未添加到Dom树中,show是无效的
-                    $pane.css('display', 'block');
-                    this.$curPane = $pane;
-                    this.tabName = target;
-                    this.trigger('CHANGED', [this]);
+                //隐藏当前页
+                if (self.$curPane) {
+                    self.$curPane.hide();
                 }
+                $pane = self.$el.find('.' + tabName);
+                //显示新页 编写代码时 zepto .show()有bug,如果元素未添加到Dom树中,show是无效的
+                $pane.css('display', 'block');
+                self.$curPane = $pane;
+                self.tabName = tabName;
+                self.trigger('CHANGED', [self]);
             }
         },
         listeners: {
             'AFTER_RENDER': function (evt, tab) {
-                this.$curTab = tab.$parent.find('ul').find('[data-target=' + this.params.tab + ']');
-                this.$tabs = tab.$parent.find('ul').find('li');
-                this.activeTab(this.$curTab);
+                tab.$tabs = tab.$parent.find('ul').find('li');
+                tab.activeTab(tab.params.tab);
             }
         }
     });
