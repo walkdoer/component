@@ -20,11 +20,10 @@ define(function(require, exports) {
          * 切换页面
          */
         changePage: function (pageName, state, data) {
-            var self = this,
-                curPg = this.getCmp(this.currentPage),
+            var curPg = this.getCmp(this.currentPage),
                 newPg = this.getCmp(pageName);
             //当前页面与要切换的页面相同，不需要切换
-            if (curPg && curPg.getName() === pageName) {
+            if (curPg && curPg.id === pageName) {
                 curPg.update(state, data);
                 return;
             }

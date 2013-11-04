@@ -28,7 +28,7 @@ define(function (require, exports) {
         tpl: null,
         tplContent: null,
         parent: null,
-        num: null,  //编号
+        _num: null,  //编号
         el: null,
         $el: null,  //该展示区域的容器
         updating: false,  //更新中
@@ -37,6 +37,9 @@ define(function (require, exports) {
         initializing: false,  //初始化进行中
         initialized: false,  //已初始化
         display: true, //是否显示
+        /**
+         * 开始初始化，标志各标志位
+         */
         startInit: function () {
             var self = this;
             if (!self._startInit) {
@@ -45,6 +48,10 @@ define(function (require, exports) {
                 self._startInit = true;
             }
         },
+        /**
+         * 结束初始化
+         * @return {[type]} [description]
+         */
         finishInit: function () {
             var self = this;
             if (!self._finishInit) {
@@ -61,36 +68,10 @@ define(function (require, exports) {
             return !!this.tplContent;
         },
         /**
-         * 设置组件Id
-         */
-        setNum: function (num) {
-            this.num = num;
-        },
-        /**
-         * 获取组件Id
-         */
-        getNum: function () {
-            return this.num;
-        },
-        /**
          * 获取类型 (Component/Page/...)
          */
         getType: function () {
             return this.type;
-        },
-        /**
-         * 获取单元的名称
-         * @return {String}
-         */
-        getName: function () {
-            return this.name || '';
-        },
-        /**
-         * 设置单元名称
-         * @param {String} name
-         */
-        setName: function (name) {
-            this.name = name;
         },
         _initTpl: function (callback) {
             var self = this,
@@ -99,7 +80,7 @@ define(function (require, exports) {
             if (!tpl) {
                 console.warn(['Has no template(tpl) or element(el) config for',
                     '[', self.getType() || '[unknow type]', ']',
-                    '[', self.getName() || '[unknow name]', ']',
+                    '[', self.id || '[unknow name]', ']',
                     'please check your option'].join(' '));
                 if (self.tplContent) {
                     self.$el = $(self.tmpl());
@@ -216,9 +197,9 @@ define(function (require, exports) {
             var self = this;
             self.startInit();
             //使用timestamp来作为组件的唯一标志
-            self.setNum(Date.now().toString());
+            self._num = Date.now().toString();
             //创建默认的Id,如果用户配置Option中有自定义Id，则默认Id会被自定义Id覆盖
-            self.id = [self.getType(), self.getNum()].join('-');
+            self.id = [self.getType(), self._num].join('-');
             //初始化变量
             self.initVariable(option, initVar);
             //创建parent的$(object)对象
@@ -311,11 +292,15 @@ define(function (require, exports) {
         /**
          * 监听事件,糅合了 jQuery或者Zepto的事件机制，所以使用与上述类库同理
          */
-        on: _handleEvent.curry('on'),
+        on: function () {
+            return _handleEvent.apply(this, ['on'].concat(slice.call(arguments, 0)));
+        },
         /**
          * 触发事件，同上
          */
-        trigger: _handleEvent.curry('trigger'),
+        trigger: function () {
+            return _handleEvent.apply(this, ['trigger'].concat(slice.call(arguments, 0)));
+        },
         /**
          * 析构
          */

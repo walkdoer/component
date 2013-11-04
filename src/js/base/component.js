@@ -160,7 +160,6 @@ define(function (require, exports) {
                         component.isContinueRender = true;
                     }
                 }).on('AFTER_RENDER', function (event, component) {
-                    console.debug('成功渲染组件:' + component.getType() + component.getName());
                     //组件渲染成功后，移除自己在等待渲染队列
                     //console.log('pop up ' + component.type);
                     self._popWaitQueue();
@@ -286,7 +285,6 @@ define(function (require, exports) {
             while (cmp) {
                 //组件有状态，且状态改变，则需要更新，否则保持原样
                 if (cmp.state && cmp.isStateChange(state) && cmp.rendered) {
-                    console.debug('update ' + cmp.getType()  + ':' + cmp.getName());
                     cmp.update(state, data);
                 }
                 cmp = cmp.nextNode;
