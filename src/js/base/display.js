@@ -15,8 +15,11 @@ define(function (require, exports) {
     _handleEvent = function () {
         var type = arguments[0],
             args = slice.call(arguments, 1),
-            el = this.$parent;
-        args[0] = this.getEvent(args[0]) || args[0];
+            eventName = this.getEvent(args[0]),
+            el;
+        el = eventName ? this.$parent : this.$el;
+        args[0] = eventName || args[0];
+        //console.log(type + ': ' + args[0], el[0]);
         el[type].apply(el, args);
         return this;
     };
@@ -175,8 +178,6 @@ define(function (require, exports) {
         initVariable: function (option, variables) {
             var self = this,
                 tmp, optionKey, realKey;
-            //将option的配置初始化到对象中
-            self.setNum(Date.now().toString());
             for (var i = 0, len = variables.length; i < len; i++) {
                 tmp = variables[i].split('->');
                 optionKey = tmp[0];
@@ -186,8 +187,6 @@ define(function (require, exports) {
                     self[realKey] = option[optionKey];
                 }
             }
-            self.id = option.id ||
-                [self.getType(), self.getNum()].join('-');
         },
         /**
          * {Private} 监听事件
@@ -215,6 +214,10 @@ define(function (require, exports) {
         init: function (option, callback) {
             var self = this;
             self.startInit();
+            //使用timestamp来作为组件的唯一标志
+            self.setNum(Date.now().toString());
+            //创建默认的Id,如果用户配置Option中有自定义Id，则默认Id会被自定义Id覆盖
+            self.id = [self.getType(), self.getNum()].join('-');
             //初始化变量
             self.initVariable(option, initVar);
             //创建parent的$(object)对象

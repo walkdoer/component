@@ -32,26 +32,26 @@ define(function (require, exports) {
         _popWaitQueue: function () {
             return this._componentsWaitToRender.splice(0, 1)[0];
         },
-        getState: function (params) {
+        getParams: function (newState) {
             var self = this,
-                newState = {},
+                newParams = {},
                 state = self.state;
             if ($.isArray(state)) {
                 $.each(state, function (index, stateItm) {
                     var hierarchy = stateItm.split('.'),
-                        tmp = params,
-                        stateKey;
+                        state = newState,
+                        paramKey;
                     $.each(hierarchy, function (index, key) {
-                        tmp = tmp[key];
-                        stateKey = key;
+                        state = state[key];
+                        paramKey = key;
                     });
-                    newState[stateKey] = tmp;
+                    newParams[paramKey] = state;
                 });
             }
-            return newState;
+            return newParams;
         },
         isStateChange: function (newParams) {
-            var state = this.getState(newParams);
+            var state = this.getParams(newParams);
             if (!_.equal(state, this.params)) {
                 this.params = state;
                 return true;
@@ -233,7 +233,7 @@ define(function (require, exports) {
             var self = this;
             self.startInit();
             self.initVariable(option, initVar);
-            self.params = self.getState({
+            self.params = self.getParams({
                 params: self.params,
                 queries: self.queries
             });
@@ -276,6 +276,7 @@ define(function (require, exports) {
             return this._super();
         },
         update: function (state, data) {
+            //更新组件的子组件
             var cmp = this._components[0];
             while (cmp) {
                 //组件有状态，且状态改变，则需要更新，否则保持原样
