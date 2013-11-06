@@ -266,9 +266,6 @@ define(function (require, exports) {
             //先渲染组件的子组件
             while (component) {
                 if (!component.selector) {
-                    if (component.type === 'app' || component.type === 'category') {
-                        console.log(component.type);
-                    }
                     fragment.appendChild(component.render().el);
                 }
                 component = component.nextNode;

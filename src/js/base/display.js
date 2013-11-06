@@ -314,8 +314,6 @@ define(function (require, exports) {
         finishRender: function () {
             this.rendered = true; //标志已经渲染完毕
             this.trigger('AFTER_RENDER', [this]);
-            //this.trigger('RENDERED', [this]);
-            //console.debug(this.type + '渲染结束');
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'

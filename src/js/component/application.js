@@ -20,23 +20,28 @@ define(function(require, exports) {
          * 切换页面
          */
         changePage: function (pageName, state, data) {
-            var curPg = this.getCmp(this.currentPage),
-                newPg = this.getCmp(pageName);
+            var self = this,
+                currentPage = self.getCmp(self.currentPage),
+                newPg = self.getCmp(pageName);
             //当前页面与要切换的页面相同，不需要切换
-            if (curPg && curPg.id === pageName) {
-                curPg.update(state, data);
+            if (currentPage && currentPage.id === pageName) {
+                currentPage.update(state, data);
                 return;
             }
-            //隐藏当前页
-            if (curPg) {
-                curPg.hide();
+            //如果当前页存在,则隐藏
+            if (currentPage) {
+                currentPage.hide();
             }
             //如果页面已经建立就直接显示页面
             if (newPg) {
-                this.getCmp(pageName).show().update(state, data);
+                newPg.show().update(state, data);
             } else {
                 //页面没有建立，创建页面
-                this._createPage(pageName, state, data);
+                this._createPage(pageName, state, data, function (page) {
+                    self.addCmp(page);
+                    page.render().appendToParent();
+                    self.render().appendToParent();
+                });
             }
             this.currentPage = pageName;
             return this;
@@ -78,10 +83,8 @@ define(function(require, exports) {
                     }
                 };
                 pageOption = $.extend({}, defaultOption, pageOption);
-                var pg = new PageClass(pageOption);
-                self.addCmp(pg);
-                pg.render().appendToParent();
-                self.render().appendToParent();
+                var page = new PageClass(pageOption);
+                callback(page);
             });
         }
     });
