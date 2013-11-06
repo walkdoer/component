@@ -6,6 +6,7 @@ define(function (require, exports) {
     var Component = require('base/component'),
         Event = require('base/event'),
         typeName = 'form',
+        WARN_CLASS = 'warn',
         Form;
     Event.add(typeName, {
         CANCEL: 'cancel',
@@ -25,6 +26,7 @@ define(function (require, exports) {
                 var required = field.required;
                 if (required && !data[field.name]) {
                     validateResult = false;
+                    field.className += ' ' + WARN_CLASS;
                     return false;//break loop
                 }
             });
@@ -54,6 +56,11 @@ define(function (require, exports) {
             //取消按钮
             'click .cancel': function (event) {
                 this.trigger('CANCEL', [this, event]);
+            },
+            'focus input': function (event) {
+                console.log('focus');
+                var $field = $(event.target);
+                $field.removeClass(WARN_CLASS);
             }
         }
     });
