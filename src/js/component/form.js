@@ -5,6 +5,7 @@ define(function (require, exports) {
     'use strict';
     var Component = require('base/component'),
         Event = require('base/event'),
+        _ = require('core/lang'),
         typeName = 'form',
         WARN_CLASS = 'warn',
         Form;
@@ -26,7 +27,7 @@ define(function (require, exports) {
                 var required = field.required;
                 if (required && !data[field.name]) {
                     validateResult = false;
-                    field.className += ' ' + WARN_CLASS;
+                    $(field).addClass(WARN_CLASS);
                     return false;//break loop
                 }
             });
@@ -44,10 +45,18 @@ define(function (require, exports) {
             });
             return data;
         },
+        /**
+         * 清空表单
+         */
+        clear: function () {
+            this.$el[0].reset();
+            return this;
+        },
         uiEvents: {
             //提交按钮
             'submit': function (event) {
                 event.preventDefault();
+                console.log('submit');
                 var data = this._getField();
                 if (this._validate(data)) {
                     this.trigger('SUBMIT', [this, event, data]);
@@ -58,7 +67,6 @@ define(function (require, exports) {
                 this.trigger('CANCEL', [this, event]);
             },
             'focus input': function (event) {
-                console.log('focus');
                 var $field = $(event.target);
                 $field.removeClass(WARN_CLASS);
             }
