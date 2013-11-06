@@ -158,6 +158,7 @@ define(function (require, exports) {
          * @return {[type]} [description]
          */
         initVariable: function (option, variables) {
+            if (!option) { return; }
             var self = this,
                 tmp, optionKey, realKey;
             for (var i = 0, len = variables.length; i < len; i++) {
@@ -195,6 +196,7 @@ define(function (require, exports) {
          */
         init: function (option, callback) {
             var self = this;
+            option = option || {};
             self.startInit();
             //使用timestamp来作为组件的唯一标志
             self._num = Date.now().toString();
