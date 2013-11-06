@@ -21,26 +21,26 @@ define(function(require, exports) {
          */
         changePage: function (pageName, state, data) {
             var self = this,
-                curPg = this.getCmp(this.currentPage),
-                newPg = this.getCmp(pageName);
+                currentPage = self.getCmp(self.currentPage),
+                newPg = self.getCmp(pageName);
             //当前页面与要切换的页面相同，不需要切换
-            if (curPg && curPg.getName() === pageName) {
-                curPg.update(state, data);
+            if (currentPage && currentPage.id === pageName) {
+                currentPage.update(state, data);
                 return;
             }
-            //隐藏当前页
-            if (curPg) {
-                curPg.hide();
+            //如果当前页存在,则隐藏
+            if (currentPage) {
+                currentPage.hide();
             }
             //如果页面已经建立就直接显示页面
             if (newPg) {
-                this.getCmp(pageName).show().update(state, data);
+                newPg.show().update(state, data);
             } else {
                 //页面没有建立，创建页面
-                this._createPage(pageName, state, data, function (pg) {
-                    //console.debug('add page' + pageName);
-                    self.addCmp(pg);
-                    self.render();
+                this._createPage(pageName, state, data, function (page) {
+                    self.addCmp(page);
+                    page.render().appendToParent();
+                    self.render().appendToParent();
                 });
             }
             this.currentPage = pageName;
@@ -49,7 +49,7 @@ define(function(require, exports) {
         _createPage: function (pageName, state, pageOption, callback) {
             var self = this;
             //读取类文件
-            require.async('page/' + pageName, function (PageClass) {
+            require.async('pages/' + pageName, function (PageClass) {
                 //创建类
                 var defaultOption = {
                     id: pageName,
@@ -62,10 +62,6 @@ define(function(require, exports) {
                             if (page.hasTplContent() && self._firstInitial) {
                                 $(self.beforeLoad).hide();
                             }
-                            //console.debug('准备渲染页面' + page.getName());
-                        },
-                        'AFTER_RENDER': function (evt, page) {
-                            //console.debug('成功渲染页面' + page.getName());
                         },
                         'BEFORE_RENDER_FIRST_COMPONENT': function (evt, page) {
                             //如果渲染第一个组件的时候，这个页面是没有加载成功的,hasTplContent = false
@@ -80,19 +76,15 @@ define(function(require, exports) {
                             } else {
                                 page.empty();
                             }
-                            //console.log('渲染第一个组件' + page.getName());
                         },
-                        'RENDERED': function (evt, page) {
-                            //console.debug('渲染页面' + page.getName() + '结束');
+                        'RENDERED': function (/*evt, page*/) {
                             self._firstInitial = false;
                         }
                     }
                 };
                 pageOption = $.extend({}, defaultOption, pageOption);
-                var pg = new PageClass(pageOption);
-                if (typeof callback === 'function') {
-                    callback(pg);
-                }
+                var page = new PageClass(pageOption);
+                callback(page);
             });
         }
     });

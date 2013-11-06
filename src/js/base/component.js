@@ -7,11 +7,10 @@ define(function (require, exports) {
         _ = require('core/lang'),
         Display = require('base/display'),
         Event = require('base/event'),
-        UserError = require('base/userError'),
         initVar = ['name', 'components', 'params', 'data', 'queries', 'state'],
         Component;
     //添加事件
-    Event.add('BEFORE_RENDER_FIRST_COMPONENT', 'beforerenderfirstcomponent');
+    Event.register('BEFORE_RENDER_FIRST_COMPONENT', 'before:render:firstcomponent');
     /**
      * 比较两个组件是不是同一个
      * @param  {Component}  cpA
@@ -33,26 +32,26 @@ define(function (require, exports) {
         _popWaitQueue: function () {
             return this._componentsWaitToRender.splice(0, 1)[0];
         },
-        getState: function (params) {
+        getParams: function (newState) {
             var self = this,
-                newState = {},
+                newParams = {},
                 state = self.state;
             if ($.isArray(state)) {
                 $.each(state, function (index, stateItm) {
                     var hierarchy = stateItm.split('.'),
-                        tmp = params,
-                        stateKey;
+                        state = newState,
+                        paramKey;
                     $.each(hierarchy, function (index, key) {
-                        tmp = tmp[key];
-                        stateKey = key;
+                        state = state[key];
+                        paramKey = key;
                     });
-                    newState[stateKey] = tmp;
+                    newParams[paramKey] = state;
                 });
             }
-            return newState;
+            return newParams;
         },
         isStateChange: function (newParams) {
-            var state = this.getState(newParams);
+            var state = this.getParams(newParams);
             if (!_.equal(state, this.params)) {
                 this.params = state;
                 return true;
@@ -89,15 +88,26 @@ define(function (require, exports) {
                 elementSelector,
                 eventType,
                 callback,
-                tmp;
+                evtConf;
             if (!evts) {
                 return;
             }
             for (var evt in evts) {
-                tmp = evt.split(' ');
-                eventType = tmp[0];
-                elementSelector = tmp[1];
-                callback =  evts[evt];
+                evtConf = evt.split(' ');
+                if (evtConf.length > 1) {
+                    elementSelector = evtConf.slice(1).join(' ');
+                } else {
+                    //如果没有配置托管的对象，则使用对象本身Id
+                    //例如 {
+                    //    'click': function() {}
+                    //}
+                    //等价于{
+                    //    'click #elementId', function() {}
+                    //}
+                    elementSelector = '#' + this.id;
+                }
+                eventType = evtConf[0];
+                callback = evts[evt];
                 this.on(eventType, elementSelector, (function (callback, context) {
                     return function () {
                         callback.apply(context, arguments);
@@ -150,16 +160,10 @@ define(function (require, exports) {
                         component.isContinueRender = true;
                     }
                 }).on('AFTER_RENDER', function (event, component) {
-                    //console.debug('成功渲染组件:' + component.getType() + component.getName());
                     //组件渲染成功后，移除自己在等待渲染队列
                     //console.log('pop up ' + component.type);
                     self._popWaitQueue();
                     self._components.push(component);
-                    //如果渲染序列中没有等待渲染的元素，也就意味着页面渲染结束
-                    if (!self.isAllComponentRendered()) {
-                        //通知下一个组件渲染
-                        self._componentsWaitToRender[0].render();
-                    }
                 });
             });
             this._componentsWaitToRender = this._componentsWaitToRender.concat(addList);
@@ -194,7 +198,7 @@ define(function (require, exports) {
                         components.push(cItm);
                         continue;
                     } else { //检查到错误，提示使用者
-                        throw new UserError('compNotRight', this.getType() + ' Component\'s component config is not right');
+                        throw new Error('Component\'s component config is not right');
                     }
                     //创建组件
                     cp = new Component($.extend({
@@ -223,7 +227,7 @@ define(function (require, exports) {
             var self = this;
             self.startInit();
             self.initVariable(option, initVar);
-            self.params = self.getState({
+            self.params = self.getParams({
                 params: self.params,
                 queries: self.queries
             });
@@ -255,22 +259,29 @@ define(function (require, exports) {
             }
         },
         render: function () {
-            //这里写成回调的原因：渲染组件默认模板成功之后再渲染子组件,
-            //最后返回this
-            var self = this;
+            var self = this,
+                fragment = document.createDocumentFragment(),
+                firstcomponent = self._componentsWaitToRender[0],
+                component = firstcomponent;
             //先渲染组件的子组件
-            if (self._componentsWaitToRender.length > 0) {
-                self._componentsWaitToRender[0].render();
+            while (component) {
+                if (!component.selector) {
+                    fragment.appendChild(component.render().el);
+                }
+                component = component.nextNode;
+            }
+            if (firstcomponent) {
+                firstcomponent.parent.appendChild(fragment);
             }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             return this._super();
         },
         update: function (state, data) {
+            //更新组件的子组件
             var cmp = this._components[0];
             while (cmp) {
                 //组件有状态，且状态改变，则需要更新，否则保持原样
                 if (cmp.state && cmp.isStateChange(state) && cmp.rendered) {
-                    console.debug('update ' + cmp.getType()  + ':' + cmp.getName());
                     cmp.update(state, data);
                 }
                 cmp = cmp.nextNode;
