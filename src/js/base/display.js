@@ -245,7 +245,8 @@ define(function (require, exports) {
          * 渲染组件
          */
         render: function (callback) {
-            var self = this;
+            var self = this,
+                originOption = self.originOption;
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!self.selector || self.rendered) {
                 if (self.initialized) {
@@ -253,6 +254,10 @@ define(function (require, exports) {
                     self.trigger('BEFORE_RENDER', [self]);
                     if (self.isContinueRender !== false) {
                         self.isContinueRender = true;
+                        self.$el.css({
+                            width: originOption.width,
+                            height: originOption.height
+                        });
                         if (self.display === false) {
                             self.$el.css('display', 'none');
                         }
