@@ -236,7 +236,7 @@ define(function (require, exports) {
                 params: self.params,
                 queries: self.queries
             });
-            self.uiEvents = $.extend(self.uiEvents, option.uiEvents);
+            self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
             self._components = [];
             self._componentsWaitToRender = [];
             self._cpConstructors = self.components;

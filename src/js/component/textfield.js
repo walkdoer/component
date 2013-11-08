@@ -10,7 +10,8 @@ define(function (require, exports) {
         typeName = 'textfield',
         Textfield;
     Event.add(typeName, {
-        'INPUT': 'input'
+        'INPUT': 'input',
+        'FLUR': 'blur'
     });
     Textfield = Component.extend({
         type: typeName,
@@ -31,7 +32,10 @@ define(function (require, exports) {
                 this.value = value;
                 $iconClear[value ? 'show' : 'hide']();
                 this.trigger('INPUT', [this]);
-            }, 300)
+            }, 300),
+            'blur input': function () {
+                this.trigger('FLUR', [this]);
+            }
         }
     });
     return Textfield;

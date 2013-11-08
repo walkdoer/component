@@ -25,9 +25,9 @@ define(function (require, exports) {
          * @return {Boolean}
          */
         _validate: function (data) {
-            var $field = this.$el.find('input'),
+            var $fields = this.$fields,
                 validateResult = true;
-            $field.each(function (i, field) {
+            $fields.each(function (i, field) {
                 var required = field.required;
                 if (required && !data[field.name]) {
                     validateResult = false;
@@ -36,6 +36,10 @@ define(function (require, exports) {
                 }
             });
             return validateResult;
+        },
+        init: function (option) {
+            this._super(option);
+            this.$fields = this.$el.find('input');
         },
         /**
          * 获取所有字段的值
@@ -56,11 +60,16 @@ define(function (require, exports) {
             this.$el[0].reset();
             return this;
         },
+        set: function (data) {
+            var $fields = this.$fields;
+            $fields.each(function (i, field) {
+                field.value = data[field.name];
+            });
+        },
         uiEvents: {
             //提交按钮
             'submit': function (event) {
                 event.preventDefault();
-                console.log('submit');
                 var data = this._getField();
                 if (this._validate(data)) {
                     this.trigger('SUBMIT', [this, event, data]);
