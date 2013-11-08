@@ -10,7 +10,7 @@ define(function (require, exports) {
         Event = require('base/event'),
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'empty'],
-        initVar = ['tpl', 'parent', 'className', 'id', 'display', 'el', 'selector', 'renderAfterInit'],
+        initVar = ['tpl', 'tplContent', 'parent', 'className', 'id', 'display', 'el', 'selector', 'renderAfterInit'],
         Display,
         _handleEvent;
     _handleEvent = function () {

@@ -3,9 +3,9 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/component'),
+    var $ = require('core/selector'),
+        Component = require('base/component'),
         Event = require('base/event'),
-        _ = require('core/lang'),
         typeName = 'form',
         WARN_CLASS = 'warn',
         Form;
@@ -13,6 +13,10 @@ define(function (require, exports) {
         CANCEL: 'cancel',
         SUBMIT: 'submit'
     });
+    /*
+    写给接手的人：由于时间较紧，在做form组件的时候是没有对输入框进行抽象为一个组件的
+    所以form表单的粒度比较粗，建议抽出textfield组件
+     */
     Form = Component.extend({
         type: typeName,
         /**
@@ -66,6 +70,7 @@ define(function (require, exports) {
             'click .cancel': function (event) {
                 this.trigger('CANCEL', [this, event]);
             },
+            //输入框聚焦
             'focus input': function (event) {
                 var $field = $(event.target);
                 $field.removeClass(WARN_CLASS);

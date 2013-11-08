@@ -148,6 +148,11 @@ define(function (require, exports) {
                 //链接组件的关系
                 self._linkCmp(comp, prevCmp);
                 prevCmp = comp;
+                //如果添加以渲染组件，直接添加到以渲染序列中
+                if (comp.rendered) {
+                    self._components.push(comp);
+                    return;
+                }
                 comp.on('BEFORE_RENDER', function (event, component) {
                     //组件还没有渲染
                     if (!self.allowToRender(component)) {
@@ -165,8 +170,8 @@ define(function (require, exports) {
                     self._popWaitQueue();
                     self._components.push(component);
                 });
+                self._componentsWaitToRender.push(comp);
             });
-            this._componentsWaitToRender = this._componentsWaitToRender.concat(addList);
             return this;
         },
         /**
@@ -268,6 +273,8 @@ define(function (require, exports) {
             while (component) {
                 if (!component.selector) {
                     fragment.appendChild(component.render().el);
+                } else {
+                    component.finishRender();
                 }
                 component = component.nextNode;
             }
