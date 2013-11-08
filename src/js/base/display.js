@@ -3,7 +3,8 @@
  */
 define(function (require, exports) {
     'use strict';
-    var _ = require('core/lang'),
+    var $ = require('core/selector'),
+        _ = require('core/lang'),
         Class = require('lib/class'),
         tpl = require('core/template'),
         Event = require('base/event'),

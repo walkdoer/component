@@ -3,7 +3,8 @@
  */
 define(function (require, exports) {
     'use strict';
-    var events = {
+    var $ = require('core/selector'),
+        events = {
             BEFORE_RENDER: 'before:render',
             AFTER_RENDER: 'after:render',
             RENDERED: 'rendered'

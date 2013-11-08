@@ -5,7 +5,8 @@
 define(function (require, exports, module) {
     'use strict';
 
-    var objProto = Object.prototype,
+    var $ = require('core/selector'),
+        objProto = Object.prototype,
         //arrProto = Array.prototype,
         toString = objProto.toString,
         hasOwn = objProto.hasOwnProperty,
@@ -13,21 +14,21 @@ define(function (require, exports, module) {
         _ = {};
 
     // 检测系统和浏览器
-    // var ua = navigator.userAgent,
-    //     os = {},
+    var ua = navigator.userAgent,
+        os = {},
+        ipad = ua.match(/(iPad).*OS\s([\d_]+)/),
+        iphone = !ipad && ua.match(/(iPhone\sOS)\s([\d_]+)/),
+        android = ua.match(/(Android)\s+([\d.]+)/);
     //     browser = {},
     //     webkit = ua.match(/WebKit\/([\d.]+)/),
-    //     android = ua.match(/(Android)\s+([\d.]+)/),
-    //     ipad = ua.match(/(iPad).*OS\s([\d_]+)/),
-    //     iphone = !ipad && ua.match(/(iPhone\sOS)\s([\d_]+)/),
     //     kindle = ua.match(/Kindle\/([\d.]+)/),
     //     silk = ua.match(/Silk\/([\d._]+)/),
     //     uc = ua.match(/UC/);
 
     // browser.webkit = !!webkit;
     // if (browser.webkit) { browser.version = webkit[1]; }
-    // if (android) { os.android = true; os.version = android[2]; }
-    // if (iphone) { os.ios = os.iphone = true; os.version = iphone[2].replace(/_/g, '.'); }
+    if (android) { os.android = true; os.version = android[2]; }
+    if (iphone) { os.ios = os.iphone = true; os.version = iphone[2].replace(/_/g, '.'); }
     // if (ipad) { os.ios = os.ipad = true; os.version = ipad[2].replace(/_/g, '.'); }
     // if (kindle) { os.kindle = true; os.version = kindle[1]; }
     // if (silk) { browser.silk = true; browser.version = silk[1]; }
@@ -36,7 +37,7 @@ define(function (require, exports, module) {
     // if (!android && !ipad && !iphone && !kindle && !silk && !uc) {
     //     browser.desktop = true;
     // }
-    // _.os = os;
+    _.os = os;
     // _.browser = browser;
 
     // 返回对象的类型
@@ -101,67 +102,84 @@ define(function (require, exports, module) {
     // 扩展方法
     // 来自 jQuery
     //extend([deep,] target, obj1 [, objN])
-    _.extend = function () {
-        var options, name, src, copy, copyIsArray, clone,
-            target = arguments[0] || {},
-            i = 1,
-            length = arguments.length,
-            deep = false;
+    // _.extend = function () {
+    //     var options, name, src, copy, copyIsArray, clone,
+    //         target = arguments[0] || {},
+    //         i = 1,
+    //         length = arguments.length,
+    //         deep = false;
 
-        // Handle a deep copy situation
-        if (typeof target === 'boolean') {
-            deep = target;
-            target = arguments[1] || {};
-            // skip the boolean and the target
-            i = 2;
-        }
+    //     // Handle a deep copy situation
+    //     if (typeof target === 'boolean') {
+    //         deep = target;
+    //         target = arguments[1] || {};
+    //         // skip the boolean and the target
+    //         i = 2;
+    //     }
 
-        // Handle case when target is a string or something (possible in deep copy)
-        if (typeof target !== 'object' && _.type(target) !== 'function') {
-            target = {};
-        }
+    //     // Handle case when target is a string or something (possible in deep copy)
+    //     if (typeof target !== 'object' && _.type(target) !== 'function') {
+    //         target = {};
+    //     }
 
-        // extend caller itself if only one argument is passed
-        if (length === i) {
-            target = this;
-            --i;
-        }
+    //     // extend caller itself if only one argument is passed
+    //     if (length === i) {
+    //         target = this;
+    //         --i;
+    //     }
 
-        for (; i < length; i++) {
-            // Only deal with non-null/undefined values
-            if ((options = arguments[i]) != null) {
-                // Extend the base object
-                for (name in options) {
-                    src = target[name];
-                    copy = options[name];
+    //     for (; i < length; i++) {
+    //         // Only deal with non-null/undefined values
+    //         if ((options = arguments[i]) != null) {
+    //             // Extend the base object
+    //             for (name in options) {
+    //                 src = target[name];
+    //                 copy = options[name];
 
-                    // Prevent never-ending loop
-                    if (target === copy) {
-                        continue;
-                    }
+    //                 // Prevent never-ending loop
+    //                 if (target === copy) {
+    //                     continue;
+    //                 }
 
-                    // Recurse if we're merging plain objects or arrays
-                    if (deep && copy && (_.isPlainObject(copy) || (copyIsArray = _.type(copy) === 'array'))) {
-                        if (copyIsArray) {
-                            copyIsArray = false;
-                            clone = src && _.type(src) === 'array' ? src : [];
-                        } else {
-                            clone = src && _.isPlainObject(src) ? src : {};
-                        }
+    //                 // Recurse if we're merging plain objects or arrays
+    //                 if (deep && copy && (_.isPlainObject(copy) || (copyIsArray = _.type(copy) === 'array'))) {
+    //                     if (copyIsArray) {
+    //                         copyIsArray = false;
+    //                         clone = src && _.type(src) === 'array' ? src : [];
+    //                     } else {
+    //                         clone = src && _.isPlainObject(src) ? src : {};
+    //                     }
 
-                        // Never move original objects, clone them
-                        target[name] = _.extend(deep, clone, copy);
+    //                     // Never move original objects, clone them
+    //                     target[name] = _.extend(deep, clone, copy);
 
-                    // Don't bring in undefined values
-                    } else if (copy !== undefined) {
-                        target[name] = copy;
-                    }
-                }
-            }
-        }
+    //                 // Don't bring in undefined values
+    //                 } else if (copy !== undefined) {
+    //                     target[name] = copy;
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        // Return the modified object
-        return target;
+    //     // Return the modified object
+    //     return target;
+    // };
+    _.extend = $.extend;
+    _.escapeHTML = function (str) {
+        var xmlchar = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;',
+            '{': '&#123;',
+            '}': '&#125;',
+            '@': '&#64;'
+        };
+        str = str || '';
+        return str.replace(/[&<>'"\{\}@]/g, function ($1) {
+            return xmlchar[$1];
+        });
     };
 
     // shim for Array.prototype.indexOf from MDN
@@ -239,14 +257,36 @@ define(function (require, exports, module) {
         }
         return true;
     };
-    // 函数柯里化
-    Function.prototype.curry = function () {
-        var slice = Array.prototype.slice,
-            args = slice.apply(arguments),
-            that = this;
+    /**
+     * 事件防抖
+     */
+    function debounce(func, wait, immediate) {
+        var timeout;
         return function () {
-            return that.apply(this, args.concat(slice.apply(arguments)));
+            var context = this, args = arguments;
+            var later = function () {
+                timeout = null;
+                if (!immediate) {
+                    func.apply(context, args);
+                }
+            };
+            var callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) {
+                func.apply(context, args);
+            }
         };
-    };
+    }
+    _.debounce = debounce;
+    // // 函数柯里化
+    // Function.prototype.curry = function () {
+    //     var slice = Array.prototype.slice,
+    //         args = slice.apply(arguments),
+    //         that = this;
+    //     return function () {
+    //         return that.apply(this, args.concat(slice.apply(arguments)));
+    //     };
+    // };
     module.exports = _;
 });

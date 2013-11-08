@@ -4,7 +4,10 @@
  */
 define(function(require, exports) {
     'use strict';
-    var Component = require('base/component');
+    require('pages/category');
+    require('pages/index');
+    var $ = require('core/selector'),
+        Component = require('base/component');
 
     var App = Component.extend({
         type: 'application',
