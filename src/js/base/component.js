@@ -7,7 +7,7 @@ define(function (require, exports) {
         _ = require('core/lang'),
         Display = require('base/display'),
         Event = require('base/event'),
-        initVar = ['name', 'components', 'params', 'data', 'queries', 'state'],
+        initVar = ['name', 'components', 'params', 'data', 'queries', 'state', 'parentNode'],
         Component;
     //添加事件
     Event.register('BEFORE_RENDER_FIRST_COMPONENT', 'before:render:firstcomponent');
@@ -58,6 +58,20 @@ define(function (require, exports) {
             } else {
                 return false;
             }
+        },
+        /**
+         * 获取组件在层级关系中的位置
+         * @return {String} /index/recommend/app12
+         */
+        getAbsPath: function () {
+            var pathArray = [],
+                node = this;
+            while (node) {
+                pathArray.push(node.id);
+                node = node.parentNode;
+            }
+            pathArray.push('');
+            return pathArray.reverse().join('/');
         },
         /**
          * 检查Component是不是已经在等待渲染队列中
@@ -207,10 +221,11 @@ define(function (require, exports) {
                     }
                     //创建组件
                     cp = new Component($.extend({
-                        parent: this.el,
+                        parentEl: self.el,
+                        parentNode: self,
                         params: option.params,
                         queries: option.queries,
-                        data: this.data,
+                        data: self.data,
                         renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));
                     self._linkCmp(cp, prevCp);
@@ -279,7 +294,7 @@ define(function (require, exports) {
                 component = component.nextNode;
             }
             if (firstcomponent) {
-                firstcomponent.parent.appendChild(fragment);
+                firstcomponent.parentEl.appendChild(fragment);
             }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             return this._super();

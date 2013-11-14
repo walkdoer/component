@@ -10,7 +10,7 @@ define(function (require, exports) {
         Event = require('base/event'),
         slice = Array.prototype.slice,
         methods = ['show', 'hide', 'toggle', 'empty'],
-        initVar = ['tpl', 'tplContent', 'parent', 'className', 'id', 'display', 'el', 'selector', 'renderAfterInit'],
+        initVar = ['tpl', 'tplContent', 'parentEl', 'className', 'id', 'display', 'el', 'selector', 'renderAfterInit'],
         Display,
         _handleEvent;
     _handleEvent = function () {
@@ -18,7 +18,7 @@ define(function (require, exports) {
             args = slice.call(arguments, 1),
             eventName = this.getEvent(args[0]),
             el;
-        el = eventName ? this.$parent : this.$el;
+        el = eventName ? this.$parentEl : this.$el;
         args[0] = eventName || args[0];
         //console.log(type + ': ' + args[0], el[0]);
         el[type].apply(el, args);
@@ -28,7 +28,7 @@ define(function (require, exports) {
         type: 'display',
         tpl: null,
         tplContent: null,
-        parent: null,
+        parentEl: null,
         _num: null,  //编号
         el: null,
         $el: null,  //该展示区域的容器
@@ -132,17 +132,12 @@ define(function (require, exports) {
                 callback();
             });
         },
-        createError: function (code, msg) {
-            var err = new Error(msg);
-            err.code = code;
-            return err;
-        },
         /**
          * {Private} 添加到父亲节点
          */
         appendToParent: function () {
-            if (this.parent) {
-                this.$el.appendTo(this.parent);
+            if (this.parentEl) {
+                this.$el.appendTo(this.parentEl);
             }
             return this;
         },
@@ -205,10 +200,10 @@ define(function (require, exports) {
             self.id = [self.getType(), self._num].join('-');
             //初始化变量
             self.initVariable(option, initVar);
-            //创建parent的$(object)对象
-            var parent = self.parent;
-            if (parent) {
-                self.$parent = $(parent);
+            //创建parentEl的$(object)对象
+            var parentEl = self.parentEl;
+            if (parentEl) {
+                self.$parentEl = $(parentEl);
             }
             //创建el的$(object)对象
             var el = self.el;
@@ -217,7 +212,7 @@ define(function (require, exports) {
             }
             var selector = self.selector;
             if (typeof selector === 'string') {
-                self.$el = self.$parent.find(selector);
+                self.$el = self.$parentEl.find(selector);
                 self.el = self.$el[0];
             }
             //保存用户原始配置，已备用

@@ -3,7 +3,8 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/component'),
+    var  $ = require('core/selector'),
+        Component = require('base/component'),
         Event = require('base/event'),
         typeName = 'tab',
         Tab;
@@ -35,11 +36,10 @@ define(function (require, exports) {
         },
         activeTab: function (tabName) {
             if (!tabName) { return; }
-            var $tab = this.$curTab = this.$parent.find('ul').find('[data-target=' + tabName + ']');
+            var $tab = this.$curTab = this.$el.find('ul').find('[data-target=' + tabName + ']');
             var self = this;
             var next = {};
             if (self.tabName === $tab.attr('data-target')) {
-                console.debug('点击同一个tab, 无需切换');
                 return;
             }
             self.trigger('BEFORE_ACTIVE', [self, next]);
@@ -85,7 +85,7 @@ define(function (require, exports) {
         },
         listeners: {
             'AFTER_RENDER': function (evt, tab) {
-                tab.$tabs = tab.$parent.find('ul').find('li');
+                tab.$tabs = tab.$el.find('ul').find('li');
                 tab.activeTab(tab.params.tab);
             }
         }
