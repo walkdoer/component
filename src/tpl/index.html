@@ -9,9 +9,7 @@
     <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 <body>
-<section id="welcome-page" class="welcome-msg"><p>加载应用中...</p></section>
-<div class="app1"></div>
-<div class="app2"></div>
+<section id="welcome-page" class="welcome-msg"><p>加载TODO...</p></section>
 </body>
 <!-- SCRIPT -->
 <script src="js/seajs/sea.js"></script>
@@ -24,13 +22,11 @@ seajs.config({
 });
 seajs.use('app', function (App) {
     var app = new App({
-        name: 'andrewTravelDiary',
-        parent: false,
-        el: document.body,
+        id: 'todo',
+        parent: document.body,
         beforeLoad: '#welcome-page', //加载中提示
         pages: {
             index: {},
-            info: {},
             help: {}
         }
     });
