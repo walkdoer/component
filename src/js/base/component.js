@@ -34,9 +34,10 @@ define(function (require, exports) {
         },
         getParams: function (newState) {
             var self = this,
-                newParams = {},
+                newParams,
                 state = self.state;
             if ($.isArray(state)) {
+                newParams = {};
                 $.each(state, function (index, stateItm) {
                     var hierarchy = stateItm.split('.'),
                         state = newState,
@@ -65,9 +66,22 @@ define(function (require, exports) {
          */
         getAbsPath: function () {
             var pathArray = [],
-                node = this;
+                node = this,
+                statusArray,
+                statusStr,
+                params;
             while (node) {
-                pathArray.push(node.id);
+                statusStr = '';
+                params = node.params;
+                if (params) {
+                    statusArray = [];
+                    $.each(params, function (key, value) {
+                        statusArray.push(value);
+                    });
+                    //产生出 '(status1[,status2[,status3]...])' 的字符串
+                    statusStr = ['(', statusArray.join(','), ')'].join('');
+                }
+                pathArray.push(node.id + statusStr);
                 node = node.parentNode;
             }
             pathArray.push('');
