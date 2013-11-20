@@ -16,7 +16,7 @@ define(function (require, exports) {
         components: [{
             _constructor_: TopBar,
             option: {
-                state: ['queries.name']
+                status: ['queries.name']
             }
         }, {
             _constructor_: AutoFillList,
@@ -26,7 +26,7 @@ define(function (require, exports) {
                 loadSize: 5,
                 tpl: '#tpl-list-app',
                 api: 'apps',
-                state: ['params.cat', 'queries.name'],
+                status: ['params.cat', 'queries.name'],
                 li: AppItem
             }
         }],

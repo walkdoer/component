@@ -11,7 +11,7 @@ define(function (require, exports) {
     TopBar = Component.extend({
         type: 'topBar',
         tpl: '#tpl-bar-top',
-        state: ['queries.name'],
+        status: ['queries.name'],
         components: [{
             _constructor_: Button,
             option: {

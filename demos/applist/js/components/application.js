@@ -55,8 +55,7 @@ define(function(require, exports) {
                     id: pageName,
                     parentNode: self,
                     parentEl: self.el,
-                    params: state.params,
-                    queries: state.queries,
+                    state: state,
                     listeners: {
                         'BEFORE_RENDER': function (evt, page) {
                             //如果要加载的页面没有页面模板，则不清空Body

@@ -14,7 +14,7 @@ define(function (require, exports) {
         _handleEvent = function () {
             var type = arguments[0],
                 args = slice.call(arguments, 1),
-                eventName = this.getEvent(args[0]),
+                eventName = this._getEvent(args[0]),
                 el;
             el = eventName ? this.$parentEl : this.$el;
             args[0] = eventName || args[0];
@@ -37,16 +37,24 @@ define(function (require, exports) {
                 'tpl',
                 'tplContent',
                 'parentEl',
+                'state',
+                'status',
                 'className',
                 'display',
                 'el',
                 'selector'
             ]);
+
+            self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
+            self._cpConstructors = self.components;
+
             if (self.parentEl) {
                 self.$parentEl = $(self.parentEl);
             } else {
                 throw new Error('component ' + this.getId() + 'no parent');
             }
+            //初始化参数
+            self.params = self._getParams(option.state);
             //初始化组件HTML元素
             self._initHTMLElement(function () {
                 self.$el.attr('id', self.id)
@@ -59,6 +67,8 @@ define(function (require, exports) {
                 if (typeof callback === 'function') {
                     callback();
                 }
+                //添加新建的子组件到组件中
+                self.appendCmp(self._buildComponents());
                 //之前被通知过render，模板准备好之后进行渲染
                 if (self.needToRender) {
                     self.render();
@@ -120,7 +130,7 @@ define(function (require, exports) {
             var component = this.firstChild;
             while (component) {
                 //组件有状态，且状态改变，则需要更新，否则保持原样
-                if (component.state && component._isStateChange(state) && component.rendered) {
+                if (component.status && component._isStateChange(state) && component.rendered) {
                     component.update(state, data);
                 }
                 component = component.nextNode;
@@ -131,6 +141,9 @@ define(function (require, exports) {
          * @param  {Array/DisplayComponent} componentArray
          */
         appendCmp: function (componentArray) {
+            if (!componentArray) {
+                return;
+            }
             var self = this;
             componentArray = $.isArray(componentArray) ? componentArray : [componentArray];
             $.each(componentArray, function (i, component) {
@@ -316,6 +329,9 @@ define(function (require, exports) {
             this.rendered = true; //标志已经渲染完毕
             this.trigger('AFTER_RENDER', [this]);
         },
+        /**
+         * 绑定UI事件
+         */
         _bindUIEvent: function () {
             var evts = this.uiEvents,
                 elementSelector,
@@ -348,7 +364,7 @@ define(function (require, exports) {
                 })(callback, this));
             }
         },
-        getParams: function (newState) {
+        _getParams: function (newState) {
             var self = this,
                 newParams,
                 state = self.state;
@@ -372,18 +388,26 @@ define(function (require, exports) {
          * @param  {String} eventName 事件代号 BEFORE_RENDER
          * @return {String}           list:myList:beforerender
          */
-        getEvent: function (eventName) {
+        _getEvent: function (eventName) {
             return Event.get(this.type, eventName, this.getType(), this.id);
         },
-        _isStateChange: function (newParams) {
-            var state = this.getParams(newParams);
-            if (!_.equal(state, this.params)) {
-                this.params = state;
+        /**
+         * 组件状态是否有改变
+         * @param  {Object}  newParams 组件的新状态
+         * @return {Boolean}
+         */
+        _isStateChange: function (newState) {
+            var newParams = this._getParams(newState);
+            if (!_.equal(newParams, this.params)) {
+                this.params = newParams;
                 return true;
             } else {
                 return false;
             }
         },
+        /**
+         * 创建子组件
+         */
         _buildComponents: function () {
             var self = this,
                 cpConstructors = self._cpConstructors,//组件构造函数列表
@@ -410,8 +434,7 @@ define(function (require, exports) {
                     cp = new Component($.extend({
                         parentEl: self.el,
                         parentNode: self,
-                        params: option.params,
-                        queries: option.queries,
+                        state: option.state,
                         data: self.data,
                         renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));

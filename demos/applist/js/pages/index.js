@@ -123,7 +123,7 @@ define(function (require, exports) {
     }
     Index = Component.extend({
         name: 'index',
-        //state: ['params.tab'],//指定页面状态
+        //status: ['params.tab'],//指定页面状态
         components: [{
             _constructor_: Logo,
             option: {
@@ -133,7 +133,7 @@ define(function (require, exports) {
             _constructor_: Tab,
             option: {
                 id: 'indexTab',
-                state: ['params.tab'] //指定Tab组件状态
+                status: ['params.tab'] //指定Tab组件状态
             }
         }],
         init: function (option) {
