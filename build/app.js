@@ -12,6 +12,10 @@ module.exports = function (config) {
             get: function (req, res) {
             }
         },
+        '/demo/appstore': {
+            template: 'demos/applist/index.html',
+            get: function (req, res) {}
+        },
         '/category': {
             get: function (req, res) {
                 return {

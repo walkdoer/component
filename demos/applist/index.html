@@ -1,11 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>UC App Store</title>
+    <title>UC Web Store</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;" />
     <meta name="MobileOptimized" content="320"/>
-    <link rel="stylesheet" type="text/css" href="css/style.min.css"><!doctype html>
+    <!-- build:style main -->
+    <link rel="stylesheet" type="text/css" href="./css/reset.css">
+    <link rel="stylesheet" type="text/css" href="./css/style.css">
+    <!-- /build -->
 </head>
 <body>
 <!--============
@@ -18,7 +21,6 @@
    =============================-->
 <script type="text/template" id="tpl-top-nav">
 <header class="top-nav">
-    <!-- LOGO -->
     <p class="logo">
         <span class="h-t">Add your favourite sites</span>
         <span class="h-btn"><i class="icn">Add URL</i></span>
@@ -30,12 +32,10 @@
  ===============================-->
 <script type="text/template" id="tpl-tab">
 <div class="tab">
-    <!-- Tab Navigator -->
     <ul class="n-ul">
         <li class="n-u-l" data-target="recommend">Recommend</li>
         <li class="n-u-l" data-target="category">Categories</li>
     </ul>
-    <!-- Tab Content-->
     <div class="tab-cont">
         <div class="pane recommend"></div>
         <div class="pane category"></div>
@@ -55,7 +55,7 @@
     {Component} App LIST （应用列表）
    ==========================-->
 <script type="text/template" id="tpl-list-app" >
-<div data-empty="no apps" data-loading="<span class='processing'></span>loading">
+<div data-empty="No Apps" data-loading="<span class='processing'></span>loading">
     <p class="list-msg"></p>
     <ul class="app-list clearfix recommed"></ul>
 </div>
@@ -65,15 +65,11 @@
    =========================-->
 <script type="text/template" id="tpl-item-app">
 <li class="app" data-icon="<%=data.logoUrl%>" data-id="<%=data.id%>" data-name="<%=data.name%>" data-url="<%=data.url%>">
-    <!-- 插件图标 -->
     <div class="icn"></div>
-    <!-- 插件详细信息 -->
     <div class="meta">
         <p class="title"><%=data.name%></p>
-        <!-- 描述 -->
         <p class="desc"><%=data.des%></p>
     </div>
-    <!-- 安装按钮（已安装/未安装） -->
     <div class="btn"><span class="<%=(data.installed ? 'installed' : 'install')%>"></span></div>
 </li>
 </script>
@@ -81,7 +77,7 @@
     {Component} Category List (类别列表模板)
    ============================-->
 <script type="text/template" id="tpl-list-category">
-<div data-empty="no category" data-loading="<span class='processing'></span>loading">
+<div data-empty="No category" data-loading="<span class='processing'></span>loading">
     <p class="list-msg"></p>
     <ul class="cate-list clearfix"></ul>
 </div>
@@ -91,14 +87,11 @@
    =======================-->
 <script type="text/template" id="tpl-item-category">
 <li class="cate" data-icon="<%=data.logoUrl%>" data-info="<%=[data.id, data.name].join(':')%>">
-    <!-- 插件详细信息 -->
     <div class="wrapper">
         <div class="meta">
             <p class="title"><%=data.name%></p>
-            <!-- 描述 -->
             <p class="desc"><%=data.represent%></p>
         </div>
-        <!-- 插件图标 -->
         <div class="icn"></div>
     </div>
 </li>
@@ -119,7 +112,7 @@
     <div class="top-bar">
         <span class="b-btn-cancel cancel">Cancel</span>
         <button type="submit" class="b-btn-ok submit">Ok</button>
-        <p class="b-title-center">Add Url</p>
+        <p class="b-title-center">Add URL</p>
     </div>
     <div class="form-fields">
         <p class="inputbox" id="field-url">
@@ -145,9 +138,12 @@
 <li class="input-history-item" data-name="<%=data.name%>"><%=data.url%></ul>
 </script>
 
-
-<!-- <script src="http://jsconsole.com/remote.js?BB79A4CB-66F9-401B-81EF-34C44AAC8AF9"></script> -->
-<script src="js/appStore.min.js"></script>
+<!-- build:remove -->
+<!--<script src="http://jsconsole.com/remote.js?BB79A4CB-66F9-401B-81EF-34C44AAC8AF9"></script>-->
+<!-- /build -->
+<!-- build:script main -->
+<script src="./js/seajs/sea.js"></script>
+<!-- /build -->
 <script>
 seajs.config({
     alias: {
@@ -158,26 +154,15 @@ seajs.config({
 seajs.use('app', function (app) {
     var prefix = 'http://appstorei.test.uae.uc.cn/';
     var app = app.init({
-        name: '插件平台国际版',
         parent: document.body,
-        beforeLoad: '#welcome-page', //加载中提示
+        beforeLoad: '#welcome-page',
         jsonp: true,
-        /*simulator: {
-            ua: 'usa',
-            ve: '8.0.1.123',
-            la: 'en'
-        },
-        api: {
-            'recommend': 'Recommend/list',
-            'category': 'Category/index',
-            'apps': 'Category/list',
-            'addUrl': prefix + 'add_app'
-        },*/
         api: {
             'recommend': prefix + 'Recommend/getRecommendApps',
             'category': prefix + 'Category/getCategories',
             'apps': prefix + 'Category/getCategoryApps',
-            'addUrl': prefix + 'add_app'
+            'addUrl': prefix + 'add_app?uc_param_str=nieidnutssvebipfcpla',
+            'log': prefix + 'add_log'
         },
         defaultRoute: '/index/recommend',
         pages: {
