@@ -1,5 +1,5 @@
 /**
- * 显示类
+ * 节点类
  */
 define(function (require, exports) {
     'use strict';

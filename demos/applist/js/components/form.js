@@ -4,7 +4,7 @@
 define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
-        Component = require('base/component'),
+        Component = require('base/node.display'),
         Event = require('base/event'),
         typeName = 'form',
         WARN_CLASS = 'warn',

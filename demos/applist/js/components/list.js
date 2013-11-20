@@ -4,7 +4,7 @@
 define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
-        Component = require('base/component'),
+        Component = require('base/node.display'),
         Model = require('model'),
         Event = require('base/event'),
         LoadMoreButton = require('components/button.loadmore'),

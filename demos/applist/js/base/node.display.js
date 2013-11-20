@@ -7,7 +7,7 @@ define(function (require, exports) {
     var $ = require('selector'),
         _ = require('core/lang'),
         slice = Array.prototype.slice,
-        Component = require('base/node'),
+        Node = require('base/node'),
         template = require('core/template'),
         emptyFunc = function () {},
         _handleEvent = function () {
@@ -32,7 +32,7 @@ define(function (require, exports) {
         //console.debug(cpA.type, cpB.type);
         return cpA.type === cpB.type && cpA.num === cpB.num;
     }
-    DisplayComponent = Component.extend({
+    DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
         tplDowloading: false, //下载模板中
@@ -75,7 +75,23 @@ define(function (require, exports) {
          */
         render: function () {
             var self = this,
-                originOption = self.originOption;
+                originOption = self.originOption,
+                fragment = document.createDocumentFragment(),
+                firstChild = self.firstChild,
+                component = firstChild;
+            //先渲染组件的子组件
+            while (component) {
+                if (!component.selector) {
+                    fragment.appendChild(component.render().el);
+                } else {
+                    component._finishRender();
+                }
+                component = component.nextNode;
+            }
+            if (firstChild) {
+                firstChild.parentEl.appendChild(fragment);
+            }
+            //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!self.selector || self.rendered) {
                 if (self.initialized) {
@@ -98,8 +114,45 @@ define(function (require, exports) {
             }
             return self;
         },
-        update: function () {
-            return this;
+        /**
+         * 更新组件
+         * @param  {[type]} state [description]
+         * @param  {[type]} data  [description]
+         * @return {[type]}       [description]
+         */
+        update: function (state, data) {
+            //更新组件的子组件
+            var component = this.firstChild;
+            while (component) {
+                //组件有状态，且状态改变，则需要更新，否则保持原样
+                if (component.state && component.isStateChange(state) && component.rendered) {
+                    component.update(state, data);
+                }
+                component = component.nextNode;
+            }
+        },
+        /**
+         * 添加组件
+         * @param  {Array/DisplayComponent} componentArray
+         */
+        appendCmp: function (componentArray) {
+            var self = this;
+            componentArray = $.isArray(componentArray) ? componentArray : [componentArray];
+            $.each(componentArray, function (i, component) {
+                component.on('BEFORE_RENDER', function (event, component) {
+                    //组件还没有渲染
+                    if (!self.allowToRender(component)) {
+                        component.isContinueRender = false;
+                    } else {
+                        if (!component.prevNode) {
+                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
+                        }
+                        // isContinueRender 表示执行下面的Render
+                        component.isContinueRender = true;
+                    }
+                });
+                self.appendChild(component);
+            });
         },
         /**
          * 渲染模板
@@ -175,7 +228,21 @@ define(function (require, exports) {
             return pathArray.reverse().join('/');
         },
         /**
+         * 是否允许渲染
+         * 只有上一个节点渲染结束之后，当前节点才可渲染
+         * 这样的规则是为了尽可能的减少浏览器重绘
+         * @return {Boolean}
+         */
+        allowToRender: function () {
+            if (this.prevNode.rendered) {
+                return true;
+            } else {
+                return false;
+            }
+        },
+        /**
          * 初始化模板
+         * tpl的取值: #a-tpl-id 或者 'tpl.file.name'
          * @param  {Function} callback 回调
          */
         _initTemplate: function (callback) {
@@ -250,33 +317,6 @@ define(function (require, exports) {
             this.rendered = true; //标志已经渲染完毕
             this.trigger('AFTER_RENDER', [this]);
         },
-        _popWaitQueue: function () {
-            return this._componentsWaitToRender.splice(0, 1)[0];
-        },
-        /**
-         * 检查Component是不是已经在等待渲染队列中
-         * @param  {Component}  component 组件
-         * @return {Boolean}
-         */
-        isInWaitQueue: function (component) {
-            var components = this._componentsWaitToRender;
-            for (var i = 0; i < components.length; i++) {
-                if (isSameComponent(components[i], component)) {
-                    return true;
-                }
-            }
-            return false;
-        },
-        /**
-         * 是否所有的组件都已渲染完毕
-         * @return {Boolean}
-         */
-        isAllComponentRendered: function () {
-            if (this._componentsWaitToRender.length === 0) {
-                return true;
-            }
-            return false;
-        },
         _bindUIEvent: function () {
             var evts = this.uiEvents,
                 elementSelector,
@@ -344,7 +384,6 @@ define(function (require, exports) {
                 Component,
                 option = this.originOption,
                 cItm,
-                prevCp = null,
                 cp = null;
             //构造子组件（sub Component）
             if ($.isArray(cpConstructors)) {
@@ -354,7 +393,7 @@ define(function (require, exports) {
                         Component = cItm;
                     } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
                         Component = cItm._constructor_;
-                    } else if (cItm instanceof Display) { //已经创建好的组件实例
+                    } else if (cItm instanceof Node) { //已经创建好的组件实例
                         components.push(cItm);
                         continue;
                     } else { //检查到错误，提示使用者
@@ -369,8 +408,6 @@ define(function (require, exports) {
                         data: self.data,
                         renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));
-                    self._linkCmp(cp, prevCp);
-                    prevCp = cp;
                     components.push(cp);
                 }
                 return components;
@@ -382,7 +419,7 @@ define(function (require, exports) {
                 return null;
             }
             return null;
-        },
+        }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
     _.each(['show', 'hide', 'toggle', 'empty'], function (method) {

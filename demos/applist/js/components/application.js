@@ -6,7 +6,7 @@ define(function(require, exports) {
     require('pages/category');
     require('pages/index');
     var $ = require('core/selector'),
-        Component = require('base/component');
+        Component = require('base/node.display');
 
     var App = Component.extend({
         type: 'application',

@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/component'),
+    var Component = require('base/node.display'),
         Event = require('base/event'),
         Logo;
     Event.add('logo', {

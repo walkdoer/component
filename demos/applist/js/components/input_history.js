@@ -5,7 +5,7 @@ define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
         Event = require('base/event'),
-        Component = require('base/component'),
+        Component = require('base/node.display'),
         typeName = 'inputHistory',
         InputHistory;
     Event.add(typeName, {
