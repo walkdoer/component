@@ -38,6 +38,7 @@ define(function (require, exports) {
             self.initVar([
                 'tpl',
                 'tplContent',
+                'components',
                 'parentEl',
                 'state',
                 'data',
@@ -263,9 +264,6 @@ define(function (require, exports) {
                 html = $(tpl).html();
                 if (html) {
                     self.tplContent = html;
-                    callback(true);
-                } else {
-                    callback(false);
                 }
             } else if (tpl) {
                 //tpl配置是文件，异步加载文件
@@ -277,9 +275,8 @@ define(function (require, exports) {
                         callback(false);
                     }
                 });
-            } else {
-                callback(false);
             }
+            callback(!!self.tplContent);
         },
         /**
          * 初始化HTML元素
@@ -294,6 +291,7 @@ define(function (require, exports) {
             } else if (selector) {
                 self.$el = self.$parentEl.find(selector);
                 self.el = self.$el[0];
+                callback();
             } else {
                 self._initTemplate(function (success) {
                     if (success) {

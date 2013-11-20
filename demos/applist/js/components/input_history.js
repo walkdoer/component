@@ -14,8 +14,8 @@ define(function (require, exports) {
     InputHistory = Component.extend({
         type: typeName,
         init: function (option) {
-            this.initVar(['storageKey', 'childTplContent', 'storageSize', 'showSize', 'filter']);
             this._super(option);
+            this.initVar(['storageKey', 'childTplContent', 'storageSize', 'showSize', 'filter']);
         },
         /**
          * {Private} 获取匹配的历史记录
