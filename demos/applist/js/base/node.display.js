@@ -23,6 +23,8 @@ define(function (require, exports) {
             return this;
         },
         DisplayComponent;
+    //添加事件
+    Event.register('BEFORE_RENDER_FIRST_COMPONENT', 'before:render:firstcomponent');
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -38,6 +40,7 @@ define(function (require, exports) {
                 'tplContent',
                 'parentEl',
                 'state',
+                'data',
                 'status',
                 'className',
                 'display',
@@ -63,6 +66,7 @@ define(function (require, exports) {
                 self._listen(self.listeners);
                 //用户创建的Listener
                 self._listen(option.listeners);
+                self._bindUIEvent();
                 self.initialized = true;
                 if (typeof callback === 'function') {
                     callback();
@@ -81,21 +85,21 @@ define(function (require, exports) {
         render: function () {
             var self = this,
                 originOption = self.originOption,
-                fragment = document.createDocumentFragment(),
+                // fragment = document.createDocumentFragment(),
                 firstChild = self.firstChild,
                 component = firstChild;
             //先渲染组件的子组件
             while (component) {
                 if (!component.selector) {
-                    fragment.appendChild(component.render().el);
+                    component.parentEl.appendChild(component.render().el);
                 } else {
                     component._finishRender();
                 }
                 component = component.nextNode;
             }
-            if (firstChild) {
-                firstChild.parentEl.appendChild(fragment);
-            }
+            // if (firstChild) {
+            //     firstChild.parentEl.appendChild(fragment);
+            // }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!self.selector || self.rendered) {
@@ -367,11 +371,11 @@ define(function (require, exports) {
         _getParams: function (newState) {
             var self = this,
                 newParams,
-                state = self.state;
-            if ($.isArray(state)) {
+                status = self.status;
+            if ($.isArray(status)) {
                 newParams = {};
-                $.each(state, function (index, stateItm) {
-                    var hierarchy = stateItm.split('.'),
+                $.each(status, function (index, statu) {
+                    var hierarchy = statu.split('.'),
                         state = newState,
                         paramKey;
                     $.each(hierarchy, function (index, key) {
