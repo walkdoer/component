@@ -14,7 +14,7 @@ define(function (require, exports) {
     InputHistory = Component.extend({
         type: typeName,
         init: function (option) {
-            this.initVariable(option, ['storageKey', 'childTplContent', 'storageSize', 'showSize', 'filter']);
+            this.initVar(['storageKey', 'childTplContent', 'storageSize', 'showSize', 'filter']);
             this._super(option);
         },
         /**

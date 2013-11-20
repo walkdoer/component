@@ -35,7 +35,7 @@ define(function (require, exports) {
             $el = self.$el; //注意：只有上一级Display初始化之后才会有对象才有$el属性
             self.pageNum = 0;
             self.first = true;
-            self.initVariable(option, ['childTpl', 'api', 'listSize', 'loadSize']);
+            self.initVar(['childTpl', 'api', 'listSize', 'loadSize']);
             self.$list = $el.find('ul');
             self.$msg = $el.find('.list-msg');
             self.emptyMsg = $el.data('empty');
@@ -74,7 +74,7 @@ define(function (require, exports) {
             //第一次加载和强制刷新都重新加载数据
             refresh = self.first || refresh;
             if (!self.btn) {
-                self.btn = self.getCmp(loadBtnId);
+                self.btn = self.getChildById(loadBtnId);
             }
             if (refresh) {
                 self.pageNum = 0;
@@ -116,7 +116,7 @@ define(function (require, exports) {
                     parentEl: self.$list[0],
                 }));
             });
-            self.addCmp(items);
+            self.appendCmp(items);
             self.render();
         },
         /**

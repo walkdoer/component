@@ -13,18 +13,16 @@ define(function(require, exports) {
         _pages: null,
         _firstInitial: true,
         init: function (option) {
-            this.startInit();
-            this._super(option, true);
-            this.initVariable(option, ['beforeLoad']);
-            this.finishInit();
+            this._super(option);
+            this.initVar(['beforeLoad']);
         },
         /**
          * 切换页面
          */
         changePage: function (pageName, state, data) {
             var self = this,
-                currentPage = self.getCmp(self.currentPage),
-                newPg = self.getCmp(pageName);
+                currentPage = self.getChildById(self.currentPage),
+                newPg = self.getChildById(pageName);
             //当前页面与要切换的页面相同，不需要切换
             if (currentPage && currentPage.id === pageName) {
                 currentPage.update(state, data);
@@ -40,7 +38,7 @@ define(function(require, exports) {
             } else {
                 //页面没有建立，创建页面
                 this._createPage(pageName, state, data, function (page) {
-                    self.addCmp(page);
+                    self.appendCmp(page);
                     page.render().appendToParent();
                     self.render().appendToParent();
                 });

@@ -34,7 +34,7 @@ define(function (require, exports) {
             //分类详情页渲染结束
             'AFTER_RENDER': function () {
                 //渲染结束，则通知列表加载数据
-                var list = this.getCmp('cateList');
+                var list = this.getChildById('cateList');
                 list.load();
             },
             //剔除已安装App,并保存到临时数组installedApps中

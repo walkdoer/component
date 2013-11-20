@@ -4,10 +4,11 @@
  */
 define(function (require, exports) {
     'use strict';
-    var $ = require('selector'),
+    var $ = require('core/selector'),
         _ = require('core/lang'),
         slice = Array.prototype.slice,
         Node = require('base/node'),
+        Event = require('base/event'),
         template = require('core/template'),
         emptyFunc = function () {},
         _handleEvent = function () {
@@ -22,16 +23,6 @@ define(function (require, exports) {
             return this;
         },
         DisplayComponent;
-    /**
-     * 比较两个组件是不是同一个
-     * @param  {Component}  cpA
-     * @param  {Component}  cpB
-     * @return {Boolean}
-     */
-    function isSameComponent(cpA, cpB) {
-        //console.debug(cpA.type, cpB.type);
-        return cpA.type === cpB.type && cpA.num === cpB.num;
-    }
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -51,18 +42,22 @@ define(function (require, exports) {
                 'el',
                 'selector'
             ]);
+            if (self.parentEl) {
+                self.$parentEl = $(self.parentEl);
+            } else {
+                throw new Error('component ' + this.getId() + 'no parent');
+            }
             //初始化组件HTML元素
-            self._initElement(function () {
+            self._initHTMLElement(function () {
                 self.$el.attr('id', self.id)
                         .attr('class', self.className);
                 //监听组件原生listener
                 self._listen(self.listeners);
                 //用户创建的Listener
                 self._listen(option.listeners);
+                self.initialized = true;
                 if (typeof callback === 'function') {
                     callback();
-                } else { //如果没有callback，则直接结束初始化
-                    self.finishInit();
                 }
                 //之前被通知过render，模板准备好之后进行渲染
                 if (self.needToRender) {
@@ -125,7 +120,7 @@ define(function (require, exports) {
             var component = this.firstChild;
             while (component) {
                 //组件有状态，且状态改变，则需要更新，否则保持原样
-                if (component.state && component.isStateChange(state) && component.rendered) {
+                if (component.state && component._isStateChange(state) && component.rendered) {
                     component.update(state, data);
                 }
                 component = component.nextNode;
@@ -141,7 +136,7 @@ define(function (require, exports) {
             $.each(componentArray, function (i, component) {
                 component.on('BEFORE_RENDER', function (event, component) {
                     //组件还没有渲染
-                    if (!self.allowToRender(component)) {
+                    if (!self._allowToRender(component)) {
                         component.isContinueRender = false;
                     } else {
                         if (!component.prevNode) {
@@ -229,16 +224,12 @@ define(function (require, exports) {
         },
         /**
          * 是否允许渲染
-         * 只有上一个节点渲染结束之后，当前节点才可渲染
+         * 只有上一个节点渲染结束之后，当前节点才可渲染,或者单前节点就是第一个节点
          * 这样的规则是为了尽可能的减少浏览器重绘
          * @return {Boolean}
          */
-        allowToRender: function () {
-            if (this.prevNode.rendered) {
-                return true;
-            } else {
-                return false;
-            }
+        _allowToRender: function () {
+            return !this.prevNode || this.prevNode.rendered;
         },
         /**
          * 初始化模板
@@ -247,12 +238,18 @@ define(function (require, exports) {
          */
         _initTemplate: function (callback) {
             var self = this,
-                tpl = self.tpl;
+                tpl = self.tpl,
+                html;
             callback = callback || emptyFunc;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl && tpl.indexOf('#') === 0) {
-                self.tplContent = $(tpl).html();
-                callback(true);
+                html = $(tpl).html();
+                if (html) {
+                    self.tplContent = html;
+                    callback(true);
+                } else {
+                    callback(false);
+                }
             } else if (tpl) {
                 //tpl配置是文件，异步加载文件
                 require.async('tpl/' + tpl, function (res) {
@@ -263,13 +260,15 @@ define(function (require, exports) {
                         callback(false);
                     }
                 });
+            } else {
+                callback(false);
             }
         },
         /**
          * 初始化HTML元素
          * @param  {Function} callback 回调函数
          */
-        _initElement: function (callback) {
+        _initHTMLElement: function (callback) {
             var self = this,
                 selector = self.selector;
             callback = callback || emptyFunc;
@@ -368,7 +367,15 @@ define(function (require, exports) {
             }
             return newParams;
         },
-        isStateChange: function (newParams) {
+        /**
+         * 获取事件的实际名称
+         * @param  {String} eventName 事件代号 BEFORE_RENDER
+         * @return {String}           list:myList:beforerender
+         */
+        getEvent: function (eventName) {
+            return Event.get(this.type, eventName, this.getType(), this.id);
+        },
+        _isStateChange: function (newParams) {
             var state = this.getParams(newParams);
             if (!_.equal(state, this.params)) {
                 this.params = state;

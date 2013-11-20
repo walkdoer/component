@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var $ = require('selector'),
+    var $ = require('core/selector'),
         Class = require('lib/class'),
         serialNumberGenerator = require('base/serialNumberGenerator'),
         Node;
@@ -33,7 +33,7 @@ define(function (require, exports) {
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = serialNumberGenerator.gen();
             //创建默认的ID，ID格式:{type}-{sn}
-            self.id = [self.getType(), self._num].join('-');
+            self.id = [self.getType(), self.sn].join('-');
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
         },
         /**
@@ -99,7 +99,7 @@ define(function (require, exports) {
          */
         initVar: function (variableArray) {
             var component = this,
-                option = component.originalOption;
+                option = component.originOption;
             variableArray.forEach(function (element) {
                 var variableConfigArray = element.split(':'),
                     optionKey = variableConfigArray[0],

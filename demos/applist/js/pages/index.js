@@ -59,8 +59,8 @@ define(function (require, exports) {
                         r: 'add_url'
                     });
                     Util.addUrlToUCBrowserSpeedail(urlInfo.name, urlInfo.url);
-                    this.getCmp('url')
-                        .getCmp('inputHistory').addHistory(urlInfo);
+                    this.getChildById('url')
+                        .getChildById('inputHistory').addHistory(urlInfo);
                     //清空，隐藏表单
                     this.clear().hide();
                 },
@@ -69,7 +69,7 @@ define(function (require, exports) {
                 },
                 'textfield:url:input': _.debounce(function (event, field) {
                     var form = this,
-                        inputHistory = field.getCmp('inputHistory'),
+                        inputHistory = field.getChildById('inputHistory'),
                         //由于时间关系，这部分代码先和HTML结构耦合，下一个版本解决耦合问题
                         //耦合处：field.$el.find('.clear')
                         $iconClear = field.$el.find('.clear');
@@ -106,7 +106,7 @@ define(function (require, exports) {
                         .render()
                         .appendToParent();
                         //让下拉框组件成为该textfield的子组件
-                        field.addCmp(inputHistory);
+                        field.appendCmp(inputHistory);
                     }
                     inputHistory.show().filte(field.value);
                 }),
@@ -114,7 +114,7 @@ define(function (require, exports) {
                 'textfield:url:blur': function (event, field) {
                     //延时执行目的是为避免下拉菜单隐藏之后无法点击下拉菜单列表项
                     var timer = setTimeout(function () {
-                        field.getCmp('inputHistory').hide();
+                        field.getChildById('inputHistory').hide();
                         clearTimeout(timer);
                     }, 100);
                 }
@@ -170,7 +170,7 @@ define(function (require, exports) {
                     });
                     this._lists[tabName] = list;//TODO 改写了getCmp方法之后可以直接通过getCmp方法来获得
                     //tab添加list组件
-                    tab.addCmp(list);
+                    tab.appendCmp(list);
                     //list组件渲染自己
                     list.render().load().appendToParent();
                 }
@@ -197,12 +197,12 @@ define(function (require, exports) {
             //点击添加Url
             'logo:topLogo:addurl': function () {
                 var page = this,
-                    urlAdder = page.getCmp(URL_ADDER_ID);
+                    urlAdder = page.getChildById(URL_ADDER_ID);
                 //创建URL表单，并成为页面的子组件
                 if (!urlAdder) {
                     urlAdder = createUrlAdder(page);
                     //将组件添加到页面中
-                    page.addCmp(urlAdder);
+                    page.appendCmp(urlAdder);
                     //渲染组件并添加到页面中
                     urlAdder.render().appendToParent();
                 }
