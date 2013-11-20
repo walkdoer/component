@@ -6,11 +6,20 @@ define(function (require, exports) {
     var Class = require('lib/class'),
         serialNumberGenerator = require('base/serialNumberGenerator'),
         Component;
+    function getter(propName) {
+        return function () {
+            return this[propName];
+        };
+    }
     Component = Class.extend({
         type: 'component',
         updating: false,  //更新中
         initializing: false,  //初始化进行中
         initialized: false,  //已初始化
+        /*-------- START OF GETTER -----*/
+        getType: getter('type'),
+        getId: getter('id'),
+        /*---------- END OF GETTER -----*/
         /**
          * 组件构造函数, 组件的初始化操作
          * @param  {Object} option 组件配置
@@ -18,23 +27,22 @@ define(function (require, exports) {
          */
         init: function (option) {
             var self = this;
+            //为每一个组件组件实例赋予一个独立的sn
             self.sn = serialNumberGenerator.gen();
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.getType(), self._num].join('-');
+            self.childNodes = [];
         },
         /**
-         * 更新组件
-         */
-        update: function () {
-            this.updating = true;
-            return this;
-        },
-        /**
-         * 析构
+         * 删除节点
          */
         destroy: function () {
-            this.$el.remove();
-            this.$el = null;
+            if (this.prevNode) {
+                this.prevNode.nextNode = this.nextNode;
+            }
+            if (this.nextNode) {
+                this.nextNode.prevNode = this.prevNode;
+            }
         },
         /**
          * 将组件连接起来
@@ -83,6 +91,22 @@ define(function (require, exports) {
                     component[variableName] = option[optionKey];
                 }
             });
+        },
+        /**
+         * 根据Id查找组件
+         * @param  {String} id 组件编号
+         * @return {Component/Null} 返回组件,找不到则返回Null
+         */
+        getChildById: function (id) {
+            var childNodes = this.childNodes,
+                node = childNodes[0];
+            while (node) {
+                if (node.id === id) {
+                    return node;
+                }
+                node = node.nextNode;
+            }
+            return null;
         }
     });
     return Component;
