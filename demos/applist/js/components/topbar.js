@@ -24,7 +24,7 @@ define(function (require, exports) {
         },
         init: function (option) {
             this._super(option);
-            this.setTitle(this.queries.name);
+            this.setTitle(this.state.queries.name);
         },
         setTitle: function (title) {
             this.$el.find('.b-title').html(_.escapeHTML(title));

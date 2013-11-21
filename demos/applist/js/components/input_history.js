@@ -71,7 +71,7 @@ define(function (require, exports) {
             len = historyArray.length;
             for (var i = 0; i < len; i++) {
                 historyItem = historyArray[i];
-                fragment.appendChild($(this.tmpl(historyItem, this.childTplContent))[0]);
+                fragment.appendChild($(this.tmpl(this.childTplContent, historyItem))[0]);
             }
             this.$el.empty().append(fragment);
             return this;
