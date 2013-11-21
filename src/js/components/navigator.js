@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/component'),
+    var Component = require('base/node.display'),
         Button = require('component/button'),
         Menu = require('component/menu'),
         Navigator;

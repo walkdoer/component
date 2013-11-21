@@ -1,10 +1,10 @@
 /**
- * [组件] 顶部导航条
+ * [Component] 顶部导航条
  */
 define(function (require, exports) {
     'use strict';
     var  $ = require('core/selector'),
-        Component = require('base/component'),
+        Component = require('base/node.display'),
         Event = require('base/event'),
         typeName = 'tab',
         Tab;
