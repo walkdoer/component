@@ -46,9 +46,6 @@ define(function (require, exports) {
             if (!this.firstChild) {
                 this.firstChild = this.lastChild = node;
             } else {
-                this.lastChild._linkNode({
-                    next: node
-                });
                 node._linkNode({
                     prev: this.lastChild
                 });
@@ -148,7 +145,9 @@ define(function (require, exports) {
         },
         /**
          * 将组件连接起来
-         *
+         * 
+         *               parentNode
+         *                   |
          *     prevNode -> curNode -> nextNode
          *
          */
