@@ -34,16 +34,12 @@ define(function (require, exports) {
             parentNode: parent,
             components: [{
                 _constructor_: TextField,
-                option: {
-                    id: 'url',
-                    selector: '#field-url'
-                }
+                id: 'url',
+                selector: '#field-url'
             }, {
                 _constructor_: TextField,
-                option: {
-                    id: 'name',
-                    selector: '#field-name'
-                }
+                id: 'name',
+                selector: '#field-name'
             }],
             uiEvents: {
                 'touchmove': function (event) {
@@ -126,15 +122,11 @@ define(function (require, exports) {
         //status: ['params.tab'],//指定页面状态
         components: [{
             _constructor_: Logo,
-            option: {
-                id: 'topLogo'
-            }
+            id: 'topLogo'
         }, {
             _constructor_: Tab,
-            option: {
-                id: 'indexTab',
-                status: ['params.tab'] //指定Tab组件状态
-            }
+            id: 'indexTab',
+            status: ['params.tab'] //指定Tab组件状态
         }],
         init: function (option) {
             this._lists = {};

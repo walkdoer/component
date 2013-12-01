@@ -22,11 +22,9 @@ define(function (require, exports) {
         type: typeName,
         components: [{
             _constructor_: LoadMoreButton,
-            option: {
-                id: loadBtnId,
-                tpl: '#tpl-btn-loadmore',
-                display: false
-            }
+            id: loadBtnId,
+            tpl: '#tpl-btn-loadmore',
+            display: false
         }],
         init: function (option) {
             var self = this,

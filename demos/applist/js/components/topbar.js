@@ -14,10 +14,8 @@ define(function (require, exports) {
         status: ['queries.name'],
         components: [{
             _constructor_: Button,
-            option: {
-                id: 'back',
-                selector: '.b-btn-back'
-            }
+            id: 'back',
+            selector: '.b-btn-back'
         }],
         update: function (state) {
             this.setTitle(state.queries.name);

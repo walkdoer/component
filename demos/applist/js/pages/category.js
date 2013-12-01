@@ -15,20 +15,16 @@ define(function (require, exports) {
         name: 'category',
         components: [{
             _constructor_: TopBar,
-            option: {
-                status: ['queries.name']
-            }
+            status: ['queries.name']
         }, {
             _constructor_: AutoFillList,
-            option: {
-                id: 'cateList',
-                listSize: 10,
-                loadSize: 5,
-                tpl: '#tpl-list-app',
-                api: 'apps',
-                status: ['params.cat', 'queries.name'],
-                li: AppItem
-            }
+            id: 'cateList',
+            listSize: 10,
+            loadSize: 5,
+            tpl: '#tpl-list-app',
+            api: 'apps',
+            status: ['params.cat', 'queries.name'],
+            li: AppItem
         }],
         listeners: {
             //分类详情页渲染结束

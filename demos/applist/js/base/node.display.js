@@ -443,7 +443,7 @@ define(function (require, exports) {
                         parentNode: self,
                         state: self.state,
                         renderAfterInit: false
-                    }, cItm.option/*cItm.option为组件的配置*/));
+                    }, cItm/*cItm为组件的配置*/));
                     components.push(cp);
                 }
                 return components;
