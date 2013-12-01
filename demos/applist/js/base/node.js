@@ -70,6 +70,7 @@ define(function (require, exports) {
          * 析构
          */
         destroy: function () {
+            //断开链表
             if (this.prevNode) {
                 this.prevNode.nextNode = this.nextNode;
             } else {
@@ -80,6 +81,7 @@ define(function (require, exports) {
             } else {
                 this.lastChild = this.prevNode;
             }
+            this.parentNode = null;
         },
         /**
          * 初始化组件的变量列表
