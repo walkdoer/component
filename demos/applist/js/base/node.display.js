@@ -35,23 +35,22 @@ define(function (require, exports) {
         init: function (option, callback) {
             var self = this;
             self._super(option);
+            self.state = {};
             self.initVar([
                 'tpl',
                 'tplContent',
                 'components',
                 'parentEl',
-                'state',
-                'data',
+                '*state*',
                 'status',
                 'className',
                 'display',
                 'el',
                 'selector'
             ]);
-
+            self.state.data = option.data;
             self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
-
             if (self.parentEl) {
                 self.$parentEl = $(self.parentEl);
             } else {
@@ -125,6 +124,13 @@ define(function (require, exports) {
             return self;
         },
         /**
+         * 获取组件的数据
+         * @return {Object}
+         */
+        getData: function () {
+            return this.state.data || null;
+        },
+        /**
          * 更新组件
          * @param  {[type]} state [description]
          * @param  {[type]} data  [description]
@@ -174,7 +180,7 @@ define(function (require, exports) {
             var self = this,
                 html;
             tplContent = tplContent || self.tplContent;
-            data = data || self.data;
+            data = data || self.getData();
             if (tplContent) {
                 html = template.tmpl(tplContent, data, self.helper);
             } else {
@@ -415,7 +421,6 @@ define(function (require, exports) {
                 cpConstructors = self._cpConstructors,//组件构造函数列表
                 components = [],
                 Component,
-                option = this.originOption,
                 cItm,
                 cp = null;
             //构造子组件（sub Component）
