@@ -11,7 +11,11 @@ define(function (require, exports) {
     TopBar = Component.extend({
         type: 'topBar',
         tpl: '#tpl-bar-top',
-        status: ['queries.name'],
+        getState: function () {
+            return {
+                name: this.state.queries.name
+            };
+        },
         components: [{
             _constructor_: Button,
             id: 'back',

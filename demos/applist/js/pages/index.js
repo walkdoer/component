@@ -119,14 +119,17 @@ define(function (require, exports) {
     }
     Index = Component.extend({
         name: 'index',
-        //status: ['params.tab'],//指定页面状态
         components: [{
             _constructor_: Logo,
             id: 'topLogo'
         }, {
             _constructor_: Tab,
             id: 'indexTab',
-            status: ['params.tab'] //指定Tab组件状态
+            getState: function () {
+                return {
+                    tab: this.state.params.tab
+                };
+            }
         }],
         init: function (option) {
             this._lists = {};

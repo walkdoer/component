@@ -15,7 +15,11 @@ define(function (require, exports) {
         name: 'category',
         components: [{
             _constructor_: TopBar,
-            status: ['queries.name']
+            getState: function () {
+                return {
+                    name: this.state.queries.name
+                };
+            }
         }, {
             _constructor_: AutoFillList,
             id: 'cateList',
@@ -23,8 +27,14 @@ define(function (require, exports) {
             loadSize: 5,
             tpl: '#tpl-list-app',
             api: 'apps',
-            status: ['params.cat', 'queries.name'],
-            li: AppItem
+            li: AppItem,
+            getState: function () {
+                var state = this.state;
+                return {
+                    cat: state.params.cat,
+                    name: state.queries.name
+                };
+            }
         }],
         listeners: {
             //分类详情页渲染结束
