@@ -216,7 +216,9 @@ define(function (require, exports, module) {
     //     }
     // };
     _.equal = function (objA, objB, except) {
-        if (!objA || !objB) { //其中至少有一个是undefined
+        if (objA === objB) {
+            return true;
+        } else if (!objA || !objB) { //其中至少有一个是undefined
             return false;
         }
         var attrCountA = Object.keys(objA).length,
