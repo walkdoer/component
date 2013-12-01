@@ -92,8 +92,11 @@ define(function (require, exports) {
          *             parent: this,
          *             identity: 'this/is/a/identity'
          *         }
-         *         如果组件类定义了3个属性, name对应option.name,  p 对于option.parent, id对应option.identity
-         *         那么应该传入的参数就是：['name', 'parent:p', 'identity:id']
+         *         initVar(['name', 'p:parent', 'id:identity', 'state.data:data']) 等同于下面4个语句
+         *             this.name = option.name,
+         *             this.p  = option.parent,
+         *             this.id = option.identity,
+         *             this.state.data = option.data
          *
          * @return
          */
@@ -102,8 +105,8 @@ define(function (require, exports) {
                 option = component.originOption;
             variableArray.forEach(function (element) {
                 var variableConfigArray = element.split(':'),
-                    optionKey = variableConfigArray[0],
-                    variableName = variableConfigArray[1] || optionKey;
+                    variableName = variableConfigArray[0],
+                    optionKey = variableConfigArray[1] || variableName;
                 if (option[optionKey] !== undefined) {
                     component[variableName] = option[optionKey];
                 }

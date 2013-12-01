@@ -104,14 +104,14 @@ define(function (require, exports) {
             });
             return this;
         },
-        appendRecord: function (records) {
+        appendRecord: function (recordArray) {
             var self = this,
                 items = [],
                 Li = self.originOption.li;
-            $.each(records, function (i, d) {
+            $.each(recordArray, function (i, rec) {
                 items.push(new Li({
-                    id: ['app', d.id].join('_'),
-                    data: d,
+                    id: ['app', rec.id].join('_'),
+                    data: rec,
                     parentNode: self,
                     parentEl: self.$list[0],
                 }));

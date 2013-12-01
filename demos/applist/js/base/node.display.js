@@ -58,7 +58,7 @@ define(function (require, exports) {
                 throw new Error('component ' + this.getId() + 'no parent');
             }
             //初始化参数
-            self.params = self._getParams(option.state);
+            self.params = self._getParams(self.state);
             //初始化组件HTML元素
             self._initHTMLElement(function () {
                 self.$el.attr('id', self.id)
@@ -436,8 +436,7 @@ define(function (require, exports) {
                     cp = new Component($.extend({
                         parentEl: self.el,
                         parentNode: self,
-                        state: option.state,
-                        data: self.data,
+                        state: self.state,
                         renderAfterInit: false
                     }, cItm.option/*cItm.option为组件的配置*/));
                     components.push(cp);
