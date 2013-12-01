@@ -6,6 +6,7 @@ define(function (require, exports) {
     var $ = require('core/selector'),
         Class = require('lib/class'),
         serialNumberGenerator = require('base/serialNumberGenerator'),
+        R_CLONING = /^\*(.*)\*$/,
         Node;
     function getter(propName) {
         return function () {
@@ -45,7 +46,7 @@ define(function (require, exports) {
             if (!this.firstChild) {
                 this.firstChild = this.lastChild = node;
             } else {
-                node.linkNode({
+                node._linkNode({
                     prev: this.lastChild
                 });
                 this.lastChild = node;
@@ -69,6 +70,7 @@ define(function (require, exports) {
          * 析构
          */
         destroy: function () {
+            //断开链表
             if (this.prevNode) {
                 this.prevNode.nextNode = this.nextNode;
             } else {
@@ -79,21 +81,35 @@ define(function (require, exports) {
             } else {
                 this.lastChild = this.prevNode;
             }
+            this.parentNode = null;
         },
         /**
          * 初始化组件的变量列表
          * @param  {Array} variableArray 需要初始化的变量名数组 
          *
-         *         变量名格式: {配置项属性名称}[:{组件属性名称}]
+         *         变量名格式: [*]{配置项属性名称}[:{组件属性名称}][*]
+         *
+         *         Note: '*' means need clone the object
          *
          *         如果组件的初始化配置option是:
          *         {
          *             name: 'hello',
          *             parent: this,
          *             identity: 'this/is/a/identity'
+         *             state: {
+         *                 data: {
+         *                     ...
+         *                 }
+         *             }
          *         }
-         *         如果组件类定义了3个属性, name对应option.name,  p 对于option.parent, id对应option.identity
-         *         那么应该传入的参数就是：['name', 'parent:p', 'identity:id']
+         *         initVar(['name', 'p:parent', 'id:identity', '*state*']) 
+         *
+         *         等同于下面4个语句:
+         *
+         *             this.name = option.name,
+         *             this.p  = option.parent,
+         *             this.id = option.identity,
+         *             this.state = $.extend(true, {}, option.state);
          *
          * @return
          */
@@ -101,11 +117,16 @@ define(function (require, exports) {
             var component = this,
                 option = component.originOption;
             variableArray.forEach(function (element) {
-                var variableConfigArray = element.split(':'),
-                    optionKey = variableConfigArray[0],
-                    variableName = variableConfigArray[1] || optionKey;
-                if (option[optionKey] !== undefined) {
-                    component[variableName] = option[optionKey];
+                var cloneInfoArray = element.match(R_CLONING),
+                    needClone = !!cloneInfoArray,
+                    variableConfigArray = (needClone ? cloneInfoArray[1] : element).split(':'),
+                    variableName = variableConfigArray[0],
+                    optionKey = variableConfigArray[1] || variableName,
+                    targetObj = option[optionKey];
+                if (targetObj !== undefined) {
+                    needClone = needClone && typeof targetObj === 'object';
+                    component[variableName] = needClone ? $.extend(true, {}, targetObj)
+                                                          : targetObj;
                 }
             });
         },
@@ -126,11 +147,13 @@ define(function (require, exports) {
         },
         /**
          * 将组件连接起来
-         *
+         * 
+         *               parentNode
+         *                   |
          *     prevNode -> curNode -> nextNode
          *
          */
-        linkNode: function (nodeConfig) {
+        _linkNode: function (nodeConfig) {
             var _prevNode = nodeConfig.prev || null,
                 _nextNode = nodeConfig.next || null,
                 _parentNode = nodeConfig.parent || null;

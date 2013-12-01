@@ -32,33 +32,35 @@ define(function (require, exports) {
         rendered: false,  //已渲染
         /*-------- Flag ---------*/
         display: true, //是否显示组件
+        getState: function () {
+            return null;
+        },
         init: function (option, callback) {
             var self = this;
             self._super(option);
+            self.state = {};
             self.initVar([
                 'tpl',
                 'tplContent',
                 'components',
                 'parentEl',
-                'state',
-                'data',
-                'status',
+                '*state*',
+                'getState',
                 'className',
                 'display',
                 'el',
                 'selector'
             ]);
-
+            self.state.data = option.data;
             self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
-
             if (self.parentEl) {
                 self.$parentEl = $(self.parentEl);
             } else {
                 throw new Error('component ' + this.getId() + 'no parent');
             }
             //初始化参数
-            self.params = self._getParams(option.state);
+            self.params = self.getState();
             //初始化组件HTML元素
             self._initHTMLElement(function () {
                 self.$el.attr('id', self.id)
@@ -125,18 +127,26 @@ define(function (require, exports) {
             return self;
         },
         /**
+         * 获取组件的数据
+         * @return {Object}
+         */
+        getData: function () {
+            return this.state.data || null;
+        },
+        /**
          * 更新组件
          * @param  {[type]} state [description]
          * @param  {[type]} data  [description]
          * @return {[type]}       [description]
          */
-        update: function (state, data) {
+        update: function (newState, data) {
             //更新组件的子组件
             var component = this.firstChild;
             while (component) {
+                component.state = newState;
                 //组件有状态，且状态改变，则需要更新，否则保持原样
-                if (component.status && component._isStateChange(state) && component.rendered) {
-                    component.update(state, data);
+                if (component._isStateChange() && component.rendered) {
+                    component.update(newState, data);
                 }
                 component = component.nextNode;
             }
@@ -174,7 +184,7 @@ define(function (require, exports) {
             var self = this,
                 html;
             tplContent = tplContent || self.tplContent;
-            data = data || self.data;
+            data = data || self.getData();
             if (tplContent) {
                 html = template.tmpl(tplContent, data, self.helper);
             } else {
@@ -366,25 +376,6 @@ define(function (require, exports) {
                 })(callback, this));
             }
         },
-        _getParams: function (newState) {
-            var self = this,
-                newParams,
-                status = self.status;
-            if ($.isArray(status)) {
-                newParams = {};
-                $.each(status, function (index, statu) {
-                    var hierarchy = statu.split('.'),
-                        state = newState,
-                        paramKey;
-                    $.each(hierarchy, function (index, key) {
-                        state = state[key];
-                        paramKey = key;
-                    });
-                    newParams[paramKey] = state;
-                });
-            }
-            return newParams;
-        },
         /**
          * 获取事件的实际名称
          * @param  {String} eventName 事件代号 BEFORE_RENDER
@@ -398,8 +389,8 @@ define(function (require, exports) {
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
          */
-        _isStateChange: function (newState) {
-            var newParams = this._getParams(newState);
+        _isStateChange: function () {
+            var newParams = this.getState();
             if (!_.equal(newParams, this.params)) {
                 this.params = newParams;
                 return true;
@@ -415,7 +406,6 @@ define(function (require, exports) {
                 cpConstructors = self._cpConstructors,//组件构造函数列表
                 components = [],
                 Component,
-                option = this.originOption,
                 cItm,
                 cp = null;
             //构造子组件（sub Component）
@@ -436,10 +426,9 @@ define(function (require, exports) {
                     cp = new Component($.extend({
                         parentEl: self.el,
                         parentNode: self,
-                        state: option.state,
-                        data: self.data,
+                        state: self.state,
                         renderAfterInit: false
-                    }, cItm.option/*cItm.option为组件的配置*/));
+                    }, cItm/*cItm为组件的配置*/));
                     components.push(cp);
                 }
                 return components;
