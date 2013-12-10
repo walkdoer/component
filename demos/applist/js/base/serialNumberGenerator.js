@@ -12,13 +12,6 @@ define(function (require, exports) {
              */
             gen: function () {
                 return (id++).toString(16);
-            },
-            /**
-             * 获取生成的Id总数
-             * @return {Number}
-             */
-            getCount: function () {
-                return id - START_ID;
             }
         };
     return idGenerator;
