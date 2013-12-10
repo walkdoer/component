@@ -54,7 +54,6 @@ define(function(require, exports) {
                 var defaultOption = {
                     id: pageName,
                     parentNode: self,
-                    parentEl: self.el,
                     state: state,
                     listeners: {
                         'BEFORE_RENDER': function (evt, page) {

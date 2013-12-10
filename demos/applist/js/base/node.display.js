@@ -43,6 +43,7 @@ define(function (require, exports) {
                 'tpl',
                 'tplContent',
                 'components',
+                'parentNode',
                 'parentEl',
                 '*state*',
                 'getState',
@@ -54,10 +55,14 @@ define(function (require, exports) {
             self.state.data = option.data;
             self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
+            var parentNode = self.parentNode;
             if (self.parentEl) {
                 self.$parentEl = $(self.parentEl);
+            } else if (parentNode) {
+                self.parentEl = parentNode.el;
+                self.$parentEl = parentNode.$el;
             } else {
-                throw new Error('component ' + this.getId() + 'no parent');
+                throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those');
             }
             //初始化参数
             self.params = self.getState();
@@ -424,7 +429,6 @@ define(function (require, exports) {
                     }
                     //创建组件
                     cp = new Component($.extend({
-                        parentEl: self.el,
                         parentNode: self,
                         state: self.state,
                         renderAfterInit: false

@@ -77,7 +77,6 @@ define(function (require, exports) {
                             //输入历史提示框的宽度与输入框宽度一样
                             width: field.$el.find('input').width(),
                             parentNode: field,
-                            parentEl: field.el,
                             tplContent: $('#tpl-input-history').html(),
                             childTplContent: $('#tpl-input-history-item').html(),
                             storageKey: 'add-url-history',
