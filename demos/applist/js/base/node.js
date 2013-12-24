@@ -75,10 +75,10 @@ define(function (require, exports) {
          * @return {Node} this
          */
         removeAllChild: function () {
-            var children = this.firstChild;
-            while(children) {
-                children.destroy();
-                children = children.nextNode;
+            var childNode = this.firstChild;
+            while(childNode) {
+                childNode.destroy();
+                childNode = childNode.nextNode;
             }
             this.firstChild = null;
             this.lastChild = null;
@@ -88,16 +88,13 @@ define(function (require, exports) {
          * 析构
          */
         destroy: function () {
+            this.removeAllChild();
             //断开链表
             if (this.prevNode) {
                 this.prevNode.nextNode = this.nextNode;
-            } else {
-                this.firstChild = this.nextNode;
             }
             if (this.nextNode) {
                 this.nextNode.prevNode = this.prevNode;
-            } else {
-                this.lastChild = this.prevNode;
             }
             this.parentNode = null;
         },

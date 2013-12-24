@@ -56,12 +56,19 @@ define(function (require, exports) {
             self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
             var parentNode = self.parentNode;
+            //Priority：parentEl > parentNode
+            //have parentEl
             if (self.parentEl) {
                 self.$parentEl = $(self.parentEl);
-            } else if (parentNode) {
+            }
+            //no parentEl but have parentNode
+            else if (parentNode) {
+                //用户没有配置parentEl，默认使用parent的el元素
                 self.parentEl = parentNode.el;
                 self.$parentEl = parentNode.$el;
-            } else {
+            }
+            //have no parentEl or parent, throw out an Error
+            else {
                 throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those');
             }
             //初始化参数
@@ -444,6 +451,11 @@ define(function (require, exports) {
                 return null;
             }
             return null;
+        },
+        destroy: function () {
+            this._super();
+            this.$el.off();
+            this.$el.remove();
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'

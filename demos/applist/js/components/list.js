@@ -48,7 +48,10 @@ define(function (require, exports) {
             self.load(true);
         },
         empty: function () {
-            this.removeAllChild().$list.empty();
+            //改变visibility减少浏览器
+            this.$list.css('visibility', 'hidden');
+            this.removeAllChild();
+            this.$list.css('visibility', 'visible');
         },
         setStatus: function (state) {
             var $msg = this.$msg;
