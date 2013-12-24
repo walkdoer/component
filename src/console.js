@@ -1,9 +1,6 @@
 define(function (require, exports) {
     'use strict';
-    var outPutPageStatus,
         outPutComponentStatus;
-
-    outPutPageStatus = function (pages) {
         for (var pgName in pages) {
             if (pages.hasOwnProperty(pgName)) {
                 var pg = pages[pgName];

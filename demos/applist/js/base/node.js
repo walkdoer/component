@@ -71,6 +71,20 @@ define(function (require, exports) {
             return this;
         },
         /**
+         * 删除所有孩子节点
+         * @return {Node} this
+         */
+        removeAllChild: function () {
+            var children = this.firstChild;
+            while(children) {
+                children.destroy();
+                children = children.nextNode;
+            }
+            this.firstChild = null;
+            this.lastChild = null;
+            return this;
+        },
+        /**
          * 析构
          */
         destroy: function () {

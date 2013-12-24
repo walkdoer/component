@@ -44,8 +44,11 @@ define(function (require, exports) {
         update: function () {
             var self = this;
             self.setStatus(LOADING);
-            self.$list.empty();
+            self.empty();
             self.load(true);
+        },
+        empty: function () {
+            this.removeAllChild().$list.empty();
         },
         setStatus: function (state) {
             var $msg = this.$msg;

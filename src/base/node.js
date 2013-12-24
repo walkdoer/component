@@ -18,10 +18,14 @@ define(function (require, exports) {
         updating: false,  //更新中
         initializing: false,  //初始化进行中
         initialized: false,  //已初始化
+
         /*-------- START OF GETTER -----*/
+
         getType: getter('type'),
         getId: getter('id'),
+
         /*---------- END OF GETTER -----*/
+
         /**
          * 组件构造函数, 组件的初始化操作
          * @param  {Object} option 组件配置
@@ -64,6 +68,20 @@ define(function (require, exports) {
                 node.destroy();
             }
             node = null;
+            return this;
+        },
+        /**
+         * 删除所有孩子节点
+         * @return {Node} this
+         */
+        removeAllChild: function () {
+            var children = this.firstChild;
+            while(children) {
+                children.destroy();
+                children = children.nextNode;
+            }
+            this.firstChild = null;
+            this.lastChild = null;
             return this;
         },
         /**
