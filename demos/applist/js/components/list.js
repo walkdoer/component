@@ -16,7 +16,9 @@ define(function (require, exports) {
         NO_DATA = 3,
         List;
     Event.add(typeName, {
-        CLICK: 'click'
+        BEFORE_APPEND: 'before:append',
+        CLICK: 'click',
+        END: 'end'
     });
     List = Component.extend({
         type: typeName,
@@ -43,8 +45,11 @@ define(function (require, exports) {
         },
         update: function () {
             var self = this;
-            self.setStatus(LOADING);
+            //empty list
             self.empty();
+            //set list status to loading status
+            self.setStatus(LOADING);
+            //load again
             self.load(true);
         },
         empty: function () {
@@ -77,12 +82,11 @@ define(function (require, exports) {
                 pageGap;
             //第一次加载和强制刷新都重新加载数据
             refresh = self.first || refresh;
-            if (!self.btn) {
-                self.btn = self.getChildById(loadBtnId);
-            }
             if (refresh) {
                 self.pageNum = 0;
-                self.btn.hide();
+            }
+            if (!self.btn) {
+                self.btn = self.getChildById(loadBtnId);
             }
             //设置pageSize
             params.pageSize = refresh ? listSize : loadSize;
@@ -90,18 +94,18 @@ define(function (require, exports) {
             params.pageNo = self.pageNum;
             pageGap = refresh ? listSize / loadSize : 1;
             Model.get(this.api, params, function (data) {
-                var records = data.data || [],
-                    dataLen = records.length;
+                var recordArray = data.data || [],
+                    dataLen = recordArray.length;
                 self.first = false;
+                self.btn.done();
                 //页数
                 self.pageNum += pageGap;
-                self._appendRecord(records, data.isMore, function () {
-                    if (data.isMore && dataLen >= params.pageSize) {
-                        self.btn.show();
-                    } else {
-                        self.btn.hide();
-                    }
-                });
+                if (data.isMore && dataLen >= params.pageSize) {
+                    self.btn.show();
+                } else {
+                    self.btn.hide();
+                }
+                self.appendRecord(recordArray);
             }, function () {
                 self.setStatus(DONE);
                 self.btn.fail().show();
@@ -109,50 +113,32 @@ define(function (require, exports) {
             return this;
         },
         appendRecord: function (recordArray) {
+            this.trigger('BEFORE_APPEND', [recordArray]);
             var self = this,
                 items = [],
+                recordCount = recordArray.length,
                 Li = self.originOption.li;
-            $.each(recordArray, function (i, rec) {
-                items.push(new Li({
-                    id: ['app', rec.id].join('_'),
-                    data: rec,
-                    parentNode: self,
-                    parentEl: self.$list[0],
-                }));
-            });
-            self.appendCmp(items);
-            self.render();
-        },
-        /**
-         * 直接将返回结果添加到列表中
-         * @param  {Array} records  后端接口返回的数据
-         */
-        _appendRecord: function (records, hasMore, callback) {
-            var self = this;
-            //没有数据
-            if (!records.length) {
-                self.btn.hide();
+            if (!recordCount) {
                 return self.setStatus(NO_DATA);
             }
-            if (records.length) {
+            if (recordCount) {
                 self.setStatus(DONE);
-                self.btn.done();
-                self.appendRecord(records);
-                if (callback) {
-                    callback();
-                }
+                $.each(recordArray, function (i, rec) {
+                    items.push(new Li({
+                        id: ['app', rec.id].join('_'),
+                        data: rec,
+                        parentNode: self,
+                        parentEl: self.$list[0],
+                    }));
+                });
+                self.appendCmp(items);
+                self.render();
             }
-            return self;
         },
         uiEvents: {
             'click li': function (e) {
                 this.trigger('CLICK', [e]);
             },
-        },
-        listeners: {
-            'loadMoreButton:loadMore:load': function () {
-                this.load();
-            }
         }
     });
     /*静态常量*/
