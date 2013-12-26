@@ -1,0 +1,25 @@
+{
+  "name": "Component",
+  "version": "0.1.1",
+  "ignore": [
+    "**/.*",
+    "build",
+    "speed",
+    "test",
+    "*.md",
+    "Gruntfile.js",
+    "package.json",
+    "bower.json"
+  ],
+  "dependencies": {
+    "underscore": "latest",
+    "zepto": "latest"
+  },
+  "devDependencies": {
+    "qunit": "~1.12.0",
+  },
+  "keywords": [
+    "component",
+    "javascript"
+  ]
+}

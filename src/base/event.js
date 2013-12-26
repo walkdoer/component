@@ -38,5 +38,25 @@ define(function (require, exports) {
         args.push(event);
         return args.join(':');
     };
+    /**
+     * Events
+     * 通过Mix的方式为其他对象提供事件机制
+     * @example
+     *     var obj = {};
+     *     _.extend(obj, Events);
+     *     object.on('run_forrest_gump', function() {
+     *         console.log('forrest gump start running...')
+     *     });
+     *     object.trigger('run_forrest_gump')
+     * @type {Object}
+     */
+    var Events = {
+        on: function() {
+
+        },
+        off: function () {
+
+        }
+    };
     return Event;
 });
