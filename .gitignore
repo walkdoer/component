@@ -39,7 +39,7 @@ server.pid
 
 #Folder#
 node_modules
-src/vendor
+vendor
 *.pid
 
 *.pid
