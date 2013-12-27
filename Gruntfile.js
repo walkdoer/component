@@ -35,8 +35,18 @@ module.exports = function(grunt) {
                     "qunit": "qunit/qunit"
                 }
             }
+        },
+        build: {
+            all: {
+                dest: 'dist/com.js'
+            }
         }
     });
+    grunt.loadTasks('build/tasks');
+
+
     grunt.loadNpmTasks('grunt-bowercopy');
     grunt.registerTask('bower', 'bowercopy');
+
+    grunt.registerTask('default', ['bower', 'build']);
 };

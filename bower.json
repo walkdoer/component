@@ -16,6 +16,7 @@
     "zepto": "latest"
   },
   "devDependencies": {
+    "requirejs": "~2.1.8",
     "qunit": "~1.12.0"
   },
   "keywords": [
