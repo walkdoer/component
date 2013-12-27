@@ -22,6 +22,7 @@ module.exports = function (grunt) {
                 startFile: 'src/intro.js',
                 endFile: 'src/outro.js'
             },
+            rawText: {},
             //对每一个AMD模块的内容进行处理
             onBuildWrite: convert
         };
@@ -40,8 +41,9 @@ module.exports = function (grunt) {
         //Task Description
         'Concatenate source, remove sub AMD definitions',
     function () {
-        log.writeln('concat file');
-        var name = this.data.dest;
+        var name = this.data.dest,
+            done = this.async();
+        log.writeln('concat file to file:' + name);
         //处理编译好的文件
         config.out = function (compiled) {
             compiled = compiled
@@ -50,12 +52,17 @@ module.exports = function (grunt) {
                 // 打上Date [yyyy-mm-ddThh:mmZ]
                 .replace(/@DATE/g, (new Date()).toISOString().replace(/:\d+\.\d+Z$/, "Z"));
             console.log(compiled.green);
-
+            log.writeln('file name:' + name);
             grunt.file.write(name, compiled);
         };
 
         requirejs.optimize(config, function (response) {
             grunt.log.ok( "File '" + name + "' created." );
+            done();
+        }, function (err) {
+            console.log('something wrong happen');
+            log.error(err);
+            done(err);
         });
     });
 };
