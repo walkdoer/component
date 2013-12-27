@@ -1,12 +1,14 @@
 /**
  * 节点类
  */
-define(function (require, exports) {
+define([
+    'zepto',
+    'underscore',
+    'core/class',
+    'base/serialNumberGenerator'
+], function ($, _, Class, serialNumberGenerator) {
     'use strict';
-    var $ = require('core/selector'),
-        Class = require('lib/class'),
-        serialNumberGenerator = require('base/serialNumberGenerator'),
-        R_CLONING = /^\*(.*)\*$/,
+    var R_CLONING = /^\*(.*)\*$/,
         Node;
     function getter(propName) {
         return function () {

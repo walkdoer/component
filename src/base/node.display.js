@@ -2,14 +2,16 @@
  * 显示类
  * @extend Component{base/Component}
  */
-define(function (require, exports) {
+define([
+    'zepto',
+    'underscore',
+    'base/node',
+    'base/event',
+    'base/template'
+],
+function ($, _, Node, Event, template) {
     'use strict';
-    var $ = require('core/selector'),
-        _ = require('core/lang'),
-        slice = Array.prototype.slice,
-        Node = require('base/node'),
-        Event = require('base/event'),
-        template = require('core/template'),
+    var slice = Array.prototype.slice,
         emptyFunc = function () {},
         _handleEvent = function () {
             var type = arguments[0],

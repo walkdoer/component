@@ -1,10 +1,11 @@
 /**
  * 事件定义
  */
-define(function (require, exports) {
+define([
+    'zepto'
+], function ($) {
     'use strict';
-    var $ = require('core/selector'),
-        events = {
+    var events = {
             BEFORE_RENDER: 'before:render',
             AFTER_RENDER: 'after:render',
             RENDERED: 'rendered'
