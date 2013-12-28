@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>UC Web Store</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;" />
+    <meta name="MobileOptimized" content="320"/>
+</head>
+<body>
+
+<script type="text/template" id="tpl-top-nav">
+<header class="top-nav">
+    <p class="logo">
+        <span class="h-t">Add your favourite sites</span>
+        <span class="h-btn"><i class="icn">Add URL</i></span>
+    </p>
+</header>
+</script>
+<script type="text/javascript" src="../libs/zepto.js"></script>
+<script type="text/javascript" src="../libs/underscore.js"></script>
+<script type="text/javascript" src="../dist/com.js"></script>
+<script>
+var header = new Com({
+    tpl: '#tpl-top-nav',
+    parentEl: $('body')[0]
+});
+
+header.render();
+</script>
+</body>
+</html>

@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2013-12-28T09:09Z
+ * Date: 2013-12-28T13:06Z
  */
 
 (function (global, factory) {
@@ -102,21 +102,19 @@
         return Class;
     };
 /**
- * 显示类
+ * 组件序列号生成器
  */
+var idGen = {
+        id: 1e9,
+        /**
+         * 生成序列号
+         * @return {String} 16进制字符串
+         */
+        gen: function () {
+            return (this.id++).toString(16);
+        }
+    };
 
-    
-    var START_ID = 1e9,
-        id = START_ID,
-        idGenerator = {
-            /**
-             * 生成序列号
-             * @return {String} 16进制字符串
-             */
-            gen: function () {
-                return (id++).toString(16);
-            }
-        };
 /**
  * 节点类
  */
@@ -152,7 +150,7 @@
             //保存用户原始配置，已备用
             self.originOption = $.extend(true, {}, option);
             //为每一个组件组件实例赋予一个独立的sn
-            self.sn = serialNumberGenerator.gen();
+            self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.getType(), self.sn].join('-');
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
@@ -355,14 +353,14 @@
      *     object.trigger('run_forrest_gump')
      * @type {Object}
      */
-    var Events = {
-        on: function() {
+    // var Events = {
+    //     on: function() {
 
-        },
-        off: function () {
+    //     },
+    //     off: function () {
 
-        }
-    };
+    //     }
+    // };
 /**
  * Template Module
  * original author: Dexter.Yy
@@ -373,9 +371,9 @@
     
 
     var tplMethods,
-        tpl = {};
+        template = {};
 
-    tpl.escapeHTML = function (str) {
+    template.escapeHTML = function (str) {
         var xmlchar = {
             '&': '&amp;',
             '<': '&lt;',
@@ -400,7 +398,7 @@
      * @param {function} cb返回的字符串会被方法返回
      * @return {string} 返回截取后的字符串,默认末尾带有"..."
      */
-    tpl.substr = function (str, limit, cb) {
+    template.substr = function (str, limit, cb) {
         var sub;
         if(!str || typeof str !== 'string') {
             return '';
@@ -412,11 +410,11 @@
         return cb ? cb.call(sub, sub) : (str.length > sub.length ? sub + '...' : sub);
     };
 
-    tpl.trueSize = function (str) {
+    template.trueSize = function (str) {
         return str.replace(/([^\x00-\xff]|[A-Z])/g, '$1 ').length;
     };
 
-    tpl.str2html = function (str) {
+    template.str2html = function (str) {
         var temp = document.createElement('div'),
             child, fragment;
         temp.innerHTML = str;
@@ -435,20 +433,20 @@
 
     // From Underscore.js
     // JavaScript micro-templating, similar to John Resig's implementation.
-    tpl.tplSettings = {
+    template.tplSettings = {
         cache: {},
         evaluate: /<%([\s\S]+?)%>/g,
         interpolate: /<%=([\s\S]+?)%>/g
     };
 
     tplMethods = {
-        escapeHTML: tpl.escapeHTML,
-        substr: tpl.substr,
+        escapeHTML: template.escapeHTML,
+        substr: template.substr,
         include: tmpl
     };
 
     function tmpl(str, data, helper) {
-        var settings = tpl.tplSettings,
+        var settings = template.tplSettings,
             tplContent, func,
             result = '';
         helper = _.extend({}, tplMethods, helper);
@@ -486,9 +484,9 @@
         return result;
     }
 
-    tpl.tmpl = tmpl;
-    tpl.reload = function(str){
-        delete tpl.tplSettings.cache[str];
+    template.tmpl = tmpl;
+    template.reload = function(str){
+        delete template.tplSettings.cache[str];
     };
 /**
  * 显示类

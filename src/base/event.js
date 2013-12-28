@@ -51,13 +51,13 @@ define([
      *     object.trigger('run_forrest_gump')
      * @type {Object}
      */
-    var Events = {
-        on: function() {
+    // var Events = {
+    //     on: function() {
 
-        },
-        off: function () {
+    //     },
+    //     off: function () {
 
-        }
-    };
+    //     }
+    // };
     return Event;
 });

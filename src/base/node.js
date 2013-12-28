@@ -5,8 +5,8 @@ define([
     '../libs/zepto',
     '../libs/underscore',
     './class',
-    './serialNumberGenerator'
-], function ($, _, Class, serialNumberGenerator) {
+    './var/idGen'
+], function ($, _, Class, idGen) {
     'use strict';
     var R_CLONING = /^\*(.*)\*$/,
         Node;
@@ -38,7 +38,7 @@ define([
             //保存用户原始配置，已备用
             self.originOption = $.extend(true, {}, option);
             //为每一个组件组件实例赋予一个独立的sn
-            self.sn = serialNumberGenerator.gen();
+            self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.getType(), self.sn].join('-');
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);

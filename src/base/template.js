@@ -10,9 +10,9 @@ define([
     'use strict';
 
     var tplMethods,
-        tpl = {};
+        template = {};
 
-    tpl.escapeHTML = function (str) {
+    template.escapeHTML = function (str) {
         var xmlchar = {
             '&': '&amp;',
             '<': '&lt;',
@@ -37,7 +37,7 @@ define([
      * @param {function} cb返回的字符串会被方法返回
      * @return {string} 返回截取后的字符串,默认末尾带有"..."
      */
-    tpl.substr = function (str, limit, cb) {
+    template.substr = function (str, limit, cb) {
         var sub;
         if(!str || typeof str !== 'string') {
             return '';
@@ -49,11 +49,11 @@ define([
         return cb ? cb.call(sub, sub) : (str.length > sub.length ? sub + '...' : sub);
     };
 
-    tpl.trueSize = function (str) {
+    template.trueSize = function (str) {
         return str.replace(/([^\x00-\xff]|[A-Z])/g, '$1 ').length;
     };
 
-    tpl.str2html = function (str) {
+    template.str2html = function (str) {
         var temp = document.createElement('div'),
             child, fragment;
         temp.innerHTML = str;
@@ -72,20 +72,20 @@ define([
 
     // From Underscore.js
     // JavaScript micro-templating, similar to John Resig's implementation.
-    tpl.tplSettings = {
+    template.tplSettings = {
         cache: {},
         evaluate: /<%([\s\S]+?)%>/g,
         interpolate: /<%=([\s\S]+?)%>/g
     };
 
     tplMethods = {
-        escapeHTML: tpl.escapeHTML,
-        substr: tpl.substr,
+        escapeHTML: template.escapeHTML,
+        substr: template.substr,
         include: tmpl
     };
 
     function tmpl(str, data, helper) {
-        var settings = tpl.tplSettings,
+        var settings = template.tplSettings,
             tplContent, func,
             result = '';
         helper = _.extend({}, tplMethods, helper);
@@ -123,10 +123,10 @@ define([
         return result;
     }
 
-    tpl.tmpl = tmpl;
-    tpl.reload = function(str){
-        delete tpl.tplSettings.cache[str];
+    template.tmpl = tmpl;
+    template.reload = function(str){
+        delete template.tplSettings.cache[str];
     };
 
-    return tpl;
+    return template;
 });
