@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2013-12-28T08:15Z
+ * Date: 2013-12-28T09:09Z
  */
 
 (function (global, factory) {
@@ -101,9 +101,6 @@
 
         return Class;
     };
-
-    return Class;
-
 /**
  * 显示类
  */
@@ -120,8 +117,6 @@
                 return (id++).toString(16);
             }
         };
-    return idGenerator;
-
 /**
  * 节点类
  */
@@ -309,8 +304,6 @@
             }
         }
     });
-    return Node;
-
 /**
  * 事件定义
  */
@@ -370,8 +363,6 @@
 
         }
     };
-    return Event;
-
 /**
  * Template Module
  * original author: Dexter.Yy
@@ -499,9 +490,6 @@
     tpl.reload = function(str){
         delete tpl.tplSettings.cache[str];
     };
-
-    return tpl;
-
 /**
  * 显示类
  * @extend Component{base/Component}

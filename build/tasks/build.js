@@ -1,6 +1,7 @@
 /**
  * 对源码文件进行特殊的处理
  * 连接AMD模块，取出AMD defined
+ * 感谢Jquery的启发
  */
 
 module.exports = function (grunt) {
@@ -9,8 +10,11 @@ module.exports = function (grunt) {
         requirejs = require('requirejs'),
         log = grunt.log,
         EMPTY_STR = '',
+        PROJECT_NAME = 'com',
         R_DEFINE_START = /define\([^{]*?{/,
         R_DEFINE_END = /\}\);[^}\w]*$/,
+        R_AMD_RETURN = /\s*return\s+[^\}]+(\}\);[^\w\}]*)$/,
+        R_AMD_EXPORT = /\s*exports\.\w+\s*=\s*\w+;/g,
         config = {
             baseUrl: 'src',
             name: 'com',
@@ -37,6 +41,13 @@ module.exports = function (grunt) {
      */
     function convert(moduleName, path, contents) {
         console.log(moduleName.green, path.red);
+        //去除多余的return 语句，保证只有一个出口，这个出口在Com中
+        if (moduleName !== PROJECT_NAME) {
+            contents = contents
+                .replace(R_AMD_RETURN, "$1")
+                // Multiple exports
+                .replace(R_AMD_EXPORT, EMPTY_STR);
+        }
         //去除AMD Define
         contents = contents.replace(R_DEFINE_START, EMPTY_STR)
                            .replace(R_DEFINE_END, EMPTY_STR);
