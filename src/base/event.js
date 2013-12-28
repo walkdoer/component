@@ -2,7 +2,7 @@
  * 事件定义
  */
 define([
-    'zepto'
+    '../libs/zepto'
 ], function ($) {
     'use strict';
     var events = {

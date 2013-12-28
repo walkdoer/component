@@ -2,10 +2,10 @@
  * 节点类
  */
 define([
-    'zepto',
-    'underscore',
-    'core/class',
-    'base/serialNumberGenerator'
+    '../libs/zepto',
+    '../libs/underscore',
+    './class',
+    './serialNumberGenerator'
 ], function ($, _, Class, serialNumberGenerator) {
     'use strict';
     var R_CLONING = /^\*(.*)\*$/,

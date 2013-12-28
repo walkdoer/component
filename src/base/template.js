@@ -5,7 +5,7 @@
  */
 /*jshint evil: true */
 define([
-    'underscore'
+    '../libs/underscore'
 ], function (_) {
     'use strict';
 

@@ -24,7 +24,9 @@ module.exports = function (grunt) {
             },
             rawText: {},
             //对每一个AMD模块的内容进行处理
-            onBuildWrite: convert
+            onBuildWrite: convert,
+            excludeShallow: ['libs/zepto', 'libs/underscore'],
+            include: []
         };
     /**
      * 去除AMD 模块的定义 define
@@ -51,11 +53,11 @@ module.exports = function (grunt) {
                 .replace(/@VERSION/g, version)
                 // 打上Date [yyyy-mm-ddThh:mmZ]
                 .replace(/@DATE/g, (new Date()).toISOString().replace(/:\d+\.\d+Z$/, "Z"));
-            console.log(compiled.green);
+            //console.log(compiled.green);
             log.writeln('file name:' + name);
             grunt.file.write(name, compiled);
         };
-
+        console.log(config);
         requirejs.optimize(config, function (response) {
             grunt.log.ok( "File '" + name + "' created." );
             done();

@@ -8,7 +8,7 @@
  */
  
 /*jshint loopfunc: true */
-define(function (require, exports, module) {
+define(function () {
 
     var initializing = false,
         fnTest = /xyz/.test(function () { xyz; }) ? /\b_super\b/ : /.*/,

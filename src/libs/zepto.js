@@ -864,6 +864,10 @@ var Zepto = (function() {
 window.Zepto = Zepto
 window.$ === undefined && (window.$ = Zepto)
 
+if ( typeof define === "function" && define.amd ) {
+  define(function () { return Zepto; } );
+}
+
 ;(function($){
   var $$ = $.zepto.qsa, _zid = 1, undefined,
       slice = Array.prototype.slice,
