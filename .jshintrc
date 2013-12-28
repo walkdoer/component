@@ -1,7 +1,7 @@
 {
     "boss": true,
     "curly": true,
-    "eqeqeq": true,
+    //"eqeqeq": true,
     "eqnull": true,
     "expr": true,
     "immed": true,

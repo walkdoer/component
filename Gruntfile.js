@@ -52,7 +52,10 @@ module.exports = function(grunt) {
         jshint: {
             all: {
                 src: [
-                    'src/**/*.js'
+                    'src/**/*.js',
+                    '!src/libs/**/*.js',
+                    '!src/intro.js',
+                    '!src/outro.js'
                     //'Gruntfile.js',
                     //'test/**/*.js',
                     //'build/tasks/*'
@@ -73,6 +76,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-bowercopy');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.registerTask('bower', 'bowercopy');
-
+    grunt.registerTask('dev', ['build', 'jshint']);
     grunt.registerTask('default', ['bower', 'build']);
 };

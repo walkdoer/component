@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2013-12-28T13:23Z
+ * Date: 2013-12-28T13:43Z
  */
 
 (function (global, factory) {
@@ -16,11 +16,11 @@
             // others that may still expect a global Backbone.
             global.Com = factory(global, exports, $, _);
         });
-    } else if (typeof module === "object" && typeof module.exports === "object") {
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
         //兼容CommonJS and CommonJS-like环境
         //此处参考jquery的做法
         var _ = require('underscore'), $;
-        try { $ = require('zepto'); } catch(e) {};
+        try { $ = require('zepto'); } catch(e) {}
         factory(global, exports, $, _);
     } else {
         global.Com = factory(global, {}, (global.jQuery || global.Zepto || global.ender || global.$), global._);
@@ -44,41 +44,39 @@
     var initializing = false,
         fnTest = /xyz/.test(function () { xyz; }) ? /\b_super\b/ : /.*/,
         Class = function () {};
-  
     // Create a new Class that inherits from this class
     Class.extend = function (prop) {
         var _super = this.prototype;
-    
         // Instantiate a base class (but only create the instance,
         // don't run the init constructor)
         initializing = true;
         var prototype = new this();
         initializing = false;
-    
+
         // Copy the properties over onto the new prototype
         for (var name in prop) {
             // Check if we're overwriting an existing function
-            prototype[name] = typeof prop[name] == "function" && 
-                typeof _super[name] == "function" && fnTest.test(prop[name]) ?
+            prototype[name] = typeof prop[name] == 'function' &&
+                typeof _super[name] == 'function' && fnTest.test(prop[name]) ?
                     (function (name, fn){
                         return function() {
                             var tmp = this._super;
-            
+
                             // Add a new ._super() method that is the same method
                             // but on the super-class
                             this._super = _super[name];
-            
+
                             // The method only need to be bound temporarily, so we
                             // remove it when we're done executing
-                            var ret = fn.apply(this, arguments);        
+                            var ret = fn.apply(this, arguments);
                             this._super = tmp;
-            
+
                             return ret;
                         };
                     })(name, prop[name]) :
                     prop[name];
         }
-    
+
         // The dummy class constructor
         function Class() {
             // All construction is actually done in the init method
@@ -722,15 +720,16 @@ var idGen = {
                 node = this,
                 statusArray,
                 statusStr,
+                pushStatusArray = function (key, value) {
+                    statusArray.push(value);
+                },
                 params;
             while (node) {
                 statusStr = '';
                 params = node.params;
                 if (params) {
                     statusArray = [];
-                    $.each(params, function (key, value) {
-                        statusArray.push(value);
-                    });
+                    $.each(params, pushStatusArray);
                     //产生出 '(status1[,status2[,status3]...])' 的字符串
                     statusStr = ['(', statusArray.join(','), ')'].join('');
                 }
@@ -811,16 +810,17 @@ var idGen = {
          * @param  {Object} listeners 事件配置
          */
         _listen: function (listeners) {
+            function onlisten(event, self) {
+                return function () {
+                    listeners[event].apply(self, arguments);
+                };
+            }
             if (!listeners) {
                 return;
             }
             for (var event in listeners) {
                 if (listeners.hasOwnProperty(event)) {
-                    this.on(event, (function (event, self) {
-                        return function () {
-                            listeners[event].apply(self, arguments);
-                        };
-                    })(event, this));
+                    this.on(event, onlisten(event, this));
                 }
             }
         },
@@ -839,6 +839,11 @@ var idGen = {
                 elementSelector,
                 eventType,
                 callback,
+                onUIEvent = function (callback, context) {
+                    return function () {
+                        callback.apply(context, arguments);
+                    };
+                },
                 evtConf;
             if (!evts) {
                 return;
@@ -859,11 +864,7 @@ var idGen = {
                 }
                 eventType = evtConf[0];
                 callback = evts[evt];
-                this.on(eventType, elementSelector, (function (callback, context) {
-                    return function () {
-                        callback.apply(context, arguments);
-                    };
-                })(callback, this));
+                this.on(eventType, elementSelector, onUIEvent(callback, this));
             }
         },
         /**

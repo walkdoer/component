@@ -239,15 +239,16 @@ function ($, _, Node, Event, template) {
                 node = this,
                 statusArray,
                 statusStr,
+                pushStatusArray = function (key, value) {
+                    statusArray.push(value);
+                },
                 params;
             while (node) {
                 statusStr = '';
                 params = node.params;
                 if (params) {
                     statusArray = [];
-                    $.each(params, function (key, value) {
-                        statusArray.push(value);
-                    });
+                    $.each(params, pushStatusArray);
                     //产生出 '(status1[,status2[,status3]...])' 的字符串
                     statusStr = ['(', statusArray.join(','), ')'].join('');
                 }
@@ -328,16 +329,17 @@ function ($, _, Node, Event, template) {
          * @param  {Object} listeners 事件配置
          */
         _listen: function (listeners) {
+            function onlisten(event, self) {
+                return function () {
+                    listeners[event].apply(self, arguments);
+                };
+            }
             if (!listeners) {
                 return;
             }
             for (var event in listeners) {
                 if (listeners.hasOwnProperty(event)) {
-                    this.on(event, (function (event, self) {
-                        return function () {
-                            listeners[event].apply(self, arguments);
-                        };
-                    })(event, this));
+                    this.on(event, onlisten(event, this));
                 }
             }
         },
@@ -356,6 +358,11 @@ function ($, _, Node, Event, template) {
                 elementSelector,
                 eventType,
                 callback,
+                onUIEvent = function (callback, context) {
+                    return function () {
+                        callback.apply(context, arguments);
+                    };
+                },
                 evtConf;
             if (!evts) {
                 return;
@@ -376,11 +383,7 @@ function ($, _, Node, Event, template) {
                 }
                 eventType = evtConf[0];
                 callback = evts[evt];
-                this.on(eventType, elementSelector, (function (callback, context) {
-                    return function () {
-                        callback.apply(context, arguments);
-                    };
-                })(callback, this));
+                this.on(eventType, elementSelector, onUIEvent(callback, this));
             }
         },
         /**

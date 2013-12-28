@@ -16,11 +16,11 @@
             // others that may still expect a global Backbone.
             global.Com = factory(global, exports, $, _);
         });
-    } else if (typeof module === "object" && typeof module.exports === "object") {
+    } else if (typeof module === 'object' && typeof module.exports === 'object') {
         //兼容CommonJS and CommonJS-like环境
         //此处参考jquery的做法
         var _ = require('underscore'), $;
-        try { $ = require('zepto'); } catch(e) {};
+        try { $ = require('zepto'); } catch(e) {}
         factory(global, exports, $, _);
     } else {
         global.Com = factory(global, {}, (global.jQuery || global.Zepto || global.ender || global.$), global._);
