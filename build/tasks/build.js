@@ -50,13 +50,13 @@ module.exports = function (grunt) {
         // };
         if (R_IS_VAR_MODULE.test(path)) {
             contents = contents
-                .replace( /define\([\w\W]*?return/, "var " + (/var\/([\w-]+)/.exec(moduleName)[1]) + " =" )
-                .replace( R_AMD_DEFINE_END, "" );
+                .replace( /define\([\w\W]*?return/, 'var ' + (/var\/([\w-]+)/.exec(moduleName)[1]) + ' =')
+                .replace( R_AMD_DEFINE_END, EMPTY_STR);
         } else {
             //去除多余的return 语句，保证只有一个出口，这个出口在Com中
             if (moduleName !== PROJECT_NAME) {
                 contents = contents
-                    .replace(R_AMD_RETURN, "$1")
+                    .replace(R_AMD_RETURN, '$1')
                     // Multiple exports
                     .replace(R_AMD_EXPORT, EMPTY_STR);
             }
@@ -84,13 +84,13 @@ module.exports = function (grunt) {
                 // 打上Version
                 .replace(/@VERSION/g, version)
                 // 打上Date [yyyy-mm-ddThh:mmZ]
-                .replace(/@DATE/g, (new Date()).toISOString().replace(/:\d+\.\d+Z$/, "Z"));
+                .replace(/@DATE/g, (new Date()).toISOString().replace(/:\d+\.\d+Z$/, 'Z'));
             log.writeln('file name:' + name);
             grunt.file.write(name, compiled);
         };
 
         requirejs.optimize(config, function (response) {
-            grunt.log.ok( "File '" + name + "' created." );
+            log.ok( 'File \'' + name + '\' created.');
             done();
         }, function (err) {
             log.error(err);
