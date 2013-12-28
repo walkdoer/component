@@ -8,6 +8,9 @@ module.exports = function (grunt) {
     var version = grunt.config('pkg.version'),
         requirejs = require('requirejs'),
         log = grunt.log,
+        EMPTY_STR = '',
+        R_DEFINE_START = /define\([^{]*?{/,
+        R_DEFINE_END = /\}\);[^}\w]*$/,
         config = {
             baseUrl: 'src',
             name: 'com',
@@ -25,6 +28,7 @@ module.exports = function (grunt) {
             rawText: {},
             //对每一个AMD模块的内容进行处理
             onBuildWrite: convert,
+            //不需要打包的文件
             excludeShallow: ['libs/zepto', 'libs/underscore'],
             include: []
         };
@@ -33,6 +37,9 @@ module.exports = function (grunt) {
      */
     function convert(moduleName, path, contents) {
         console.log(moduleName.green, path.red);
+        //去除AMD Define
+        contents = contents.replace(R_DEFINE_START, EMPTY_STR)
+                           .replace(R_DEFINE_END, EMPTY_STR);
         return contents;
     }
 
@@ -57,12 +64,11 @@ module.exports = function (grunt) {
             log.writeln('file name:' + name);
             grunt.file.write(name, compiled);
         };
-        console.log(config);
+
         requirejs.optimize(config, function (response) {
             grunt.log.ok( "File '" + name + "' created." );
             done();
         }, function (err) {
-            console.log('something wrong happen');
             log.error(err);
             done(err);
         });

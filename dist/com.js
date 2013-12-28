@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2013-12-28T08:05Z
+ * Date: 2013-12-28T08:15Z
  */
 
 (function (global, factory) {
@@ -39,7 +39,7 @@
  */
  
 /*jshint loopfunc: true */
-define('base/class',[],function () {
+
 
     var initializing = false,
         fnTest = /xyz/.test(function () { xyz; }) ? /\b_super\b/ : /.*/,
@@ -103,13 +103,11 @@ define('base/class',[],function () {
     };
 
     return Class;
-});
-
 
 /**
  * 显示类
  */
-define('base/serialNumberGenerator',['require','exports','module'],function (require, exports) {
+
     
     var START_ID = 1e9,
         id = START_ID,
@@ -123,16 +121,11 @@ define('base/serialNumberGenerator',['require','exports','module'],function (req
             }
         };
     return idGenerator;
-});
+
 /**
  * 节点类
  */
-define('base/node',[
-    '../libs/zepto',
-    '../libs/underscore',
-    './class',
-    './serialNumberGenerator'
-], function ($, _, Class, serialNumberGenerator) {
+
     
     var R_CLONING = /^\*(.*)\*$/,
         Node;
@@ -317,13 +310,11 @@ define('base/node',[
         }
     });
     return Node;
-});
+
 /**
  * 事件定义
  */
-define('base/event',[
-    '../libs/zepto'
-], function ($) {
+
     
     var events = {
             BEFORE_RENDER: 'before:render',
@@ -380,16 +371,14 @@ define('base/event',[
         }
     };
     return Event;
-});
+
 /**
  * Template Module
  * original author: Dexter.Yy
  * https://github.com/dexteryy/OzJS/blob/master/mod/template.js
  */
 /*jshint evil: true */
-define('base/template',[
-    '../libs/underscore'
-], function (_) {
+
     
 
     var tplMethods,
@@ -512,19 +501,12 @@ define('base/template',[
     };
 
     return tpl;
-});
+
 /**
  * 显示类
  * @extend Component{base/Component}
  */
-define('com',[
-    './libs/zepto',
-    './libs/underscore',
-    './base/node',
-    './base/event',
-    './base/template'
-],
-function ($, _, Node, Event, template) {
+
     
     var slice = Array.prototype.slice,
         emptyFunc = function () {},
@@ -972,4 +954,4 @@ function ($, _, Node, Event, template) {
         };
     });
     return DisplayComponent;
-});}));
+}));
