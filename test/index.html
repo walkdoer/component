@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <title>UC Web Store</title>
+    <title>Test Demo</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;" />
     <meta name="MobileOptimized" content="320"/>
@@ -16,8 +16,8 @@
     </p>
 </header>
 </script>
-<script type="text/javascript" src="../libs/zepto.js"></script>
-<script type="text/javascript" src="../libs/underscore.js"></script>
+<script type="text/javascript" src="./libs/zepto.js"></script>
+<script type="text/javascript" src="./libs/underscore.js"></script>
 <script type="text/javascript" src="../dist/com.js"></script>
 <script>
 var header = new Com({
@@ -25,7 +25,7 @@ var header = new Com({
     parentEl: $('body')[0]
 });
 
-header.render();
+header.render().appendToParent();
 </script>
 </body>
 </html>

@@ -41,5 +41,5 @@ server.pid
 node_modules
 vendor
 *.pid
-
+*.swp
 *.pid

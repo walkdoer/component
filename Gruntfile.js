@@ -40,7 +40,9 @@ module.exports = function(grunt) {
                     destPrefix: 'test/libs'
                 },
                 files: {
-                    'qunit': 'qunit/qunit'
+                    'qunit': 'qunit/qunit',
+                    'zepto.js': 'zepto/zepto.js',
+                    'underscore.js': 'underscore/underscore.js'
                 }
             }
         },
