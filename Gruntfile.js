@@ -46,6 +46,12 @@ module.exports = function(grunt) {
                 }
             }
         },
+        watch: {
+            scripts: {
+                files: ['src/**/*.js'],
+                tasks: ['build']
+            }
+        },
         build: {
             all: {
                 dest: 'dist/com.js'
@@ -56,6 +62,7 @@ module.exports = function(grunt) {
                 src: [
                     'src/**/*.js',
                     '!src/libs/**/*.js',
+                    '!src/base/class.js',
                     '!src/intro.js',
                     '!src/outro.js'
                     //'Gruntfile.js',
@@ -66,10 +73,12 @@ module.exports = function(grunt) {
                     jshintrc: true
                 }
             },
-            dist: {
-                src: 'dist/com.js',
-                options: srcHintOptions
-            }
+            //由于源码已经经过jshint，所以合并之后的文件则不进行检查
+            //目前暂时取消
+            // dist: {
+            //     src: 'dist/com.js',
+            //     options: srcHintOptions
+            // }
         }
     });
     grunt.loadTasks('build/tasks');
@@ -77,7 +86,8 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-bowercopy');
     grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.registerTask('bower', 'bowercopy');
-    grunt.registerTask('dev', ['build', 'jshint']);
+    grunt.registerTask('dev', ['build', 'jshint', 'watch']);
     grunt.registerTask('default', ['bower', 'build']);
 };

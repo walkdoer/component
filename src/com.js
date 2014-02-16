@@ -50,6 +50,7 @@ function ($, _, Node, Event, template) {
                 '*state*',
                 'getState',
                 'className',
+                'update',
                 'display',
                 'el',
                 'selector'
@@ -140,20 +141,24 @@ function ($, _, Node, Event, template) {
         getData: function () {
             return this.state.data || null;
         },
+        _isComNeedUpdate: function (component) {
+            return component._isStateChange() && component.rendered;
+        },
         /**
          * 更新组件
          * @param  {[type]} state [description]
          * @param  {[type]} data  [description]
          * @return {[type]}       [description]
          */
-        update: function (newState, data) {
+        update: function (data) {
+            var newState = this.getState();
             //更新组件的子组件
             var component = this.firstChild;
             while (component) {
                 component.state = newState;
                 //组件有状态，且状态改变，则需要更新，否则保持原样
-                if (component._isStateChange() && component.rendered) {
-                    component.update(newState, data);
+                if (this._isComNeedUpdate(component)) {
+                    component.update(data);
                 }
                 component = component.nextNode;
             }

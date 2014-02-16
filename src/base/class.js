@@ -1,15 +1,12 @@
+/*jshint loopfunc: true */
 /**
  * Class Module
  *
  * Simple JavaScript Inheritance
  * By John Resig http://ejohn.org/
- *
- * @import elf.js
  */
  
-/*jshint loopfunc: true */
 define(function () {
-
     var initializing = false,
         fnTest = /xyz/.test(function () { xyz; }) ? /\b_super\b/ : /.*/,
         Class = function () {};
@@ -21,7 +18,6 @@ define(function () {
         initializing = true;
         var prototype = new this();
         initializing = false;
-
         // Copy the properties over onto the new prototype
         for (var name in prop) {
             // Check if we're overwriting an existing function
@@ -71,4 +67,3 @@ define(function () {
 
     return Class;
 });
-

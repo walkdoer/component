@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-02-15T04:09Z
+ * Date: 2014-02-16T09:14Z
  */
 
 (function (global, factory) {
@@ -29,17 +29,14 @@
 // Pass this, window may not be defined yet
 }(this, function (window, Com, $, _) {
     
+/*jshint loopfunc: true */
 /**
  * Class Module
  *
  * Simple JavaScript Inheritance
  * By John Resig http://ejohn.org/
- *
- * @import elf.js
  */
  
-/*jshint loopfunc: true */
-
 
     var initializing = false,
         fnTest = /xyz/.test(function () { xyz; }) ? /\b_super\b/ : /.*/,
@@ -52,7 +49,6 @@
         initializing = true;
         var prototype = new this();
         initializing = false;
-
         // Copy the properties over onto the new prototype
         for (var name in prop) {
             // Check if we're overwriting an existing function
@@ -531,6 +527,7 @@ var idGen = {
                 '*state*',
                 'getState',
                 'className',
+                'update',
                 'display',
                 'el',
                 'selector'
@@ -621,20 +618,24 @@ var idGen = {
         getData: function () {
             return this.state.data || null;
         },
+        _isComNeedUpdate: function (component) {
+            return component._isStateChange() && component.rendered;
+        },
         /**
          * 更新组件
          * @param  {[type]} state [description]
          * @param  {[type]} data  [description]
          * @return {[type]}       [description]
          */
-        update: function (newState, data) {
+        update: function (data) {
+            var newState = this.getState();
             //更新组件的子组件
             var component = this.firstChild;
             while (component) {
                 component.state = newState;
                 //组件有状态，且状态改变，则需要更新，否则保持原样
-                if (component._isStateChange() && component.rendered) {
-                    component.update(newState, data);
+                if (this._isComNeedUpdate(component)) {
+                    component.update(data);
                 }
                 component = component.nextNode;
             }

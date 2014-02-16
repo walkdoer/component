@@ -10,10 +10,7 @@
 
 <script type="text/template" id="tpl-top-nav">
 <header class="top-nav">
-    <p class="logo">
-        <span class="h-t">Add your favourite sites</span>
-        <span class="h-btn"><i class="icn">Add URL</i></span>
-    </p>
+    <p class="title">Test Demo</p>
 </header>
 </script>
 <script type="text/javascript" src="./libs/zepto.js"></script>
@@ -22,9 +19,23 @@
 <script>
 var header = new Com({
     tpl: '#tpl-top-nav',
-    parentEl: $('body')[0]
+    parentEl: $('body')[0],
+    update: function () {
+        var newState = this.getState();
+        this.title = newState.title;
+        this.$el.find('.title').html(this.title);
+        this._super(newState);
+    },
+    getState: function () {
+        return  {
+            title: window.location.hash
+        };
+    }
 });
 
+window.onhashchange = function () {
+    header.update();
+}
 header.render().appendToParent();
 </script>
 </body>
