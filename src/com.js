@@ -142,7 +142,7 @@ function ($, _, Node, Event, template) {
             return this.state.data || null;
         },
         _isComNeedUpdate: function (component) {
-            return component._isStateChange() && component.rendered;
+            return component._isStateChange(component.getState()) && component.rendered;
         },
         /**
          * 更新组件
@@ -151,11 +151,11 @@ function ($, _, Node, Event, template) {
          * @return {[type]}       [description]
          */
         update: function (data) {
-            var newState = this.getState();
+            var newState;
             //更新组件的子组件
             var component = this.firstChild;
-            if (this.userUpdate) {
-                this.userUpdate(newState, data);
+            if (this.userUpdate && this._isComNeedUpdate(this)) {
+                this.userUpdate(data);
             }
             while (component) {
                 component.state = newState;
@@ -407,10 +407,9 @@ function ($, _, Node, Event, template) {
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
          */
-        _isStateChange: function () {
-            var newParams = this.getState();
-            if (!_.equal(newParams, this.params)) {
-                this.params = newParams;
+        _isStateChange: function (newState) {
+            if (!_.isEqual(newState, this.params)) {
+                this.params = newState;
                 return true;
             } else {
                 return false;

@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-02-16T10:54Z
+ * Date: 2014-02-16T11:27Z
  */
 
 (function (global, factory) {
@@ -213,7 +213,7 @@ var idGen = {
          * 初始化组件的变量列表
          * @param  {Array} variableArray 需要初始化的变量名数组 
          *
-         *         变量名格式: [*]{配置项属性名称}[:{组件属性名称}][*]
+         *         变量名格式: [*]{组件配置属性}[:{用户配置项属性}][*]
          *
          *         Note: '*' means need clone the object
          *
@@ -619,7 +619,7 @@ var idGen = {
             return this.state.data || null;
         },
         _isComNeedUpdate: function (component) {
-            return component._isStateChange() && component.rendered;
+            return component._isStateChange(component.getState()) && component.rendered;
         },
         /**
          * 更新组件
@@ -628,11 +628,11 @@ var idGen = {
          * @return {[type]}       [description]
          */
         update: function (data) {
-            var newState = this.getState();
+            var newState;
             //更新组件的子组件
             var component = this.firstChild;
-            if (this.userUpdate) {
-                this.userUpdate(newState, data);
+            if (this.userUpdate && this._isComNeedUpdate(this)) {
+                this.userUpdate(data);
             }
             while (component) {
                 component.state = newState;
@@ -884,10 +884,9 @@ var idGen = {
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
          */
-        _isStateChange: function () {
-            var newParams = this.getState();
-            if (!_.equal(newParams, this.params)) {
-                this.params = newParams;
+        _isStateChange: function (newState) {
+            if (!_.isEqual(newState, this.params)) {
+                this.params = newState;
                 return true;
             } else {
                 return false;

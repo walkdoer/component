@@ -31,8 +31,17 @@ var header = new Com({
             title: window.location.hash
         };
     }
+}), subTitle = new Com({
+    tplContent: '<div><span class="sub-title">This is Sub Title</span></div>',
+    parentNode: header,
+    getState: function () {
+        return {
+            subTitle: 'subTitle of ' + window.location.hash
+        };
+    }
 });
 
+header.appendChild(subTitle);
 window.onhashchange = function () {
     header.update();
 }

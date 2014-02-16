@@ -107,7 +107,7 @@ define([
          * 初始化组件的变量列表
          * @param  {Array} variableArray 需要初始化的变量名数组 
          *
-         *         变量名格式: [*]{配置项属性名称}[:{组件属性名称}][*]
+         *         变量名格式: [*]{组件配置属性}[:{用户配置项属性}][*]
          *
          *         Note: '*' means need clone the object
          *
