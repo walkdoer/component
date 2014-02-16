@@ -10,7 +10,7 @@
 
 <script type="text/template" id="tpl-top-nav">
 <header class="top-nav">
-    <p class="title">Test Demo</p>
+    <p class="title"><%title%></p>
 </header>
 </script>
 <script type="text/javascript" src="./libs/zepto.js"></script>
@@ -20,19 +20,13 @@
 var header = new Com({
     tpl: '#tpl-top-nav',
     parentEl: $('body')[0],
-    update: function () {
-        var newState = this.getState();
-        this.title = newState.title;
-        this.$el.find('.title').html(this.title);
-        //this._super(newState);
-    },
     getState: function () {
         return  {
             title: window.location.hash
         };
     }
 }), subTitle = new Com({
-    tplContent: '<div><span class="sub-title">This is Sub Title</span></div>',
+    tplContent: '<div><span class="sub-title"><%subTitle%></span></div>',
     parentNode: header,
     getState: function () {
         return {

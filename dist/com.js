@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-02-16T11:27Z
+ * Date: 2014-02-16T12:03Z
  */
 
 (function (global, factory) {
@@ -430,7 +430,7 @@ var idGen = {
     template.tplSettings = {
         cache: {},
         evaluate: /<%([\s\S]+?)%>/g,
-        interpolate: /<%=([\s\S]+?)%>/g
+        interpolate: /<%([\s\S]+?)%>/g
     };
 
     tplMethods = {
@@ -456,13 +456,21 @@ var idGen = {
             func = new Function('data', 'helper', 'var __tpl="";__tpl+="' +
                 str.replace(/\\/g, '\\\\')
                     .replace(/"/g, '\\"')
+                    //replace code <%=data.name%>
                     .replace(settings.interpolate, function(match, code) {
-                        return '"+' + code.replace(/\\"/g, '"') + '+"';
+                        var objKeyArray = code.split('.'),
+                            objItem = data;
+                        _.each(objKeyArray, function (value, index) {
+                            objItem = objItem[value];
+                        });
+                        var execute = code.replace(/\\"/g, '"') +
+                           (typeof objItem === 'function' ? '()' : '');
+                        return '"+data.' + execute + '+"';
                     })
-                    .replace(settings.evaluate || null, function(match, code) {
-                        return '";' + code.replace(/\\"/g, '"')
-                            .replace(/[\r\n\t]/g, ' ') + '__tpl+="';
-                    })
+                    // .replace(settings.evaluate || null, function(match, code) {
+                    //     return '";' + code.replace(/\\"/g, '"')
+                            // .replace(/[\r\n\t]/g, ' ') + '__tpl+="';
+                    // })
                     .replace(/\r/g, '\\r')
                     .replace(/\n/g, '\\n')
                     .replace(/\t/g, '\\t') +
@@ -545,7 +553,7 @@ var idGen = {
                 throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
             }
             //初始化参数
-            self.params = self.getState();
+            self.state = self.getState();
             //初始化组件HTML元素
             self._initHTMLElement(function () {
                 self.$el.attr('id', self.id)
@@ -616,7 +624,7 @@ var idGen = {
          * @return {Object}
          */
         getData: function () {
-            return this.state.data || null;
+            return this.state || null;
         },
         _isComNeedUpdate: function (component) {
             return component._isStateChange(component.getState()) && component.rendered;
@@ -628,14 +636,12 @@ var idGen = {
          * @return {[type]}       [description]
          */
         update: function (data) {
-            var newState;
             //更新组件的子组件
             var component = this.firstChild;
             if (this.userUpdate && this._isComNeedUpdate(this)) {
                 this.userUpdate(data);
             }
             while (component) {
-                component.state = newState;
                 //组件有状态，且状态改变，则需要更新，否则保持原样
                 if (this._isComNeedUpdate(component)) {
                     component.update(data);
@@ -727,13 +733,13 @@ var idGen = {
                 pushStatusArray = function (key, value) {
                     statusArray.push(value);
                 },
-                params;
+                state;
             while (node) {
                 statusStr = '';
-                params = node.params;
-                if (params) {
+                state = node.state;
+                if (state) {
                     statusArray = [];
-                    $.each(params, pushStatusArray);
+                    $.each(state, pushStatusArray);
                     //产生出 '(status1[,status2[,status3]...])' 的字符串
                     statusStr = ['(', statusArray.join(','), ')'].join('');
                 }
@@ -768,16 +774,6 @@ var idGen = {
                 if (html) {
                     self.tplContent = html;
                 }
-            } else if (tpl) {
-                //tpl配置是文件，异步加载文件
-                require.async('tpl/' + tpl, function (res) {
-                    if (res) {
-                        self.tplContent = res;
-                        callback(true);
-                    } else {
-                        callback(false);
-                    }
-                });
             }
             callback(!!self.tplContent);
         },
@@ -885,8 +881,8 @@ var idGen = {
          * @return {Boolean}
          */
         _isStateChange: function (newState) {
-            if (!_.isEqual(newState, this.params)) {
-                this.params = newState;
+            if (!_.isEqual(newState, this.state)) {
+                this.state = newState;
                 return true;
             } else {
                 return false;
@@ -919,7 +915,7 @@ var idGen = {
                     //创建组件
                     cp = new Component($.extend({
                         parentNode: self,
-                        state: self.state,
+                        // state: self.state,
                         renderAfterInit: false
                     }, cItm/*cItm为组件的配置*/));
                     components.push(cp);

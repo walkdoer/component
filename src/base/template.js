@@ -75,7 +75,7 @@ define([
     template.tplSettings = {
         cache: {},
         evaluate: /<%([\s\S]+?)%>/g,
-        interpolate: /<%=([\s\S]+?)%>/g
+        interpolate: /<%([\s\S]+?)%>/g
     };
 
     tplMethods = {
@@ -101,13 +101,21 @@ define([
             func = new Function('data', 'helper', 'var __tpl="";__tpl+="' +
                 str.replace(/\\/g, '\\\\')
                     .replace(/"/g, '\\"')
+                    //replace code <%=data.name%>
                     .replace(settings.interpolate, function(match, code) {
-                        return '"+' + code.replace(/\\"/g, '"') + '+"';
+                        var objKeyArray = code.split('.'),
+                            objItem = data;
+                        _.each(objKeyArray, function (value, index) {
+                            objItem = objItem[value];
+                        });
+                        var execute = code.replace(/\\"/g, '"') +
+                           (typeof objItem === 'function' ? '()' : '');
+                        return '"+data.' + execute + '+"';
                     })
-                    .replace(settings.evaluate || null, function(match, code) {
-                        return '";' + code.replace(/\\"/g, '"')
-                            .replace(/[\r\n\t]/g, ' ') + '__tpl+="';
-                    })
+                    // .replace(settings.evaluate || null, function(match, code) {
+                    //     return '";' + code.replace(/\\"/g, '"')
+                            // .replace(/[\r\n\t]/g, ' ') + '__tpl+="';
+                    // })
                     .replace(/\r/g, '\\r')
                     .replace(/\n/g, '\\n')
                     .replace(/\t/g, '\\t') +
