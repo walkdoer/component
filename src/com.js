@@ -49,8 +49,8 @@ function ($, _, Node, Event, template) {
                 'parentEl',
                 '*state*',
                 'getState',
+                'userUpdate:update',
                 'className',
-                'update',
                 'display',
                 'el',
                 'selector'
@@ -65,7 +65,7 @@ function ($, _, Node, Event, template) {
                 self.parentEl = parentNode.el;
                 self.$parentEl = parentNode.$el;
             } else {
-                throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those');
+                throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
             }
             //初始化参数
             self.params = self.getState();
@@ -154,6 +154,9 @@ function ($, _, Node, Event, template) {
             var newState = this.getState();
             //更新组件的子组件
             var component = this.firstChild;
+            if (this.userUpdate) {
+                this.userUpdate(newState, data);
+            }
             while (component) {
                 component.state = newState;
                 //组件有状态，且状态改变，则需要更新，否则保持原样
