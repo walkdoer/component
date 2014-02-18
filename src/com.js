@@ -55,7 +55,7 @@ function ($, _, Node, Event, template) {
                 'el',
                 'selector'
             ]);
-            self.state.data = option.data;
+            self._data = option.data;
             self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
             var parentNode = self.parentNode;
@@ -139,10 +139,29 @@ function ($, _, Node, Event, template) {
          * @return {Object}
          */
         getData: function () {
-            return this.state || null;
+            return $.extend({}, this._data || {}, {_state_: this.state});
         },
         _isComNeedUpdate: function (component) {
             return component._isStateChange(component.getState()) && component.rendered;
+        },
+        _syncState: function () {
+            //创建新节点
+            var $newDom = $(this.tmpl());
+            this.parentEl.replaceChild($newDom[0], this.el);
+            this.el = $newDom[0];
+            this.$el = $newDom;
+        },
+        _updateParent: function (domEl) {
+            this.parentEl = domEl;
+            this.$parentEl = $(domEl);
+        },
+        _rebuildDomTree: function () {
+            var component = this.firstChild;
+            while (component) {
+                component._updateParent(this.el);
+                this.el.appendChild(component.el);
+                component = component.nextNode;
+            }
         },
         /**
          * 更新组件
@@ -153,15 +172,20 @@ function ($, _, Node, Event, template) {
         update: function (data) {
             //更新组件的子组件
             var component = this.firstChild;
-            if (this.userUpdate && this._isComNeedUpdate(this)) {
-                this.userUpdate(data);
-            }
             while (component) {
                 //组件有状态，且状态改变，则需要更新，否则保持原样
                 if (this._isComNeedUpdate(component)) {
                     component.update(data);
                 }
                 component = component.nextNode;
+            }
+            if (this._isComNeedUpdate(this)) {
+                this.state = this.getState();
+                this._syncState();
+                this._rebuildDomTree();
+                if (typeof this.userUpdate === 'function') {
+                    this.userUpdate(data);
+                }
             }
         },
         /**
@@ -397,7 +421,6 @@ function ($, _, Node, Event, template) {
          */
         _isStateChange: function (newState) {
             if (!_.isEqual(newState, this.state)) {
-                this.state = newState;
                 return true;
             } else {
                 return false;
@@ -429,9 +452,7 @@ function ($, _, Node, Event, template) {
                     }
                     //创建组件
                     cp = new Component($.extend({
-                        parentNode: self,
-                        // state: self.state,
-                        renderAfterInit: false
+                        parentNode: self
                     }, cItm/*cItm为组件的配置*/));
                     components.push(cp);
                 }

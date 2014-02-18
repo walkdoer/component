@@ -10,7 +10,7 @@
 
 <script type="text/template" id="tpl-top-nav">
 <header class="top-nav">
-    <p class="title"><%title%></p>
+    <p class="title"><%_state_.title%></p>
 </header>
 </script>
 <script type="text/javascript" src="./libs/zepto.js"></script>
@@ -26,15 +26,23 @@ var header = new Com({
         };
     }
 }), subTitle = new Com({
-    tplContent: '<div><span class="sub-title"><%subTitle%></span></div>',
+    tplContent: '<div><span class="sub-title"><%_state_.subTitle%></span></div>',
     parentNode: header,
     getState: function () {
         return {
             subTitle: 'subTitle of ' + window.location.hash
         };
     }
+}), subsubTitle = new Com({
+    tplContent: '<div><span class="sub-sub-title"><%_state_.subTitle%></span></div>',
+    parentNode: subTitle,
+    getState: function () {
+        return {
+            subTitle: 'sub sub Title of ' + window.location.hash
+        };
+    }
 });
-
+subTitle.appendChild(subsubTitle);
 header.appendChild(subTitle);
 window.onhashchange = function () {
     header.update();
