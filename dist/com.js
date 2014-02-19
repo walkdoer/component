@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-02-19T11:37Z
+ * Date: 2014-02-19T13:16Z
  */
 
 (function (global, factory) {
@@ -629,10 +629,6 @@ var idGen = {
         _isComNeedUpdate: function (component) {
             return component._isStateChange(component.getState()) && component.rendered;
         },
-        _syncState: function () {
-            //创建新节点
-            this._$tempEl = $(this.tmpl());
-        },
         _changeEl: function ($el) {
             this.el = $el[0];
             this.$el = $el;
@@ -641,44 +637,39 @@ var idGen = {
             this.parentEl = $dom[0];
             this.$parentEl = $dom;
         },
-        _updateEl: function () {
-            this.parentEl.replaceChild(this._$tempEl[0], this.el);
-            this._changeEl(this._$tempEl);
-        },
         _rebuildDomTree: function () {
             var component = this.firstChild;
-            this._updateEl();
+            this._changeEl(this._$tempEl);
             while (component) {
-                component._updateEl();
+                component._changeEl(component._$tempEl);
                 component._changeParentEl(this.$el);
-                this.el.appendChild(component.el);
+                component._$tempEl = null;
                 component = component.nextNode;
             }
+            this._$tempEl = null;
         },
         /**
          * 更新组件
-         * @param  {[type]} state [description]
-         * @param  {[type]} data  [description]
          * @return {[type]}       [description]
          */
-        update: function (data) {
-            //更新组件的子组件
+        update: function () {
+            //首先自我更新，保存到临时_$tempEl中
+            this.updating = true;
+            this.state = this.getState();
+            this._$tempEl = $(this.tmpl());
             var component = this.firstChild;
             while (component) {
-                //组件有状态，且状态改变，则需要更新，否则保持原样
-                if (this._isComNeedUpdate(component)) {
-                    component.update(data);
-                }
+                component.update();
                 component = component.nextNode;
             }
-            if (this._isComNeedUpdate(this)) {
-                this.state = this.getState();
-                this._syncState();
+            if (this.parentNode == null || !this.parentNode.updating) {
+                this.parentEl.replaceChild(this._$tempEl[0], this.el);
                 this._rebuildDomTree();
-                if (typeof this.userUpdate === 'function') {
-                    this.userUpdate(data);
-                }
+            } else {
+                this.parentNode._$tempEl.append(this._$tempEl);
             }
+            this.updating = false;
+            return this;
         },
         /**
          * 添加组件
