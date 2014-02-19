@@ -152,16 +152,17 @@ function ($, _, Node, Event, template) {
             this.parentEl = $dom[0];
             this.$parentEl = $dom;
         },
-        _rebuildDomTree: function () {
+        _rebuildDomTree: function (isRoot) {
             var component = this.firstChild;
             this._changeEl(this._$tempEl);
+            if (!isRoot) {
+                this._changeParentEl(this.parentNode.$el);
+            }
             while (component) {
-                component._changeEl(component._$tempEl);
-                component._changeParentEl(this.$el);
-                component._$tempEl = null;
+                component._rebuildDomTree(false);
                 component = component.nextNode;
             }
-            this._$tempEl = null;
+            delete this._$tempEl;
         },
         /**
          * 更新组件
@@ -179,7 +180,7 @@ function ($, _, Node, Event, template) {
             }
             if (this.parentNode == null || !this.parentNode.updating) {
                 this.parentEl.replaceChild(this._$tempEl[0], this.el);
-                this._rebuildDomTree();
+                this._rebuildDomTree(true);
             } else {
                 this.parentNode._$tempEl.append(this._$tempEl);
             }
