@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-02-18T15:53Z
+ * Date: 2014-02-19T11:37Z
  */
 
 (function (global, factory) {
@@ -631,19 +631,26 @@ var idGen = {
         },
         _syncState: function () {
             //创建新节点
-            var $newDom = $(this.tmpl());
-            this.parentEl.replaceChild($newDom[0], this.el);
-            this.el = $newDom[0];
-            this.$el = $newDom;
+            this._$tempEl = $(this.tmpl());
         },
-        _updateParent: function (domEl) {
-            this.parentEl = domEl;
-            this.$parentEl = $(domEl);
+        _changeEl: function ($el) {
+            this.el = $el[0];
+            this.$el = $el;
+        },
+        _changeParentEl: function ($dom) {
+            this.parentEl = $dom[0];
+            this.$parentEl = $dom;
+        },
+        _updateEl: function () {
+            this.parentEl.replaceChild(this._$tempEl[0], this.el);
+            this._changeEl(this._$tempEl);
         },
         _rebuildDomTree: function () {
             var component = this.firstChild;
+            this._updateEl();
             while (component) {
-                component._updateParent(this.el);
+                component._updateEl();
+                component._changeParentEl(this.$el);
                 this.el.appendChild(component.el);
                 component = component.nextNode;
             }
