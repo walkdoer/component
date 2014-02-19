@@ -2,14 +2,16 @@
  * 显示类
  * @extend Component{base/Component}
  */
-define(function (require, exports) {
+define([
+    './libs/zepto',
+    './libs/underscore',
+    './base/node',
+    './base/event',
+    './base/template'
+],
+function ($, _, Node, Event, template) {
     'use strict';
-    var $ = require('core/selector'),
-        _ = require('core/lang'),
-        slice = Array.prototype.slice,
-        Node = require('base/node'),
-        Event = require('base/event'),
-        template = require('core/template'),
+    var slice = Array.prototype.slice,
         emptyFunc = function () {},
         _handleEvent = function () {
             var type = arguments[0],
@@ -47,32 +49,26 @@ define(function (require, exports) {
                 'parentEl',
                 '*state*',
                 'getState',
+                'userUpdate:update',
                 'className',
                 'display',
                 'el',
                 'selector'
             ]);
-            self.state.data = option.data;
+            self._data = option.data;
             self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
             var parentNode = self.parentNode;
-            //Priority：parentEl > parentNode
-            //have parentEl
             if (self.parentEl) {
                 self.$parentEl = $(self.parentEl);
-            }
-            //no parentEl but have parentNode
-            else if (parentNode) {
-                //用户没有配置parentEl，默认使用parent的el元素
+            } else if (parentNode) {
                 self.parentEl = parentNode.el;
                 self.$parentEl = parentNode.$el;
-            }
-            //have no parentEl or parent, throw out an Error
-            else {
-                throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those');
+            } else {
+                throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
             }
             //初始化参数
-            self.params = self.getState();
+            self.state = self.getState();
             //初始化组件HTML元素
             self._initHTMLElement(function () {
                 self.$el.attr('id', self.id)
@@ -143,25 +139,53 @@ define(function (require, exports) {
          * @return {Object}
          */
         getData: function () {
-            return this.state.data || null;
+            return $.extend({}, this._data || {}, {_state_: this.state});
+        },
+        _isComNeedUpdate: function (component) {
+            return component._isStateChange(component.getState()) && component.rendered;
+        },
+        _changeEl: function ($el) {
+            this.el = $el[0];
+            this.$el = $el;
+        },
+        _changeParentEl: function ($dom) {
+            this.parentEl = $dom[0];
+            this.$parentEl = $dom;
+        },
+        _rebuildDomTree: function (isRoot) {
+            var component = this.firstChild;
+            this._changeEl(this._$tempEl);
+            if (!isRoot) {
+                this._changeParentEl(this.parentNode.$el);
+            }
+            while (component) {
+                component._rebuildDomTree(false);
+                component = component.nextNode;
+            }
+            delete this._$tempEl;
         },
         /**
          * 更新组件
-         * @param  {[type]} state [description]
-         * @param  {[type]} data  [description]
          * @return {[type]}       [description]
          */
-        update: function (newState, data) {
-            //更新组件的子组件
+        update: function () {
+            //首先自我更新，保存到临时_$tempEl中
+            this.updating = true;
+            this.state = this.getState();
+            this._$tempEl = $(this.tmpl());
             var component = this.firstChild;
             while (component) {
-                component.state = newState;
-                //组件有状态，且状态改变，则需要更新，否则保持原样
-                if (component._isStateChange() && component.rendered) {
-                    component.update(newState, data);
-                }
+                component.update();
                 component = component.nextNode;
             }
+            if (this.parentNode == null || !this.parentNode.updating) {
+                this.parentEl.replaceChild(this._$tempEl[0], this.el);
+                this._rebuildDomTree(true);
+            } else {
+                this.parentNode._$tempEl.append(this._$tempEl);
+            }
+            this.updating = false;
+            return this;
         },
         /**
          * 添加组件
@@ -244,15 +268,16 @@ define(function (require, exports) {
                 node = this,
                 statusArray,
                 statusStr,
-                params;
+                pushStatusArray = function (key, value) {
+                    statusArray.push(value);
+                },
+                state;
             while (node) {
                 statusStr = '';
-                params = node.params;
-                if (params) {
+                state = node.state;
+                if (state) {
                     statusArray = [];
-                    $.each(params, function (key, value) {
-                        statusArray.push(value);
-                    });
+                    $.each(state, pushStatusArray);
                     //产生出 '(status1[,status2[,status3]...])' 的字符串
                     statusStr = ['(', statusArray.join(','), ')'].join('');
                 }
@@ -287,16 +312,6 @@ define(function (require, exports) {
                 if (html) {
                     self.tplContent = html;
                 }
-            } else if (tpl) {
-                //tpl配置是文件，异步加载文件
-                require.async('tpl/' + tpl, function (res) {
-                    if (res) {
-                        self.tplContent = res;
-                        callback(true);
-                    } else {
-                        callback(false);
-                    }
-                });
             }
             callback(!!self.tplContent);
         },
@@ -333,16 +348,17 @@ define(function (require, exports) {
          * @param  {Object} listeners 事件配置
          */
         _listen: function (listeners) {
+            function onlisten(event, self) {
+                return function () {
+                    listeners[event].apply(self, arguments);
+                };
+            }
             if (!listeners) {
                 return;
             }
             for (var event in listeners) {
                 if (listeners.hasOwnProperty(event)) {
-                    this.on(event, (function (event, self) {
-                        return function () {
-                            listeners[event].apply(self, arguments);
-                        };
-                    })(event, this));
+                    this.on(event, onlisten(event, this));
                 }
             }
         },
@@ -361,6 +377,11 @@ define(function (require, exports) {
                 elementSelector,
                 eventType,
                 callback,
+                onUIEvent = function (callback, context) {
+                    return function () {
+                        callback.apply(context, arguments);
+                    };
+                },
                 evtConf;
             if (!evts) {
                 return;
@@ -381,11 +402,7 @@ define(function (require, exports) {
                 }
                 eventType = evtConf[0];
                 callback = evts[evt];
-                this.on(eventType, elementSelector, (function (callback, context) {
-                    return function () {
-                        callback.apply(context, arguments);
-                    };
-                })(callback, this));
+                this.on(eventType, elementSelector, onUIEvent(callback, this));
             }
         },
         /**
@@ -401,10 +418,8 @@ define(function (require, exports) {
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
          */
-        _isStateChange: function () {
-            var newParams = this.getState();
-            if (!_.equal(newParams, this.params)) {
-                this.params = newParams;
+        _isStateChange: function (newState) {
+            if (!_.isEqual(newState, this.state)) {
                 return true;
             } else {
                 return false;
@@ -436,9 +451,7 @@ define(function (require, exports) {
                     }
                     //创建组件
                     cp = new Component($.extend({
-                        parentNode: self,
-                        state: self.state,
-                        renderAfterInit: false
+                        parentNode: self
                     }, cItm/*cItm为组件的配置*/));
                     components.push(cp);
                 }
@@ -451,11 +464,6 @@ define(function (require, exports) {
                 return null;
             }
             return null;
-        },
-        destroy: function () {
-            this._super();
-            this.$el.off();
-            this.$el.remove();
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'

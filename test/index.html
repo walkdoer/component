@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Test Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;" />
+    <meta name="MobileOptimized" content="320"/>
+    <style type="text/css" media="screen">
+        header, div {
+            margin:10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/template" id="tpl-top-nav">
+<header class="top-nav">
+    <p class="title"><%_state_.title%></p>
+</header>
+</script>
+<script type="text/javascript" src="./libs/zepto.js"></script>
+<script type="text/javascript" src="./libs/underscore.js"></script>
+<script type="text/javascript" src="../dist/com.js"></script>
+<script>
+var header = new Com({
+    tpl: '#tpl-top-nav',
+    parentEl: $('body')[0],
+    getState: function () {
+        return  {
+            title: window.location.hash
+        };
+    }
+}), subTitle1 = new Com({
+    tplContent: '<div><span class="sub-title"><%_state_.subTitle%></span></div>',
+    parentNode: header,
+    getState: function () {
+        return {
+            subTitle: 'subTitle of ' + window.location.hash
+        };
+    }
+}), subTitle2 = new Com({
+    tplContent: '<div><span class="sub-title">This Component has no state;</span></div>',
+    parentNode: header
+}), subsubTitle = new Com({
+    tplContent: '<div><span class="sub-sub-title"><%_state_.subTitle%></span></div>',
+    parentNode: subTitle1,
+    getState: function () {
+        return {
+            subTitle: 'sub sub Title of ' + window.location.hash
+        };
+    }
+}),subsubTitle2 = new Com({
+    tplContent: '<div><span class="sub-sub-title"><%_state_.subTitle%></span></div>',
+    parentNode: subTitle2,
+    getState: function () {
+        return {
+            subTitle: 'sub sub Title2 of ' + window.location.hash
+        };
+    }
+});
+subTitle1.appendChild(subsubTitle);
+subTitle2.appendChild(subsubTitle2);
+header.appendChild(subTitle1);
+header.appendChild(subTitle2);
+window.onhashchange = function () {
+    header.update();
+}
+header.render().appendToParent();
+</script>
+</body>
+</html>

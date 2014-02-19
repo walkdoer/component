@@ -1,0 +1,39 @@
+{
+    "boss": true,
+    "curly": true,
+    //"eqeqeq": true,
+    "eqnull": true,
+    "expr": true,
+    "immed": true,
+    "noarg": true,
+    "onevar": false,
+    "smarttabs": true,
+    "trailing": true,
+    "undef": true,
+    "unused": true,
+
+    "evil": true,
+    "sub": true,
+
+    "browser": true,
+    "devel": true,
+    "wsh": true,
+
+    "globals": {
+            "require": false,
+            "define": false,
+            "QUnit": false,
+            "ok": false,
+            "equal": false,
+            "asyncTest": false,
+            "notEqual": false,
+            "deepEqual": false,
+            "strictEqual": false,
+            "start": false,
+            "stop": false,
+            "expect": false,
+            "jQuery": true,
+            "module": true,
+            "$": true
+    }
+}

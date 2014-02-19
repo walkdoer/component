@@ -25,7 +25,7 @@ define(function (require, exports) {
          * {Override} 带有自动补全功能
          * @param  {Array} records  后端接口返回的数据
          */
-        _appendRecord: function (records, hasMore, callback) {
+        appendRecord: function (records, hasMore, callback) {
             var self = this,
                 originLength = records.length;
             this.trigger('BEFORE_APPEND', [records]);
@@ -42,7 +42,7 @@ define(function (require, exports) {
                 this.firstAppend = false;
                 self.setStatus(List.DONE);
                 self.btn.done();
-                self.appendRecord(records);
+                self._super(records);
                 this.stockItems = [];//这里不要改成null
                 if (callback) {
                     callback();

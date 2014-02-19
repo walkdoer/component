@@ -1,12 +1,14 @@
 /**
  * 节点类
  */
-define(function (require, exports) {
+define([
+    '../libs/zepto',
+    '../libs/underscore',
+    './class',
+    './var/idGen'
+], function ($, _, Class, idGen) {
     'use strict';
-    var $ = require('core/selector'),
-        Class = require('lib/class'),
-        serialNumberGenerator = require('base/serialNumberGenerator'),
-        R_CLONING = /^\*(.*)\*$/,
+    var R_CLONING = /^\*(.*)\*$/,
         Node;
     function getter(propName) {
         return function () {
@@ -36,7 +38,7 @@ define(function (require, exports) {
             //保存用户原始配置，已备用
             self.originOption = $.extend(true, {}, option);
             //为每一个组件组件实例赋予一个独立的sn
-            self.sn = serialNumberGenerator.gen();
+            self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.getType(), self.sn].join('-');
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
@@ -75,10 +77,10 @@ define(function (require, exports) {
          * @return {Node} this
          */
         removeAllChild: function () {
-            var childNode = this.firstChild;
-            while(childNode) {
-                childNode.destroy();
-                childNode = childNode.nextNode;
+            var children = this.firstChild;
+            while(children) {
+                children.destroy();
+                children = children.nextNode;
             }
             this.firstChild = null;
             this.lastChild = null;
@@ -88,13 +90,16 @@ define(function (require, exports) {
          * 析构
          */
         destroy: function () {
-            this.removeAllChild();
             //断开链表
             if (this.prevNode) {
                 this.prevNode.nextNode = this.nextNode;
+            } else {
+                this.firstChild = this.nextNode;
             }
             if (this.nextNode) {
                 this.nextNode.prevNode = this.prevNode;
+            } else {
+                this.lastChild = this.prevNode;
             }
             this.parentNode = null;
         },
@@ -102,7 +107,7 @@ define(function (require, exports) {
          * 初始化组件的变量列表
          * @param  {Array} variableArray 需要初始化的变量名数组 
          *
-         *         变量名格式: [*]{配置项属性名称}[:{组件属性名称}][*]
+         *         变量名格式: [*]{组件配置属性}[:{用户配置项属性}][*]
          *
          *         Note: '*' means need clone the object
          *

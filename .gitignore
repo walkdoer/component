@@ -37,11 +37,9 @@ ehthumbs.db
 Thumbs.db
 server.pid
 
-build/node_modules
+#Folder#
+node_modules
+vendor
 *.pid
-
+*.swp
 *.pid
-
-build/private/var/server.pid
-
-build/private/var/server.pid
