@@ -42,7 +42,8 @@ module.exports = function(grunt) {
                 files: {
                     'qunit': 'qunit/qunit',
                     'zepto.js': 'zepto/zepto.js',
-                    'underscore.js': 'underscore/underscore.js'
+                    'underscore.js': 'underscore/underscore.js',
+                    'require.js': 'requirejs/require.js'
                 }
             }
         },
