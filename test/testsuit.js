@@ -13,9 +13,12 @@
     // extension so RequireJS resolves them as relative paths rather than using
     // the `baseUrl` value supplied above.
     var testModules = [
-        "../src/base/class.js",
+        "base/classTest.js",
     ];
 
     // Resolve all testModules and then start the Test Runner.
-    require(testModules, QUnit.start);
+    require(testModules, function () {
+        QUnit.load();
+        QUnit.start();
+    });
 }());
