@@ -15,8 +15,22 @@ define(function (require) {
                 return 'ClassA bar';
             }
         });
-        var a = new ClassA();
+
+        var ClassB = ClassA.extend({
+            foo: function () {
+                return 'ClassB foo';
+            },
+            bar: function () {
+                return 'ClassB bar and ' + this._super();
+            }
+        });
+        var a = new ClassA(),
+            b = new ClassB();
 		QUnit.equal(a.foo(), 'ClassA foo');
+        QUnit.equal(a.bar(), 'ClassA bar');
+
+        QUnit.equal(b.foo(), 'ClassB foo');
+        QUnit.equal(b.bar(), 'ClassB bar and ClassA bar');
 	});
 
 });
