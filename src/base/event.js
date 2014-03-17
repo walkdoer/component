@@ -11,6 +11,6 @@ define(function () {
         on: function (eventName, callback, context) {
         
         }
-    }
+    };
     return Event;
 });

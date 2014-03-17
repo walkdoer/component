@@ -3,13 +3,12 @@
  * @extend Component{base/Component}
  */
 define([
-    'zepto',
-    'underscore',
+    './base/lang',
     './base/node',
     './base/event',
     './base/template'
 ],
-function ($, _, Node, Event, template) {
+function (_, Node, Event, template) {
     'use strict';
     var slice = Array.prototype.slice,
         emptyFunc = function () {},
@@ -56,7 +55,7 @@ function ($, _, Node, Event, template) {
                 'selector'
             ]);
             self._data = option.data;
-            self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
+            self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
             var parentNode = self.parentNode;
             if (self.parentEl) {
@@ -139,7 +138,7 @@ function ($, _, Node, Event, template) {
          * @return {Object}
          */
         getData: function () {
-            return $.extend({}, this._data || {}, {_state_: this.state});
+            return _.extend({}, this._data || {}, {_state_: this.state});
         },
         _isComNeedUpdate: function (component) {
             return component._isStateChange(component.getState()) && component.rendered;
@@ -196,8 +195,8 @@ function ($, _, Node, Event, template) {
                 return;
             }
             var self = this;
-            componentArray = $.isArray(componentArray) ? componentArray : [componentArray];
-            $.each(componentArray, function (i, component) {
+            componentArray = _.isArray(componentArray) ? componentArray : [componentArray];
+            _.each(componentArray, function (i, component) {
                 component.on('BEFORE_RENDER', function (event, component) {
                     //组件还没有渲染
                     if (!self._allowToRender(component)) {
@@ -277,7 +276,7 @@ function ($, _, Node, Event, template) {
                 state = node.state;
                 if (state) {
                     statusArray = [];
-                    $.each(state, pushStatusArray);
+                    _.each(state, pushStatusArray);
                     //产生出 '(status1[,status2[,status3]...])' 的字符串
                     statusStr = ['(', statusArray.join(','), ')'].join('');
                 }
@@ -436,7 +435,7 @@ function ($, _, Node, Event, template) {
                 cItm,
                 cp = null;
             //构造子组件（sub Component）
-            if ($.isArray(cpConstructors)) {
+            if (_.isArray(cpConstructors)) {
                 for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
                     cItm = cpConstructors[i];
                     if (typeof cItm === 'function') { //构造函数
@@ -450,7 +449,7 @@ function ($, _, Node, Event, template) {
                         throw new Error('Component\'s component config is not right');
                     }
                     //创建组件
-                    cp = new Component($.extend({
+                    cp = new Component(_.extend({
                         parentNode: self
                     }, cItm/*cItm为组件的配置*/));
                     components.push(cp);

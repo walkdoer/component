@@ -5,7 +5,7 @@
  */
 /*jshint evil: true */
 define([
-    'underscore'
+    './lang'
 ], function (_) {
     'use strict';
 

@@ -2,11 +2,10 @@
  * 节点类
  */
 define([
-    'zepto',
-    'underscore',
+    './lang',
     './class',
     './var/idGen'
-], function ($, _, Class, idGen) {
+], function (_, Class, idGen) {
     'use strict';
     var R_CLONING = /^\*(.*)\*$/,
         Node;
@@ -36,7 +35,7 @@ define([
         init: function (option) {
             var self = this;
             //保存用户原始配置，已备用
-            self.originOption = $.extend(true, {}, option);
+            self.originOption = _.extend(true, {}, option);
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
@@ -150,7 +149,7 @@ define([
                 if (targetObj !== undefined) {
                     needClone = needClone && typeof targetObj === 'object';
                     component[variableName] = needClone ?
-                        $.extend(true, {}, targetObj)
+                        _.extend(true, {}, targetObj)
                         : targetObj;
                 }
             });
