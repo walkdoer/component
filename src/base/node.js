@@ -2,7 +2,7 @@
  * 节点类
  */
 define([
-    '../libs/zepto',
+    'zepto',
     '../libs/underscore',
     './class',
     './var/idGen'
@@ -41,6 +41,7 @@ define([
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.getType(), self.sn].join('-');
+            self.nodeCount = 0;
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
         },
         /**
@@ -57,6 +58,7 @@ define([
                 });
                 this.lastChild = node;
             }
+            this.nodeCount++;
             return this;
         },
         /**
@@ -69,6 +71,7 @@ define([
             if (node) {
                 node.destroy();
             }
+            this.nodeCount--;
             node = null;
             return this;
         },
@@ -80,6 +83,7 @@ define([
             var children = this.firstChild;
             while(children) {
                 children.destroy();
+                this.nodeCount--;
                 children = children.nextNode;
             }
             this.firstChild = null;
