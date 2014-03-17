@@ -3,7 +3,7 @@
  */
 define([
     'zepto',
-    '../libs/underscore',
+    'underscore',
     './class',
     './var/idGen'
 ], function ($, _, Class, idGen) {
@@ -149,8 +149,9 @@ define([
                     targetObj = option[optionKey];
                 if (targetObj !== undefined) {
                     needClone = needClone && typeof targetObj === 'object';
-                    component[variableName] = needClone ? $.extend(true, {}, targetObj)
-                                                          : targetObj;
+                    component[variableName] = needClone ?
+                        $.extend(true, {}, targetObj)
+                        : targetObj;
                 }
             });
         },

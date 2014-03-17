@@ -8,11 +8,15 @@
     require.config({
         baseUrl: "../src",
         paths: {
-            zepto: '../src/libs/zepto'
+            zepto: '../src/libs/zepto',
+            underscore: '../src/libs/underscore'
         },
         shim: {
-            zepto: {
+            'zepto': {
                 exports: '$'
+            },
+            'underscore': {
+                exports: '_'
             }
         }
     });

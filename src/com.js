@@ -3,8 +3,8 @@
  * @extend Component{base/Component}
  */
 define([
-    './libs/zepto',
-    './libs/underscore',
+    'zepto',
+    'underscore',
     './base/node',
     './base/event',
     './base/template'
