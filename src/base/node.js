@@ -171,7 +171,7 @@ define([
         },
         /**
          * 将组件连接起来
-         * 
+         *
          *               parentNode
          *                   |
          *     prevNode -> curNode -> nextNode

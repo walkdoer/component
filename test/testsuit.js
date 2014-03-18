@@ -7,18 +7,6 @@
     // folder.
     require.config({
         baseUrl: "../src",
-        paths: {
-            zepto: '../src/libs/zepto',
-            underscore: '../src/libs/underscore'
-        },
-        shim: {
-            'zepto': {
-                exports: '$'
-            },
-            'underscore': {
-                exports: '_'
-            }
-        }
     });
 
     // A list of all QUnit test Modules.  Make sure you include the `.js` 
@@ -26,7 +14,8 @@
     // the `baseUrl` value supplied above.
     var testModules = [
         "base/classTest.js",
-        "base/nodeTest.js"
+        "base/nodeTest.js",
+        "base/templateTest.js"
     ];
 
     // Resolve all testModules and then start the Test Runner.
