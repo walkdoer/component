@@ -266,7 +266,7 @@ define([
          * @return this
          */
         on: function(name, callback, context) {
-            if (!callback || !eventsApi(this, 'on', name, [callback, context])) {
+            if (!eventsApi(this, 'on', name, [callback, context]) || !callback) {
                 return this;
             }
             this._events || (this._events = {});
@@ -276,6 +276,7 @@ define([
                 context: context,
                 ctx: context || this
             });
+            return this;
         },
         /**
          * off
@@ -331,15 +332,13 @@ define([
             if (!this._events) {
                 return this;
             }
-            var args = _.slice.call(arguments, 1);
+            var args = Array.prototype.slice.call(arguments, 1);
             if (!eventsApi(this, 'trigger', name, args)) {
                 return false;
             }
             var events = this._events[name];
             if (events) {
-                if (events) {
-                    triggerEvent(events, args);
-                }
+                triggerEvent(events, args);
             }
         }
     });

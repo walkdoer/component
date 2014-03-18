@@ -44,4 +44,28 @@ define(function (require) {
 
     });
 
+    QUnit.test('Node Event', function () {
+        var adder = new Node({
+            id: 'adder'
+        });
+        adder.on('add', function (a, b, c) {
+            console.log('node1 event fire', a, b, c);
+            QUnit.equal(a + b + c, 6, '.on("event", callbakc)形式：事件回调调用正常');
+        }).on({
+            sub: function (a, b) {
+                QUnit.equal(a - b, 2, '.on({event1: foo, event2: bar})形式：事件回调调用正常');
+            },
+            increase: function (a) {
+                QUnit.equal(a + 1, 3,  '.on({event1: foo, event2: bar})形式：事件回调调用正常');
+            }
+        });
+        adder.trigger('add', 1, 2, 3);
+        adder.trigger('sub', 6, 4);
+        adder.trigger('increase', 2);
+        var logger = new Node({
+            id: 'logger'
+        });
+
+    });
+
 });
