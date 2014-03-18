@@ -25,7 +25,7 @@ function (_, Node, Event, template) {
         },
         DisplayComponent;
     //添加事件
-    Event.register('BEFORE_RENDER_FIRST_COMPONENT', 'before:render:firstcomponent');
+    var BEFORE_RENDER_FIRST_COMPONENT = 'before:render:firstcomponent';
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -203,7 +203,7 @@ function (_, Node, Event, template) {
                         component.isContinueRender = false;
                     } else {
                         if (!component.prevNode) {
-                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
+                            self.trigger(BEFORE_RENDER_FIRST_COMPONENT, [self]);
                         }
                         // isContinueRender 表示执行下面的Render
                         component.isContinueRender = true;
@@ -245,18 +245,6 @@ function (_, Node, Event, template) {
          */
         hasTplContent: function () {
             return !!this.tplContent;
-        },
-        /**
-         * 监听事件,糅合了 jQuery或者Zepto的事件机制，所以使用与上述类库同理
-         */
-        on: function () {
-            return _handleEvent.apply(this, ['on'].concat(slice.call(arguments, 0)));
-        },
-        /**
-         * 触发事件，同上
-         */
-        trigger: function () {
-            return _handleEvent.apply(this, ['trigger'].concat(slice.call(arguments, 0)));
         },
         /**
          * 获取组件在层级关系中的位置
