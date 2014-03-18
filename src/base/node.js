@@ -16,6 +16,19 @@ define([
         };
     }
     var eventSplitter = /\s+/;
+    /**
+     * eventApi
+     * 兼容多事件名 'click touch'
+     * 兼容jquery式事件回调
+     * {
+     *     click: bar
+     *     touch: foo
+     * }
+     * @params {Object} obj  上下文
+     * @params {String} action 函数名称 如on,trigger,off
+     * @params {String/Object} name 事件名称
+     * @params {Array} 传入给函数执行的参数
+     */
     var eventsApi = function(obj, action, name, rest) {
         if (!name) {
             return true;
@@ -35,6 +48,36 @@ define([
         }
 
         return true;
+    };
+    /**
+     * triggerevent
+     * @params {Array} events 事件回调函数数组
+     * @params {Array} args 传入回调函数的参数
+     */
+    var triggerEvent = function(events, args) {
+        var ev, i = -1,
+            l = events.length,
+            a1 = args[0],
+            a2 = args[1],
+            a3 = args[2];
+        //switch提高函数性能
+        switch (args.length) {
+            case 0:
+                while (++i < l)(ev = events[i]).callback.call(ev.ctx);
+                return;
+            case 1:
+                while (++i < l)(ev = events[i]).callback.call(ev.ctx, a1);
+                return;
+            case 2:
+                while (++i < l)(ev = events[i]).callback.call(ev.ctx, a1, a2);
+                return;
+            case 3:
+                while (++i < l)(ev = events[i]).callback.call(ev.ctx, a1, a2, a3);
+                return;
+            default:
+                while (++i < l)(ev = events[i]).callback.apply(ev.ctx, args);
+                return;
+        }
     };
 
     Node = Class.extend({
@@ -228,15 +271,19 @@ define([
             }
             this._events || (this._events = {});
             var events = this._events[name] || (this._events[name] = []);
-            events.push({callback: callback, context: context, ctx: context || this});
+            events.push({
+                callback: callback,
+                context: context,
+                ctx: context || this
+            });
         },
         /**
          * off
          * 解绑函数，解除事件绑定
          * this.off()表示解绑所有事件
          * this.off(null, callback) 表示解绑事件回调函数为callback的所有事件
-         * this.off('click', callback) 表示解绑回调函数为callback的事件回调
-         * this.off('click', callback, context) 解绑上下文为context，回调函数为callback的事件监听函数
+         * this.off('click', callback) 表示解绑回调函数为callback的click事件
+         * this.off('click', callback, context) 解绑上下文为context，回调函数为callback的click事件
          * @param {String} name 事件名称
          * @param {Function} callback 事件回调函数
          * @param {Object} context 指定回调函数上下文
@@ -259,10 +306,10 @@ define([
                 if ((events = this._events[name])) {
                     this._events[name] = retain = [];
                     if (callback || context) {
-                        for(var j = 0, evt, eventsLen = events.length; j < eventsLen; j++) {
+                        for (var j = 0, evt, eventsLen = events.length; j < eventsLen; j++) {
                             evt = events[j];
                             if ((callback && evt.callback !== callback) ||
-                                    (context && evt.context !== context)) {
+                                (context && evt.context !== context)) {
                                 retain.push(evt);
                             }
 
@@ -275,6 +322,26 @@ define([
             }
             return this;
         },
+        /**
+         * trigger
+         * 触发事件
+         * @params {String} name 事件名称
+         */
+        trigger: function(name) {
+            if (!this._events) {
+                return this;
+            }
+            var args = _.slice.call(arguments, 1);
+            if (!eventsApi(this, 'trigger', name, args)) {
+                return false;
+            }
+            var events = this._events[name];
+            if (events) {
+                if (events) {
+                    triggerEvent(events, args);
+                }
+            }
+        }
     });
     return Node;
 });

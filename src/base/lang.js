@@ -2,9 +2,11 @@
  * 辅助类
  */
 define(function(require, exports, module) {
-    var class2type = {},
+    var _ = {},
+        class2type = {},
         toString = class2type.toString,
         slice = Array.prototype.slice,
+        nativeKeys = Object.keys,
         isArray = Array.isArray ||
             function(object) {
                 return object instanceof Array;
@@ -37,7 +39,7 @@ define(function(require, exports, module) {
 
     function extend(target, source, deep) {
         for (var key in source) {
-            if(deep && (isPlainObject(source[key]) || isArray(source[key]))) {
+            if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
                 if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
                     target[key] = {};
                 }
@@ -50,8 +52,23 @@ define(function(require, exports, module) {
             }
         }
     }
+    _.keys = function(obj) {
+        if (!isObject(obj)) {
+            return [];
+        }
+        if (nativeKeys) {
+            return nativeKeys(obj);
+        }
+        var keys = [];
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    };
 
-    exports.extend = function(target) {
+    _.extend = function(target) {
         var deep, args = slice.call(arguments, 1);
         if (typeof target == 'boolean') {
             deep = target;
@@ -62,4 +79,5 @@ define(function(require, exports, module) {
         });
         return target;
     };
+    return _;
 });
