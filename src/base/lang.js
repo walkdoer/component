@@ -95,5 +95,6 @@ define(function(require, exports, module) {
         return toString.call(obj) == '[object String]';
     };
     _.isFunction = isFunction;
+    _.isArray = isArray;
     return _;
 });
