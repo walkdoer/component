@@ -25,10 +25,6 @@ define(function(require, exports, module) {
         return obj != null && obj == obj.window;
     }
 
-    function isDocument(obj) {
-        return obj != null && obj.nodeType == obj.DOCUMENT_NODE;
-    }
-
     function isObject(obj) {
         return type(obj) == "object";
     }
@@ -52,6 +48,21 @@ define(function(require, exports, module) {
             }
         }
     }
+
+    _.isEmpty = function(obj) {
+        if (obj == null) {
+            return true;
+        }
+        if (isArray(obj) || _.isString(obj)) {
+            return obj.length === 0;
+        }
+        for (var key in obj) {
+            if (_.has(obj, key)) {
+                return false;
+            }
+        }
+        return true;
+    };
     _.keys = function(obj) {
         if (!isObject(obj)) {
             return [];
@@ -79,5 +90,10 @@ define(function(require, exports, module) {
         });
         return target;
     };
+
+    _.isString = function(obj) {
+        return toString.call(obj) == '[object String]';
+    };
+    _.isFunction = isFunction;
     return _;
 });

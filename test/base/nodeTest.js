@@ -62,10 +62,40 @@ define(function (require) {
         adder.trigger('add', 1, 2, 3);
         adder.trigger('sub', 6, 4);
         adder.trigger('increase', 2);
-        var logger = new Node({
-            id: 'logger'
+
+        var View = new Node(),
+            Model = new Node(),
+            Router = new Node();
+
+        var functionCallCounter = {
+            onChange: 0,
+            Router: 0
+        };
+        var onChange = function (data) {
+            functionCallCounter.onChange++;
+            QUnit.equal(data, 'model data', 'listenTo API 正常');
+        };
+
+        View.listenTo(Router, 'change', function (params) {
+            functionCallCounter.Router++;
+            QUnit.equal(params, 'router params', 'listenTo API 正常');
+        }).listenTo(Model, {
+            'change': onChange,
+            'delete': function (data) {
+                QUnit.equal(data, 'model delete', 'listenTo API 正常');
+            }
         });
 
+        Model.trigger('change', 'model data');
+        Model.trigger('delete', 'model delete');
+        Router.trigger('change', 'router params');
+
+        View.stopListening(Router);
+        Router.trigger('change', 'router params');
+        View.stopListening(Model, 'change', onChange);
+        Model.trigger('delete', 'model delete');
+        QUnit.equal(functionCallCounter.onChange, 1, 'stopListening API 正常');
+        QUnit.equal(functionCallCounter.Model, 1, 'stopListening API 正常');
     });
 
 });

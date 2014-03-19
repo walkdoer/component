@@ -340,6 +340,51 @@ define([
             if (events) {
                 triggerEvent(events, args);
             }
+        },
+        /**
+         * listenTo
+         *
+         * 為了方便解綁，避免管理事件綁定混亂失效造成的洩露,出現所謂的Zombie Object
+         * @params {Node} node 節點
+         * @params {String} name 事件名稱
+         * @params {Function} callback 事件回調函數
+         */
+        listenTo: function (node, name, callback) {
+            var listeningTo = this._listeningTo || (this._listeningTo = []);
+
+            listeningTo.push(node);
+            //形如{click: foo, touch: bar}的事件綁定方式
+            if (!callback && typeof name === 'object') {
+                callback = this;
+            }
+            node.on(name, callback, this);
+            return this;
+        },
+        /**
+         * stoplistening
+         *
+         * 通知節點停止監聽特定的事件，或者停止監聽正在監聽中的其他節點
+         * @params {Node} node 節點
+         * @params {String} name 事件名稱
+         * @params {Function} callback 事件回調函數
+         */
+        stopListening: function (node, name, callback) {
+            var remove = !name && !callback,
+                listeningTo = this.listeningTo;
+            if (node) {
+                listeningTo = [node];
+            }
+            if (!callback && typeof name === 'object') {
+                callback = this;
+            }
+            for(var i = 0, itm, l = listeningTo.length; i < l; i++) {
+                itm = listeningTo[i];
+                itm.off(name, callback, this);
+                if (remove || _.isEmpty(itm._events)) {
+                    listeningTo.splice(i, 1);
+                }
+            }
+            return this;
         }
     });
     return Node;
