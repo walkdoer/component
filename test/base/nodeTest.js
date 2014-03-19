@@ -95,7 +95,7 @@ define(function (require) {
         View.stopListening(Model, 'change', onChange);
         Model.trigger('delete', 'model delete');
         QUnit.equal(functionCallCounter.onChange, 1, 'stopListening API 正常');
-        QUnit.equal(functionCallCounter.Model, 1, 'stopListening API 正常');
+        QUnit.equal(functionCallCounter.Router, 1, 'stopListening API 正常');
     });
 
 });

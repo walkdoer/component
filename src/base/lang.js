@@ -57,7 +57,7 @@ define(function(require, exports, module) {
             return obj.length === 0;
         }
         for (var key in obj) {
-            if (_.has(obj, key)) {
+            if (obj.hasOwnProperty(key)) {
                 return false;
             }
         }
