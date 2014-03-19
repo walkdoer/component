@@ -196,7 +196,7 @@ function (_, Node, Event, template) {
             }
             var self = this;
             componentArray = _.isArray(componentArray) ? componentArray : [componentArray];
-            _.each(componentArray, function (i, component) {
+            componentArray.forEach(function (component) {
                 component.on('BEFORE_RENDER', function (event, component) {
                     //组件还没有渲染
                     if (!self._allowToRender(component)) {
@@ -248,23 +248,22 @@ function (_, Node, Event, template) {
         },
         /**
          * 获取组件在层级关系中的位置
-         * @return {String} /index/recommend/app12
+         * @return {String} 生成结果index/recommend/app12
          */
         getAbsPath: function () {
             var pathArray = [],
                 node = this,
                 statusArray,
                 statusStr,
-                pushStatusArray = function (key, value) {
-                    statusArray.push(value);
-                },
                 state;
             while (node) {
                 statusStr = '';
                 state = node.state;
                 if (state) {
                     statusArray = [];
-                    _.each(state, pushStatusArray);
+                    for (var key in state) {
+                        statusArray.push(state[key]);
+                    }
                     //产生出 '(status1[,status2[,status3]...])' 的字符串
                     statusStr = ['(', statusArray.join(','), ')'].join('');
                 }
@@ -426,14 +425,18 @@ function (_, Node, Event, template) {
             if (_.isArray(cpConstructors)) {
                 for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
                     cItm = cpConstructors[i];
-                    if (typeof cItm === 'function') { //构造函数
+                    //构造函数
+                    if (typeof cItm === 'function') {
                         Component = cItm;
-                    } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
+                    //构造函数以及组件详细配置
+                    } else if (typeof cItm === 'object' && cItm._constructor_) {
                         Component = cItm._constructor_;
-                    } else if (cItm instanceof Node) { //已经创建好的组件实例
+                    //已经创建好的组件实例
+                    } else if (cItm instanceof Node) {
                         components.push(cItm);
                         continue;
-                    } else { //检查到错误，提示使用者
+                    //检查到错误，提示使用者
+                    } else {
                         throw new Error('Component\'s component config is not right');
                     }
                     //创建组件
@@ -447,14 +450,15 @@ function (_, Node, Event, template) {
                 //对于配置: components 'component/componentName'
                 //表示所有的组件都是由该类型组件构成
                 //todo 由于这里的应用场景有限，所以为了代码大小考虑，
-                //为了保证功能尽可能简单，暂时不做这部分开发（考虑传入的是构造函数和组件文件地址的情况）
+                //为了保证功能尽可能简单，暂时不做这部分开发（考虑传入的
+                //是构造函数和组件文件地址的情况）
                 return null;
             }
             return null;
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-    _.each(['show', 'hide', 'toggle', 'empty'], function (method) {
+    ['show', 'hide', 'toggle', 'empty'].forEach(function (method) {
         DisplayComponent.prototype[method] = function () {
             var args = slice.call(arguments);
             this.$el[method].apply(this.$el, args);
