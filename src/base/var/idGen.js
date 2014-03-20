@@ -8,8 +8,8 @@ define(function () {
          * 生成序列号
          * @return {String} 16进制字符串
          */
-        gen: function () {
-            return (this.id++).toString(16);
+        gen: function (prefix) {
+            return (prefix || '') + (this.id++).toString(16);
         }
     };
 });

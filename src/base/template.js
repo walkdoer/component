@@ -5,7 +5,7 @@
  */
 /*jshint evil: true */
 define([
-    '../libs/underscore'
+    './lang'
 ], function (_) {
     'use strict';
 
@@ -105,7 +105,7 @@ define([
                     .replace(settings.interpolate, function(match, code) {
                         var objKeyArray = code.split('.'),
                             objItem = data;
-                        _.each(objKeyArray, function (value, index) {
+                        objKeyArray.forEach(function (value) {
                             objItem = objItem[value];
                         });
                         var execute = code.replace(/\\"/g, '"') +

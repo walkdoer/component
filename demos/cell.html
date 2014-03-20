@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Test Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;" />
+    <meta name="MobileOptimized" content="320"/>
+    <style type="text/css" media="screen">
+        .colCell{width:50px; height:50px;margin:5px;background:#CCC;float:left;}
+        .rowCell{overflow: auto;width: 100%}
+    </style>
+</head>
+<body>
+
+<script type="text/javascript" src="./vendor/zepto.js"></script>
+<script type="text/javascript" src="./vendor/underscore.js"></script>
+<script type="text/javascript" src="../dist/com.js"></script>
+<script>
+var bigCell = new Com({
+        id: 'bigCell',
+        className: 'bigCell',
+        parentEl: $('body')[0]
+});
+
+var prevCell,
+    firstCell;
+for (var i = 0; i < 4; i++) {
+    var rowCell = new Com({
+        id: 'rowCell_' + i,
+        className: 'rowCell'
+    });
+    bigCell.appendChild(rowCell);
+    for (var j = 0; j < 4; j++) {
+        var colCell = new Com({
+            id: 'colCell_' + i + '_' + j,
+            tplContent: '<div style="background:<%_state_.color%>"></div>',
+            className: 'colCell',
+            color: 16777215, //默认为白色 #FFFFFF
+            getState: function() {
+                return {
+                    color: '#' + this.color.toString(16)
+                };
+            }
+        });
+        if (!firstCell) {
+            firstCell = colCell;
+        }
+        prevCell && colCell.listenTo(prevCell, 'change', function (num) {
+            var self= this;
+            var random = Math.round(Math.random() * 100);
+            this.color -= num * random;
+            this.update();
+            setTimeout(function() {
+                self.trigger('change', num + random);
+            }, 50);
+        })
+        rowCell.appendChild(colCell);
+        prevCell = colCell;
+    }
+}
+firstCell.listenTo(colCell, 'change', function(num) {
+    var self= this;
+    var random = Math.round(Math.random() * 100);
+    this.color += num * random;
+    this.update();
+    setTimeout(function() {
+        self.trigger('change', num + random);
+    }, 50);
+});
+bigCell.render().appendToParent();
+firstCell.trigger('change', 100);
+</script>
+</body>
+</html>

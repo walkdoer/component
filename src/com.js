@@ -3,30 +3,19 @@
  * @extend Component{base/Component}
  */
 define([
-    './libs/zepto',
-    './libs/underscore',
+    './base/lang',
     './base/node',
-    './base/event',
     './base/template'
 ],
-function ($, _, Node, Event, template) {
+function (_, Node, template) {
     'use strict';
     var slice = Array.prototype.slice,
         emptyFunc = function () {},
-        _handleEvent = function () {
-            var type = arguments[0],
-                args = slice.call(arguments, 1),
-                eventName = this._getEvent(args[0]),
-                el;
-            el = eventName ? this.$parentEl : this.$el;
-            args[0] = eventName || args[0];
-            //console.log(type + ': ' + args[0], el[0]);
-            el[type].apply(el, args);
-            return this;
-        },
         DisplayComponent;
     //添加事件
-    Event.register('BEFORE_RENDER_FIRST_COMPONENT', 'before:render:firstcomponent');
+    var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender:firstcomponent',
+        BEFORE_RENDER = 'beforerender',
+        AFTER_RENDER = 'afterrender';
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -41,6 +30,7 @@ function ($, _, Node, Event, template) {
             var self = this;
             self._super(option);
             self.state = {};
+            /*
             self.initVar([
                 'tpl',
                 'tplContent',
@@ -54,19 +44,11 @@ function ($, _, Node, Event, template) {
                 'display',
                 'el',
                 'selector'
-            ]);
+            ]);*/
             self._data = option.data;
-            self.uiEvents = $.extend(self.uiEvents || {}, option.uiEvents);
+            self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
-            var parentNode = self.parentNode;
-            if (self.parentEl) {
-                self.$parentEl = $(self.parentEl);
-            } else if (parentNode) {
-                self.parentEl = parentNode.el;
-                self.$parentEl = parentNode.$el;
-            } else {
-                throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
-            }
+            self._initParent(self.parentNode);
             //初始化参数
             self.state = self.getState();
             //初始化组件HTML元素
@@ -83,12 +65,26 @@ function ($, _, Node, Event, template) {
                     callback();
                 }
                 //添加新建的子组件到组件中
-                self.appendCmp(self._buildComponents());
+                self.appendChild(self._buildComponents());
                 //之前被通知过render，模板准备好之后进行渲染
                 if (self.needToRender) {
                     self.render();
                 }
             });
+        },
+        /**
+         * 初始化Parent
+         */
+        _initParent: function () {
+            var parentNode = this.parentNode;
+            if (this.parentEl) {
+                this.$parentEl = $(this.parentEl);
+            } else if (parentNode) {
+                this.parentEl = parentNode.el;
+                this.$parentEl = parentNode.$el;
+            } else {
+                //throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
+            }
         },
         /**
          * 渲染组件
@@ -115,7 +111,7 @@ function ($, _, Node, Event, template) {
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!self.selector || self.rendered) {
                 if (self.initialized) {
-                    self.trigger('BEFORE_RENDER', [self]);
+                    self.trigger(BEFORE_RENDER, self);
                     if (self.isContinueRender !== false) {
                         self.isContinueRender = true;
                         self.$el.css({
@@ -139,7 +135,10 @@ function ($, _, Node, Event, template) {
          * @return {Object}
          */
         getData: function () {
-            return $.extend({}, this._data || {}, {_state_: this.state});
+            return _.extend({}, this._data || {}, {
+                _state_: this.state,
+                _id_: this.id
+            });
         },
         _isComNeedUpdate: function (component) {
             return component._isStateChange(component.getState()) && component.rendered;
@@ -166,13 +165,14 @@ function ($, _, Node, Event, template) {
         },
         /**
          * 更新组件
-         * @return {[type]}       [description]
+         * @return {Object} this
          */
         update: function () {
             //首先自我更新，保存到临时_$tempEl中
             this.updating = true;
             this.state = this.getState();
-            this._$tempEl = $(this.tmpl());
+            this._$tempEl = $(this.tmpl()).attr('id', this.id);
+            this.className && this._$tempEl.attr('class', this.className);
             var component = this.firstChild;
             while (component) {
                 component.update();
@@ -189,29 +189,32 @@ function ($, _, Node, Event, template) {
         },
         /**
          * 添加组件
-         * @param  {Array/DisplayComponent} componentArray
+         * @param  {Array/DisplayComponent} comArray
          */
-        appendCmp: function (componentArray) {
-            if (!componentArray) {
+        appendChild: function (comArray) {
+            var self = this;
+            if (!comArray) {
                 return;
             }
-            var self = this;
-            componentArray = $.isArray(componentArray) ? componentArray : [componentArray];
-            $.each(componentArray, function (i, component) {
-                component.on('BEFORE_RENDER', function (event, component) {
+            this._super(comArray);
+            var com = self.firstChild,
+                onBeforeRender = function (component) {
                     //组件还没有渲染
                     if (!self._allowToRender(component)) {
                         component.isContinueRender = false;
                     } else {
                         if (!component.prevNode) {
-                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
+                            self.trigger(BEFORE_RENDER_FIRST_COMPONENT, self);
                         }
                         // isContinueRender 表示执行下面的Render
                         component.isContinueRender = true;
                     }
-                });
-                self.appendChild(component);
-            });
+                };
+            while (com) {
+                com._initParent();
+                com.on(BEFORE_RENDER, onBeforeRender);
+                com = com.nextNode;
+            }
         },
         /**
          * 渲染模板
@@ -227,7 +230,9 @@ function ($, _, Node, Event, template) {
                 console.warn(['Has no template content for',
                     '[', self.getType() || '[unknow type]', ']',
                     '[', self.id || '[unknow name]', ']',
-                    'please check your option', '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'].join(' '));
+                    'please check your option',
+                    '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'
+                    ].join(' '));
             }
             return html || '';
         },
@@ -248,36 +253,23 @@ function ($, _, Node, Event, template) {
             return !!this.tplContent;
         },
         /**
-         * 监听事件,糅合了 jQuery或者Zepto的事件机制，所以使用与上述类库同理
-         */
-        on: function () {
-            return _handleEvent.apply(this, ['on'].concat(slice.call(arguments, 0)));
-        },
-        /**
-         * 触发事件，同上
-         */
-        trigger: function () {
-            return _handleEvent.apply(this, ['trigger'].concat(slice.call(arguments, 0)));
-        },
-        /**
          * 获取组件在层级关系中的位置
-         * @return {String} /index/recommend/app12
+         * @return {String} 生成结果index/recommend/app12
          */
         getAbsPath: function () {
             var pathArray = [],
                 node = this,
                 statusArray,
                 statusStr,
-                pushStatusArray = function (key, value) {
-                    statusArray.push(value);
-                },
                 state;
             while (node) {
                 statusStr = '';
                 state = node.state;
                 if (state) {
                     statusArray = [];
-                    $.each(state, pushStatusArray);
+                    for (var key in state) {
+                        statusArray.push(state[key]);
+                    }
                     //产生出 '(status1[,status2[,status3]...])' 的字符串
                     statusStr = ['(', statusArray.join(','), ')'].join('');
                 }
@@ -367,7 +359,7 @@ function ($, _, Node, Event, template) {
          */
         _finishRender: function () {
             this.rendered = true; //标志已经渲染完毕
-            this.trigger('AFTER_RENDER', [this]);
+            this.trigger(AFTER_RENDER, this);
         },
         /**
          * 绑定UI事件
@@ -406,14 +398,6 @@ function ($, _, Node, Event, template) {
             }
         },
         /**
-         * 获取事件的实际名称
-         * @param  {String} eventName 事件代号 BEFORE_RENDER
-         * @return {String}           list:myList:beforerender
-         */
-        _getEvent: function (eventName) {
-            return Event.get(this.type, eventName, this.getType(), this.id);
-        },
-        /**
          * 组件状态是否有改变
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
@@ -436,21 +420,25 @@ function ($, _, Node, Event, template) {
                 cItm,
                 cp = null;
             //构造子组件（sub Component）
-            if ($.isArray(cpConstructors)) {
+            if (_.isArray(cpConstructors)) {
                 for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
                     cItm = cpConstructors[i];
-                    if (typeof cItm === 'function') { //构造函数
+                    //构造函数
+                    if (typeof cItm === 'function') {
                         Component = cItm;
-                    } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
+                    //构造函数以及组件详细配置
+                    } else if (typeof cItm === 'object' && cItm._constructor_) {
                         Component = cItm._constructor_;
-                    } else if (cItm instanceof Node) { //已经创建好的组件实例
+                    //已经创建好的组件实例
+                    } else if (cItm instanceof Node) {
                         components.push(cItm);
                         continue;
-                    } else { //检查到错误，提示使用者
+                    //检查到错误，提示使用者
+                    } else {
                         throw new Error('Component\'s component config is not right');
                     }
                     //创建组件
-                    cp = new Component($.extend({
+                    cp = new Component(_.extend({
                         parentNode: self
                     }, cItm/*cItm为组件的配置*/));
                     components.push(cp);
@@ -460,14 +448,15 @@ function ($, _, Node, Event, template) {
                 //对于配置: components 'component/componentName'
                 //表示所有的组件都是由该类型组件构成
                 //todo 由于这里的应用场景有限，所以为了代码大小考虑，
-                //为了保证功能尽可能简单，暂时不做这部分开发（考虑传入的是构造函数和组件文件地址的情况）
+                //为了保证功能尽可能简单，暂时不做这部分开发（考虑传入的
+                //是构造函数和组件文件地址的情况）
                 return null;
             }
             return null;
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-    _.each(['show', 'hide', 'toggle', 'empty'], function (method) {
+    ['show', 'hide', 'toggle', 'empty'].forEach(function (method) {
         DisplayComponent.prototype[method] = function () {
             var args = slice.call(arguments);
             this.$el[method].apply(this.$el, args);
