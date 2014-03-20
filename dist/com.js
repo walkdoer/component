@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-17T15:10Z
+ * Date: 2014-03-20T07:22Z
  */
 
 (function (global, factory) {
@@ -33,9 +33,11 @@
  * 辅助类
  */
 
-    var class2type = {},
+    var _ = {},
+        class2type = {},
         toString = class2type.toString,
         slice = Array.prototype.slice,
+        nativeKeys = Object.keys,
         isArray = Array.isArray ||
             function(object) {
                 return object instanceof Array;
@@ -54,10 +56,6 @@
         return obj != null && obj == obj.window;
     }
 
-    function isDocument(obj) {
-        return obj != null && obj.nodeType == obj.DOCUMENT_NODE;
-    }
-
     function isObject(obj) {
         return type(obj) == "object";
     }
@@ -68,7 +66,7 @@
 
     function extend(target, source, deep) {
         for (var key in source) {
-            if(deep && (isPlainObject(source[key]) || isArray(source[key]))) {
+            if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
                 if (isPlainObject(source[key]) && !isPlainObject(target[key])) {
                     target[key] = {};
                 }
@@ -82,7 +80,37 @@
         }
     }
 
-    exports.extend = function(target) {
+    _.isEmpty = function(obj) {
+        if (obj == null) {
+            return true;
+        }
+        if (isArray(obj) || _.isString(obj)) {
+            return obj.length === 0;
+        }
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                return false;
+            }
+        }
+        return true;
+    };
+    _.keys = function(obj) {
+        if (!isObject(obj)) {
+            return [];
+        }
+        if (nativeKeys) {
+            return nativeKeys(obj);
+        }
+        var keys = [];
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    };
+
+    _.extend = function(target) {
         var deep, args = slice.call(arguments, 1);
         if (typeof target == 'boolean') {
             deep = target;
@@ -93,7 +121,128 @@
         });
         return target;
     };
+    var eq = function(a, b, aStack, bStack) {
+        // Identical objects are equal. `0 === -0`, but they aren't identical.
+        // See the [Harmony `egal` proposal](http://wiki.ecmascript.org/doku.php?id=harmony:egal).
+        if (a === b) {
+            return a !== 0 || 1 / a == 1 / b;
+        }
+        // A strict comparison is necessary because `null == undefined`.
+        if (a == null || b == null) {
+            return a === b;
+        }
+        // Unwrap any wrapped objects.
+        if (a instanceof _) {
+            a = a._wrapped;
+        }
+        if (b instanceof _) {
+            b = b._wrapped;
+        }
+        // Compare `[[Class]]` names.
+        var className = toString.call(a);
+        if (className != toString.call(b)) {
+            return false;
+        }
+        switch (className) {
+            // Strings, numbers, dates, and booleans are compared by value.
+            case '[object String]':
+                // Primitives and their corresponding object wrappers are equivalent; thus, `"5"` is
+                // equivalent to `new String("5")`.
+                return a == String(b);
+            case '[object Number]':
+                // `NaN`s are equivalent, but non-reflexive. An `egal` comparison is performed for
+                // other numeric values.
+                return a != +a ? b != +b : (a == 0 ? 1 / a == 1 / b : a == +b);
+            case '[object Date]':
+            case '[object Boolean]':
+                // Coerce dates and booleans to numeric primitive values. Dates are compared by their
+                // millisecond representations. Note that invalid dates with millisecond representations
+                // of `NaN` are not equivalent.
+                return +a == +b;
+                // RegExps are compared by their source patterns and flags.
+            case '[object RegExp]':
+                return a.source == b.source &&
+                    a.global == b.global &&
+                    a.multiline == b.multiline &&
+                    a.ignoreCase == b.ignoreCase;
+        }
+        if (typeof a != 'object' || typeof b != 'object') {
+            return false;
+        }
+        // Assume equality for cyclic structures. The algorithm for detecting cyclic
+        // structures is adapted from ES 5.1 section 15.12.3, abstract operation `JO`.
+        var length = aStack.length;
+        while (length--) {
+            // Linear search. Performance is inversely proportional to the number of
+            // unique nested structures.
+            if (aStack[length] == a) {
+                return bStack[length] == b;
+            }
+        }
+        // Objects with different constructors are not equivalent, but `Object`s
+        // from different frames are.
+        var aCtor = a.constructor,
+            bCtor = b.constructor;
+        if (aCtor !== bCtor && !(_.isFunction(aCtor) && (aCtor instanceof aCtor) &&
+            _.isFunction(bCtor) && (bCtor instanceof bCtor)) && ('constructor' in a && 'constructor' in b)) {
+            return false;
+        }
+        // Add the first object to the stack of traversed objects.
+        aStack.push(a);
+        bStack.push(b);
+        var size = 0,
+            result = true;
+        // Recursively compare objects and arrays.
+        if (className == '[object Array]') {
+            // Compare array lengths to determine if a deep comparison is necessary.
+            size = a.length;
+            result = size == b.length;
+            if (result) {
+                // Deep compare the contents, ignoring non-numeric properties.
+                while (size--) {
+                    if (!(result = eq(a[size], b[size], aStack, bStack))) {
+                        break;
+                    }
+                }
+            }
+        } else {
+            // Deep compare objects.
+            for (var key in a) {
+                if (a.hasOwnProperty(key)) {
+                    // Count the expected number of properties.
+                    size++;
+                    // Deep compare each member.
+                    if (!(result = b.hasOwnProperty(key) && eq(a[key], b[key], aStack, bStack))) {
+                        break;
+                    }
+                }
+            }
+            // Ensure that both objects contain the same number of properties.
+            if (result) {
+                for (key in b) {
+                    if (b.hasOwnProperty(key) && !(size--)) {
+                        break;
+                    }
+                }
+                result = !size;
+            }
+        }
+        // Remove the first object from the stack of traversed objects.
+        aStack.pop();
+        bStack.pop();
+        return result;
+    };
 
+    // Perform a deep comparison to check if two objects are equal.
+    _.isEqual = function(a, b) {
+        return eq(a, b, [], []);
+    };
+
+    _.isString = function(obj) {
+        return toString.call(obj) == '[object String]';
+    };
+    _.isFunction = isFunction;
+    _.isArray = isArray;
 /*jshint loopfunc: true */
 /**
  * Class Module
@@ -169,8 +318,8 @@ var idGen = {
          * 生成序列号
          * @return {String} 16进制字符串
          */
-        gen: function () {
-            return (this.id++).toString(16);
+        gen: function (prefix) {
+            return (prefix || '') + (this.id++).toString(16);
         }
     };
 
@@ -181,16 +330,92 @@ var idGen = {
     
     var R_CLONING = /^\*(.*)\*$/,
         Node;
+
     function getter(propName) {
-        return function () {
+        return function() {
             return this[propName];
         };
     }
+    var eventSplitter = /\s+/;
+    /**
+     * eventApi
+     * 兼容多事件名 'click touch'
+     * 兼容jquery式事件回调
+     * {
+     *     click: bar
+     *     touch: foo
+     * }
+     * @params {Object} obj  上下文
+     * @params {String} action 函数名称 如on,trigger,off
+     * @params {String/Object} name 事件名称
+     * @params {Array} 传入给函数执行的参数
+     */
+    var eventsApi = function(obj, action, name, rest) {
+        if (!name) {
+            return true;
+        }
+        if (typeof name === 'object') {
+            for (var key in name) {
+                obj[action].apply(obj, [key, name[key]].concat(rest));
+            }
+            return false;
+        }
+        if (eventSplitter.test(name)) {
+            var names = name.split(eventSplitter);
+            for (var i = 0, l = names.length; i < l; i++) {
+                obj[action].apply(obj, [names[i]].concat(rest));
+            }
+            return false;
+        }
+
+        return true;
+    };
+    /**
+     * triggerevent
+     * @params {Array} events 事件回调函数数组
+     * @params {Array} args 传入回调函数的参数
+     */
+    var triggerEvent = function(events, args) {
+        var ev, i = -1,
+            l = events.length,
+            a1 = args[0],
+            a2 = args[1],
+            a3 = args[2];
+        //switch提高函数性能
+        switch (args.length) {
+            case 0:
+                while (++i < l) {
+                    (ev = events[i]).callback.call(ev.ctx);
+                }
+                return;
+            case 1:
+                while (++i < l) {
+                    (ev = events[i]).callback.call(ev.ctx, a1);
+                }
+                return;
+            case 2:
+                while (++i < l) {
+                    (ev = events[i]).callback.call(ev.ctx, a1, a2);
+                }
+                return;
+            case 3:
+                while (++i < l) {
+                    (ev = events[i]).callback.call(ev.ctx, a1, a2, a3);
+                }
+                return;
+            default:
+                while (++i < l) {
+                    (ev = events[i]).callback.apply(ev.ctx, args);
+                }
+                return;
+        }
+    };
+
     Node = Class.extend({
         type: 'component',
-        updating: false,  //更新中
-        initializing: false,  //初始化进行中
-        initialized: false,  //已初始化
+        updating: false, //更新中
+        initializing: false, //初始化进行中
+        initialized: false, //已初始化
 
         /*-------- START OF GETTER -----*/
 
@@ -204,10 +429,10 @@ var idGen = {
          * @param  {Object} option 组件配置
          *
          */
-        init: function (option) {
+        init: function(option) {
             var self = this;
             //保存用户原始配置，已备用
-            self.originOption = _.extend(true, {}, option);
+            self.originOption = _.extend({}, option, true);
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
@@ -220,7 +445,7 @@ var idGen = {
          * @param  {Node} node
          * @return {this}
          */
-        appendChild: function (node) {
+        appendChild: function(node) {
             if (!this.firstChild) {
                 this.firstChild = this.lastChild = node;
             } else {
@@ -237,7 +462,7 @@ var idGen = {
          * @param  {Node} nodeWillRemove  待删除节点
          * @return {this}
          */
-        removeChild: function (nodeWillRemove) {
+        removeChild: function(nodeWillRemove) {
             var node = this.getChildById(nodeWillRemove.id);
             if (node) {
                 node.destroy();
@@ -250,9 +475,9 @@ var idGen = {
          * 删除所有孩子节点
          * @return {Node} this
          */
-        removeAllChild: function () {
+        removeAllChild: function() {
             var children = this.firstChild;
-            while(children) {
+            while (children) {
                 children.destroy();
                 this.nodeCount--;
                 children = children.nextNode;
@@ -264,7 +489,7 @@ var idGen = {
         /**
          * 析构
          */
-        destroy: function () {
+        destroy: function() {
             //断开链表
             if (this.prevNode) {
                 this.prevNode.nextNode = this.nextNode;
@@ -280,7 +505,7 @@ var idGen = {
         },
         /**
          * 初始化组件的变量列表
-         * @param  {Array} variableArray 需要初始化的变量名数组 
+         * @param  {Array} variableArray 需要初始化的变量名数组
          *
          *         变量名格式: [*]{组件配置属性}[:{用户配置项属性}][*]
          *
@@ -297,7 +522,7 @@ var idGen = {
          *                 }
          *             }
          *         }
-         *         initVar(['name', 'p:parent', 'id:identity', '*state*']) 
+         *         initVar(['name', 'p:parent', 'id:identity', '*state*'])
          *
          *         等同于下面4个语句:
          *
@@ -308,12 +533,12 @@ var idGen = {
          *
          * @return
          */
-        initVar: function (variableArray) {
+        initVar: function(variableArray) {
             var component = this,
                 option = component.originOption;
-            variableArray.forEach(function (element) {
+            variableArray.forEach(function(element) {
                 var cloneInfoArray = element.match(R_CLONING),
-                    needClone = !!cloneInfoArray,
+                    needClone = !! cloneInfoArray,
                     variableConfigArray = (needClone ? cloneInfoArray[1] : element).split(':'),
                     variableName = variableConfigArray[0],
                     optionKey = variableConfigArray[1] || variableName,
@@ -321,8 +546,7 @@ var idGen = {
                 if (targetObj !== undefined) {
                     needClone = needClone && typeof targetObj === 'object';
                     component[variableName] = needClone ?
-                        _.extend(true, {}, targetObj)
-                        : targetObj;
+                        _.extend({}, targetObj, true) : targetObj;
                 }
             });
         },
@@ -331,7 +555,7 @@ var idGen = {
          * @param  {String} id 组件编号
          * @return {Node/Null} 返回组件,找不到则返回Null
          */
-        getChildById: function (id) {
+        getChildById: function(id) {
             var node = this.firstChild;
             while (node) {
                 if (node.id === id) {
@@ -343,13 +567,13 @@ var idGen = {
         },
         /**
          * 将组件连接起来
-         * 
+         *
          *               parentNode
          *                   |
          *     prevNode -> curNode -> nextNode
          *
          */
-        _linkNode: function (nodeConfig) {
+        _linkNode: function(nodeConfig) {
             var _prevNode = nodeConfig.prev || null,
                 _nextNode = nodeConfig.next || null,
                 _parentNode = nodeConfig.parent || null;
@@ -364,22 +588,136 @@ var idGen = {
             if (_parentNode) {
                 this.parentNode = _parentNode;
             }
+        },
+        /**
+         * on
+         * @param {String} name 事件名称
+         * @param {Function} callback 事件回调函数
+         * @param {Object} context 指定回调函数上下文
+         * @return this
+         */
+        on: function(name, callback, context) {
+            if (!eventsApi(this, 'on', name, [callback, context]) || !callback) {
+                return this;
+            }
+            this._events || (this._events = {});
+            var events = this._events[name] || (this._events[name] = []);
+            events.push({
+                callback: callback,
+                context: context,
+                ctx: context || this
+            });
+            return this;
+        },
+        /**
+         * off
+         * 解绑函数，解除事件绑定
+         * this.off()表示解绑所有事件
+         * this.off(null, callback) 表示解绑事件回调函数为callback的所有事件
+         * this.off('click', callback) 表示解绑回调函数为callback的click事件
+         * this.off('click', callback, context) 解绑上下文为context，回调函数为callback的click事件
+         * @param {String} name 事件名称
+         * @param {Function} callback 事件回调函数
+         * @param {Object} context 指定回调函数上下文
+         * @return this
+         */
+        off: function(name, callback, context) {
+            if (!this._events || !eventsApi(this, 'off', name, [callback, context])) {
+                return this;
+            }
+            //this.off()的用法则解绑所有事件绑定
+            if (!name && !callback && !context) {
+                this._events = void 0;
+                return this;
+            }
+            var names = name ? [name] : _.keys(this._events),
+                events,
+                retain;
+            for (var i = 0, len = names.length; i < len; i++) {
+                name = names[i];
+                if ((events = this._events[name])) {
+                    this._events[name] = retain = [];
+                    if (callback || context) {
+                        for (var j = 0, evt, eventsLen = events.length; j < eventsLen; j++) {
+                            evt = events[j];
+                            if ((callback && evt.callback !== callback) ||
+                                (context && evt.context !== context)) {
+                                retain.push(evt);
+                            }
+
+                        }
+                    }
+                }
+                if (retain.length === 0) {
+                    delete this._events[name];
+                }
+            }
+            return this;
+        },
+        /**
+         * trigger
+         * 触发事件
+         * @params {String} name 事件名称
+         */
+        trigger: function(name) {
+            if (!this._events) {
+                return this;
+            }
+            var args = Array.prototype.slice.call(arguments, 1);
+            if (!eventsApi(this, 'trigger', name, args)) {
+                return false;
+            }
+            var events = this._events[name];
+            if (events) {
+                triggerEvent(events, args);
+            }
+        },
+        /**
+         * listenTo
+         *
+         * 為了方便解綁，避免管理事件綁定混亂失效造成的洩露,出現所謂的Zombie Object
+         * @params {Node} node 節點
+         * @params {String} name 事件名稱
+         * @params {Function} callback 事件回調函數
+         */
+        listenTo: function (node, name, callback) {
+            var listeningTo = this._listeningTo || (this._listeningTo = []);
+
+            listeningTo.push(node);
+            //形如{click: foo, touch: bar}的事件綁定方式
+            if (!callback && typeof name === 'object') {
+                callback = this;
+            }
+            node.on(name, callback, this);
+            return this;
+        },
+        /**
+         * stoplistening
+         *
+         * 通知節點停止監聽特定的事件，或者停止監聽正在監聽中的其他節點
+         * @params {Node} node 節點
+         * @params {String} name 事件名稱
+         * @params {Function} callback 事件回調函數
+         */
+        stopListening: function (node, name, callback) {
+            var remove = !name && !callback,
+                listeningTo = this.listeningTo;
+            if (node) {
+                listeningTo = [node];
+            }
+            if (!callback && typeof name === 'object') {
+                callback = this;
+            }
+            for(var i = 0, itm, l = listeningTo.length; i < l; i++) {
+                itm = listeningTo[i];
+                itm.off(name, callback, this);
+                if (remove || _.isEmpty(itm._events)) {
+                    listeningTo.splice(i, 1);
+                }
+            }
+            return this;
         }
     });
-/**
- * Module: Event
- * @create 2014-03-17
- * @author andrew(zhangmhao@gmail.com)
- */
-
-
-    
-
-    var Event = {
-        on: function (eventName, callback, context) {
-        
-        }
-    };
 /**
  * Template Module
  * original author: Dexter.Yy
@@ -485,7 +823,7 @@ var idGen = {
                     .replace(settings.interpolate, function(match, code) {
                         var objKeyArray = code.split('.'),
                             objItem = data;
-                        _.each(objKeyArray, function (value, index) {
+                        objKeyArray.forEach(function (value) {
                             objItem = objItem[value];
                         });
                         var execute = code.replace(/\\"/g, '"') +
@@ -523,20 +861,11 @@ var idGen = {
     
     var slice = Array.prototype.slice,
         emptyFunc = function () {},
-        _handleEvent = function () {
-            var type = arguments[0],
-                args = slice.call(arguments, 1),
-                eventName = this._getEvent(args[0]),
-                el;
-            el = eventName ? this.$parentEl : this.$el;
-            args[0] = eventName || args[0];
-            //console.log(type + ': ' + args[0], el[0]);
-            el[type].apply(el, args);
-            return this;
-        },
         DisplayComponent;
     //添加事件
-    Event.register('BEFORE_RENDER_FIRST_COMPONENT', 'before:render:firstcomponent');
+    var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender:firstcomponent',
+        BEFORE_RENDER = 'beforerender',
+        AFTER_RENDER = 'afterrender';
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -625,7 +954,7 @@ var idGen = {
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!self.selector || self.rendered) {
                 if (self.initialized) {
-                    self.trigger('BEFORE_RENDER', [self]);
+                    self.trigger(BEFORE_RENDER, [self]);
                     if (self.isContinueRender !== false) {
                         self.isContinueRender = true;
                         self.$el.css({
@@ -676,7 +1005,7 @@ var idGen = {
         },
         /**
          * 更新组件
-         * @return {[type]}       [description]
+         * @return {Object} this
          */
         update: function () {
             //首先自我更新，保存到临时_$tempEl中
@@ -706,15 +1035,17 @@ var idGen = {
                 return;
             }
             var self = this;
-            componentArray = _.isArray(componentArray) ? componentArray : [componentArray];
-            _.each(componentArray, function (i, component) {
-                component.on('BEFORE_RENDER', function (event, component) {
+            componentArray = _.isArray(componentArray) ?
+                componentArray
+                : [componentArray];
+            componentArray.forEach(function (component) {
+                component.on(BEFORE_RENDER, function (event, component) {
                     //组件还没有渲染
                     if (!self._allowToRender(component)) {
                         component.isContinueRender = false;
                     } else {
                         if (!component.prevNode) {
-                            self.trigger('BEFORE_RENDER_FIRST_COMPONENT', [self]);
+                            self.trigger(BEFORE_RENDER_FIRST_COMPONENT, [self]);
                         }
                         // isContinueRender 表示执行下面的Render
                         component.isContinueRender = true;
@@ -737,7 +1068,9 @@ var idGen = {
                 console.warn(['Has no template content for',
                     '[', self.getType() || '[unknow type]', ']',
                     '[', self.id || '[unknow name]', ']',
-                    'please check your option', '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'].join(' '));
+                    'please check your option',
+                    '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'
+                    ].join(' '));
             }
             return html || '';
         },
@@ -758,36 +1091,23 @@ var idGen = {
             return !!this.tplContent;
         },
         /**
-         * 监听事件,糅合了 jQuery或者Zepto的事件机制，所以使用与上述类库同理
-         */
-        on: function () {
-            return _handleEvent.apply(this, ['on'].concat(slice.call(arguments, 0)));
-        },
-        /**
-         * 触发事件，同上
-         */
-        trigger: function () {
-            return _handleEvent.apply(this, ['trigger'].concat(slice.call(arguments, 0)));
-        },
-        /**
          * 获取组件在层级关系中的位置
-         * @return {String} /index/recommend/app12
+         * @return {String} 生成结果index/recommend/app12
          */
         getAbsPath: function () {
             var pathArray = [],
                 node = this,
                 statusArray,
                 statusStr,
-                pushStatusArray = function (key, value) {
-                    statusArray.push(value);
-                },
                 state;
             while (node) {
                 statusStr = '';
                 state = node.state;
                 if (state) {
                     statusArray = [];
-                    _.each(state, pushStatusArray);
+                    for (var key in state) {
+                        statusArray.push(state[key]);
+                    }
                     //产生出 '(status1[,status2[,status3]...])' 的字符串
                     statusStr = ['(', statusArray.join(','), ')'].join('');
                 }
@@ -877,7 +1197,7 @@ var idGen = {
          */
         _finishRender: function () {
             this.rendered = true; //标志已经渲染完毕
-            this.trigger('AFTER_RENDER', [this]);
+            this.trigger(AFTER_RENDER, [this]);
         },
         /**
          * 绑定UI事件
@@ -916,14 +1236,6 @@ var idGen = {
             }
         },
         /**
-         * 获取事件的实际名称
-         * @param  {String} eventName 事件代号 BEFORE_RENDER
-         * @return {String}           list:myList:beforerender
-         */
-        _getEvent: function (eventName) {
-            return Event.get(this.type, eventName, this.getType(), this.id);
-        },
-        /**
          * 组件状态是否有改变
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
@@ -949,14 +1261,18 @@ var idGen = {
             if (_.isArray(cpConstructors)) {
                 for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
                     cItm = cpConstructors[i];
-                    if (typeof cItm === 'function') { //构造函数
+                    //构造函数
+                    if (typeof cItm === 'function') {
                         Component = cItm;
-                    } else if (typeof cItm === 'object' && cItm._constructor_) { //构造函数以及组件详细配置
+                    //构造函数以及组件详细配置
+                    } else if (typeof cItm === 'object' && cItm._constructor_) {
                         Component = cItm._constructor_;
-                    } else if (cItm instanceof Node) { //已经创建好的组件实例
+                    //已经创建好的组件实例
+                    } else if (cItm instanceof Node) {
                         components.push(cItm);
                         continue;
-                    } else { //检查到错误，提示使用者
+                    //检查到错误，提示使用者
+                    } else {
                         throw new Error('Component\'s component config is not right');
                     }
                     //创建组件
@@ -970,14 +1286,15 @@ var idGen = {
                 //对于配置: components 'component/componentName'
                 //表示所有的组件都是由该类型组件构成
                 //todo 由于这里的应用场景有限，所以为了代码大小考虑，
-                //为了保证功能尽可能简单，暂时不做这部分开发（考虑传入的是构造函数和组件文件地址的情况）
+                //为了保证功能尽可能简单，暂时不做这部分开发（考虑传入的
+                //是构造函数和组件文件地址的情况）
                 return null;
             }
             return null;
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-    _.each(['show', 'hide', 'toggle', 'empty'], function (method) {
+    ['show', 'hide', 'toggle', 'empty'].forEach(function (method) {
         DisplayComponent.prototype[method] = function () {
             var args = slice.call(arguments);
             this.$el[method].apply(this.$el, args);

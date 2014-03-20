@@ -5,27 +5,17 @@
 define([
     './base/lang',
     './base/node',
-    './base/event',
     './base/template'
 ],
-function (_, Node, Event, template) {
+function (_, Node, template) {
     'use strict';
     var slice = Array.prototype.slice,
         emptyFunc = function () {},
-        _handleEvent = function () {
-            var type = arguments[0],
-                args = slice.call(arguments, 1),
-                eventName = this._getEvent(args[0]),
-                el;
-            el = eventName ? this.$parentEl : this.$el;
-            args[0] = eventName || args[0];
-            //console.log(type + ': ' + args[0], el[0]);
-            el[type].apply(el, args);
-            return this;
-        },
         DisplayComponent;
     //添加事件
-    var BEFORE_RENDER_FIRST_COMPONENT = 'before:render:firstcomponent';
+    var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender:firstcomponent',
+        BEFORE_RENDER = 'beforerender',
+        AFTER_RENDER = 'afterrender';
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -114,7 +104,7 @@ function (_, Node, Event, template) {
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!self.selector || self.rendered) {
                 if (self.initialized) {
-                    self.trigger('BEFORE_RENDER', [self]);
+                    self.trigger(BEFORE_RENDER, [self]);
                     if (self.isContinueRender !== false) {
                         self.isContinueRender = true;
                         self.$el.css({
@@ -165,7 +155,7 @@ function (_, Node, Event, template) {
         },
         /**
          * 更新组件
-         * @return {[type]}       [description]
+         * @return {Object} this
          */
         update: function () {
             //首先自我更新，保存到临时_$tempEl中
@@ -195,9 +185,11 @@ function (_, Node, Event, template) {
                 return;
             }
             var self = this;
-            componentArray = _.isArray(componentArray) ? componentArray : [componentArray];
+            componentArray = _.isArray(componentArray) ?
+                componentArray
+                : [componentArray];
             componentArray.forEach(function (component) {
-                component.on('BEFORE_RENDER', function (event, component) {
+                component.on(BEFORE_RENDER, function (event, component) {
                     //组件还没有渲染
                     if (!self._allowToRender(component)) {
                         component.isContinueRender = false;
@@ -226,7 +218,9 @@ function (_, Node, Event, template) {
                 console.warn(['Has no template content for',
                     '[', self.getType() || '[unknow type]', ']',
                     '[', self.id || '[unknow name]', ']',
-                    'please check your option', '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'].join(' '));
+                    'please check your option',
+                    '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'
+                    ].join(' '));
             }
             return html || '';
         },
@@ -353,7 +347,7 @@ function (_, Node, Event, template) {
          */
         _finishRender: function () {
             this.rendered = true; //标志已经渲染完毕
-            this.trigger('AFTER_RENDER', [this]);
+            this.trigger(AFTER_RENDER, [this]);
         },
         /**
          * 绑定UI事件
@@ -390,14 +384,6 @@ function (_, Node, Event, template) {
                 callback = evts[evt];
                 this.on(eventType, elementSelector, onUIEvent(callback, this));
             }
-        },
-        /**
-         * 获取事件的实际名称
-         * @param  {String} eventName 事件代号 BEFORE_RENDER
-         * @return {String}           list:myList:beforerender
-         */
-        _getEvent: function (eventName) {
-            return Event.get(this.type, eventName, this.getType(), this.id);
         },
         /**
          * 组件状态是否有改变
