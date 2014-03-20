@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-20T07:22Z
+ * Date: 2014-03-20T07:40Z
  */
 
 (function (global, factory) {
@@ -978,7 +978,10 @@ var idGen = {
          * @return {Object}
          */
         getData: function () {
-            return _.extend({}, this._data || {}, {_state_: this.state});
+            return _.extend({}, this._data || {}, {
+                _state_: this.state,
+                _id_: this.id
+            });
         },
         _isComNeedUpdate: function (component) {
             return component._isStateChange(component.getState()) && component.rendered;
