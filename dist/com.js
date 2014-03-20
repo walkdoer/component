@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-20T08:39Z
+ * Date: 2014-03-20T09:38Z
  */
 
 (function (global, factory) {
@@ -451,9 +451,13 @@ var idGen = {
             node.forEach(function (n) {
                 if (!self.firstChild) {
                     self.firstChild = self.lastChild = n;
+                    n._linkNode({
+                        parent: self
+                    });
                 } else {
                     n._linkNode({
-                        prev: self.lastChild
+                        prev: self.lastChild,
+                        parent: self
                     });
                     self.lastChild = n;
                 }
@@ -901,15 +905,7 @@ var idGen = {
             self._data = option.data;
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
-            var parentNode = self.parentNode;
-            if (self.parentEl) {
-                self.$parentEl = $(self.parentEl);
-            } else if (parentNode) {
-                self.parentEl = parentNode.el;
-                self.$parentEl = parentNode.$el;
-            } else {
-                //throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
-            }
+            self._initParent(self.parentNode);
             //初始化参数
             self.state = self.getState();
             //初始化组件HTML元素
@@ -932,6 +928,21 @@ var idGen = {
                     self.render();
                 }
             });
+        },
+        /**
+         * 初始化Parent
+         */
+        _initParent: function () {
+            var parentNode = this.parentNode;
+            if (this.parentEl) {
+                this.$parentEl = $(this.parentEl);
+            } else if (parentNode) {
+                this.parentEl = parentNode.el;
+                this.$parentEl = parentNode.$el;
+            } else {
+                //throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
+                console.log('失败:' + this.id);
+            }
         },
         /**
          * 渲染组件
@@ -958,7 +969,7 @@ var idGen = {
             //如果有selector则表明该元素已经在页面上了，不需要再渲染
             if (!self.selector || self.rendered) {
                 if (self.initialized) {
-                    self.trigger(BEFORE_RENDER, [self]);
+                    self.trigger(BEFORE_RENDER, self);
                     if (self.isContinueRender !== false) {
                         self.isContinueRender = true;
                         self.$el.css({
@@ -1043,23 +1054,24 @@ var idGen = {
                 return;
             }
             this._super(comArray);
-            //非数组转化为数组
-            _.isArray(comArray) || (comArray = [comArray]);
-            comArray.forEach(function (component) {
-                component.parentNode =  self;
-                component.on(BEFORE_RENDER, function (event, component) {
+            var com = self.firstChild,
+                onBeforeRender = function (component) {
                     //组件还没有渲染
                     if (!self._allowToRender(component)) {
                         component.isContinueRender = false;
                     } else {
                         if (!component.prevNode) {
-                            self.trigger(BEFORE_RENDER_FIRST_COMPONENT, [self]);
+                            self.trigger(BEFORE_RENDER_FIRST_COMPONENT, self);
                         }
                         // isContinueRender 表示执行下面的Render
                         component.isContinueRender = true;
                     }
-                });
-            });
+                };
+            while (com) {
+                com._initParent();
+                com.on(BEFORE_RENDER, onBeforeRender);
+                com = com.nextNode;
+            }
         },
         /**
          * 渲染模板
@@ -1204,7 +1216,7 @@ var idGen = {
          */
         _finishRender: function () {
             this.rendered = true; //标志已经渲染完毕
-            this.trigger(AFTER_RENDER, [this]);
+            this.trigger(AFTER_RENDER, this);
         },
         /**
          * 绑定UI事件

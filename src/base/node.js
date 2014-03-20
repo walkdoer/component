@@ -130,9 +130,13 @@ define([
             node.forEach(function (n) {
                 if (!self.firstChild) {
                     self.firstChild = self.lastChild = n;
+                    n._linkNode({
+                        parent: self
+                    });
                 } else {
                     n._linkNode({
-                        prev: self.lastChild
+                        prev: self.lastChild,
+                        parent: self
                     });
                     self.lastChild = n;
                 }
