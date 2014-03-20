@@ -117,7 +117,8 @@ define([
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.getType(), self.sn].join('-');
             self.nodeCount = 0;
-            self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
+            //self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
+            self.initVar(_.keys(option));
         },
         /**
          * 添加节点

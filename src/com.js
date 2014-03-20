@@ -30,6 +30,7 @@ function (_, Node, template) {
             var self = this;
             self._super(option);
             self.state = {};
+            /*
             self.initVar([
                 'tpl',
                 'tplContent',
@@ -43,7 +44,7 @@ function (_, Node, template) {
                 'display',
                 'el',
                 'selector'
-            ]);
+            ]);*/
             self._data = option.data;
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
@@ -83,7 +84,6 @@ function (_, Node, template) {
                 this.$parentEl = parentNode.$el;
             } else {
                 //throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
-                console.log('失败:' + this.id);
             }
         },
         /**
@@ -171,7 +171,8 @@ function (_, Node, template) {
             //首先自我更新，保存到临时_$tempEl中
             this.updating = true;
             this.state = this.getState();
-            this._$tempEl = $(this.tmpl());
+            this._$tempEl = $(this.tmpl()).attr('id', this.id)
+                                          .attr('class', this.className);
             var component = this.firstChild;
             while (component) {
                 component.update();

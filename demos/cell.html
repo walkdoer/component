@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; minimum-scale=1.0; user-scalable=no;" />
     <meta name="MobileOptimized" content="320"/>
     <style type="text/css" media="screen">
-        .colCell{width:50px; height:50px;background:#CCC;margin:5px;float:left;}
-        .rowcell{padding:10px;clear:both}
+        .colCell{width:50px; height:50px;background:#CCC;float:left;}
+        .rowCell{overflow: auto;width: 100%}
     </style>
 </head>
 <body>
@@ -22,6 +22,8 @@ var bigCell = new Com({
         parentEl: $('body')[0]
 });
 
+var prevCell,
+    firstCell;
 for (var i = 0; i < 4; i++) {
     var rowCell = new Com({
         id: 'rowCell_' + i,
@@ -31,12 +33,40 @@ for (var i = 0; i < 4; i++) {
     for (var j = 0; j < 4; j++) {
         var colCell = new Com({
             id: 'colCell_' + i + '_' + j,
-            className: 'colCell'
+            tplContent: '<div style="background:<%_state_.color%>"></div>',
+            className: 'colCell',
+            color: 16777215, //默认为白色 #FFFFFF
+            getState: function() {
+                return {
+                    color: '#' + this.color.toString(16)
+                };
+            }
         });
+        if (!firstCell) {
+            firstCell = colCell;
+        }
+        prevCell && colCell.listenTo(prevCell, 'change', function (num) {
+            var self= this;
+            this.color -= num;
+            this.update();
+            setTimeout(function() {
+                self.trigger('change', num++);
+            }, 0);
+        })
         rowCell.appendChild(colCell);
+        prevCell = colCell;
     }
 }
+firstCell.listenTo(colCell, 'change', function(num) {
+     var self= this;
+    this.color -= num;
+    this.update();
+    setTimeout(function() {
+        self.trigger('change', num++);
+    }, 0);
+});
 bigCell.render().appendToParent();
+firstCell.trigger('change', 100);
 </script>
 </body>
 </html>
