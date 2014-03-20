@@ -390,6 +390,9 @@ define([
         stopListening: function (node, name, callback) {
             var remove = !name && !callback,
                 listeningTo = this.listeningTo;
+            if (!listeningTo) {
+                return this;
+            }
             if (node) {
                 listeningTo = [node];
             }

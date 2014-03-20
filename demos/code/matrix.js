@@ -15,7 +15,7 @@
                 tplContent: '<div class="cell" style="background:<%_state_.color%>"></div>',
                 row: i,
                 col: j,
-                color: 16777215, //默认为白色 #FFFFFF
+                color: 10777215, //默认为白色 #FFFFFF
                 id: 'm_' + i + '_' + j,
                 parentEl: window.document.body,
                 getState: function() {
@@ -110,7 +110,6 @@
         return Math.round(Math.random() * range);
     }
     function onColorChange(color) {
-        console.log('color change ' + this.id);
         var self = this;
         if (typeof color === 'string') {
             color = parseInt(color, 16);
@@ -121,12 +120,13 @@
         } else if(span > 100 && span < 1000 && this.color > 200) {
             this.color -= 200;
         } else {
-            this.color -= span + getRandomRange(10) * getRandomRange(1000);
+            this.color -= span + getRandomRange(100) * getRandomRange(1000);
         }
         this.update();
-        setTimeout(function () {
+        var timer = setTimeout(function () {
             self.trigger('colorchange', self.color);
-        }, 1000);
+            clearTimeout(timer);
+        }, 5000);
     }
     window.getRandomRange = getRandomRange;
     window.start = function (row, col, color) {
