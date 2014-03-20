@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-20T07:40Z
+ * Date: 2014-03-20T08:39Z
  */
 
 (function (global, factory) {
@@ -446,15 +446,19 @@ var idGen = {
          * @return {this}
          */
         appendChild: function(node) {
-            if (!this.firstChild) {
-                this.firstChild = this.lastChild = node;
-            } else {
-                node._linkNode({
-                    prev: this.lastChild
-                });
-                this.lastChild = node;
-            }
-            this.nodeCount++;
+            var self = this;
+            _.isArray(node) || (node = [node]);
+            node.forEach(function (n) {
+                if (!self.firstChild) {
+                    self.firstChild = self.lastChild = n;
+                } else {
+                    n._linkNode({
+                        prev: self.lastChild
+                    });
+                    self.lastChild = n;
+                }
+                self.nodeCount++;
+            });
             return this;
         },
         /**
@@ -904,7 +908,7 @@ var idGen = {
                 self.parentEl = parentNode.el;
                 self.$parentEl = parentNode.$el;
             } else {
-                throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
+                //throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
             }
             //初始化参数
             self.state = self.getState();
@@ -922,7 +926,7 @@ var idGen = {
                     callback();
                 }
                 //添加新建的子组件到组件中
-                self.appendCmp(self._buildComponents());
+                self.appendChild(self._buildComponents());
                 //之前被通知过render，模板准备好之后进行渲染
                 if (self.needToRender) {
                     self.render();
@@ -1031,17 +1035,18 @@ var idGen = {
         },
         /**
          * 添加组件
-         * @param  {Array/DisplayComponent} componentArray
+         * @param  {Array/DisplayComponent} comArray
          */
-        appendCmp: function (componentArray) {
-            if (!componentArray) {
+        appendChild: function (comArray) {
+            var self = this;
+            if (!comArray) {
                 return;
             }
-            var self = this;
-            componentArray = _.isArray(componentArray) ?
-                componentArray
-                : [componentArray];
-            componentArray.forEach(function (component) {
+            this._super(comArray);
+            //非数组转化为数组
+            _.isArray(comArray) || (comArray = [comArray]);
+            comArray.forEach(function (component) {
+                component.parentNode =  self;
                 component.on(BEFORE_RENDER, function (event, component) {
                     //组件还没有渲染
                     if (!self._allowToRender(component)) {
@@ -1054,7 +1059,6 @@ var idGen = {
                         component.isContinueRender = true;
                     }
                 });
-                self.appendChild(component);
             });
         },
         /**

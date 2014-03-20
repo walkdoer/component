@@ -20,12 +20,13 @@
     <p class="title"><%_state_.title%></p>
 </header>
 </script>
-<script type="text/javascript" src="./libs/zepto.js"></script>
-<script type="text/javascript" src="./libs/underscore.js"></script>
+<script type="text/javascript" src="./vendor/zepto.js"></script>
+<script type="text/javascript" src="./vendor/underscore.js"></script>
 <script type="text/javascript" src="../dist/com.js"></script>
 <script>
 var header = new Com({
     tpl: '#tpl-top-nav',
+    id: 'header',
     parentEl: $('body')[0],
     getState: function () {
         return  {
@@ -33,6 +34,7 @@ var header = new Com({
         };
     }
 }), subTitle1 = new Com({
+    id: 'subTitle1',
     tplContent: '<div><span class="sub-title"><%_state_.subTitle%></span></div>',
     parentNode: header,
     getState: function () {
@@ -41,9 +43,11 @@ var header = new Com({
         };
     }
 }), subTitle2 = new Com({
+    id: 'subTitle2',
     tplContent: '<div><span class="sub-title">This Component has no state;</span></div>',
     parentNode: header
 }), subsubTitle = new Com({
+    id: 'subsubTitle',
     tplContent: '<div><span class="sub-sub-title"><%_state_.subTitle%></span></div>',
     parentNode: subTitle1,
     getState: function () {
@@ -52,6 +56,7 @@ var header = new Com({
         };
     }
 }),subsubTitle2 = new Com({
+    id: 'subsubTitle2',
     tplContent: '<div><span class="sub-sub-title"><%_state_.subTitle%></span></div>',
     parentNode: subTitle2,
     getState: function () {

@@ -125,15 +125,19 @@ define([
          * @return {this}
          */
         appendChild: function(node) {
-            if (!this.firstChild) {
-                this.firstChild = this.lastChild = node;
-            } else {
-                node._linkNode({
-                    prev: this.lastChild
-                });
-                this.lastChild = node;
-            }
-            this.nodeCount++;
+            var self = this;
+            _.isArray(node) || (node = [node]);
+            node.forEach(function (n) {
+                if (!self.firstChild) {
+                    self.firstChild = self.lastChild = n;
+                } else {
+                    n._linkNode({
+                        prev: self.lastChild
+                    });
+                    self.lastChild = n;
+                }
+                self.nodeCount++;
+            });
             return this;
         },
         /**
