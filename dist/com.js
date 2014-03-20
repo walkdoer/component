@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-20T11:45Z
+ * Date: 2014-03-20T13:48Z
  */
 
 (function (global, factory) {
@@ -1030,8 +1030,8 @@ var idGen = {
             //首先自我更新，保存到临时_$tempEl中
             this.updating = true;
             this.state = this.getState();
-            this._$tempEl = $(this.tmpl()).attr('id', this.id)
-                                          .attr('class', this.className);
+            this._$tempEl = $(this.tmpl()).attr('id', this.id);
+            this.className && this._$tempEl.attr('class', this.className);
             var component = this.firstChild;
             while (component) {
                 component.update();
