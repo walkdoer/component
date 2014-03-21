@@ -54,7 +54,6 @@ define([
                 self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
                 self._cpConstructors = self.components;
                 self._initParent(self.parentNode);
-                self._delegateEvents = [];
                 //初始化参数
                 self.state = self.getState();
                 //初始化组件HTML元素
@@ -395,26 +394,8 @@ define([
                     }
                     eventType = evtConf[0];
                     callback = evts[evt];
-                    //如果已经在父节点托管了同样的事件类型，则添加监听
-                    if (this.parentNode && this._isEventAlreadyDelegate(eventType)) {
-                        this.on(eventType + elementSelector, callback);
-                    } else if (this.parentNode){
-                        this._delegateEvent(eventType, elementSelector, callback);
-                    } else {
-                        this._uiDelegate(eventType, elementSelector, callback);
-                    }
+                    this._uiDelegate(eventType, elementSelector, callback);
                 }
-            },
-            _isEventAlreadyDelegate: function (eventType) {
-                return ~this.parentNode._delegateEvents.indexOf(eventType);
-            },
-            _delegateEvent: function (eventType, elementSelector, callback) {
-                var self = this;
-                this.parentNode._delegateEvents.push(eventType);
-                this.parentEl.addEventListener(eventType, function(evt) {
-                    self.trigger(evt.type + elementSelector, evt);
-                });
-                this.on(eventType + elementSelector, callback);
             },
             _uiDelegate: function(eventName, selector, fn) {
                 var self = this;

@@ -1,14 +1,17 @@
 (function (window, undefined) {
     'use strict';
     var matrixArr = [],
-        rowSize = 8,
-        colSize = 8,
+        rowSize = 30,
+        colSize = 30,
         rowArr;
 
     var matrix = new Com({
         id: 'matirx',
         parentEl: window.document.body
     });
+    var getRandomColor = function(){
+        return getRandomRange(16777215).toString(16);
+    };
     //创建 rowSize * colSize 的矩阵
     for(var i = 0; i < rowSize; i++) {
         //二维数组模拟矩阵
@@ -19,12 +22,17 @@
                 tplContent: '<div class="cell" style="background:<%_state_.color%>"></div>',
                 row: i,
                 col: j,
-                color: 10777215, //默认为白色 #FFFFFF
+                color: 0,
+                setColor: function (color) {
+                    this.color = parseInt(color, 16);
+                },
                 id: 'm_' + i + '_' + j,
                 parentNode: matrix,
                 uiEvents: {
-                    'click': function() {
-                        console.log('click');
+                    'click': function(evt, self) {
+                        self.setColor(getRandomColor());
+                        self.update();
+                        self.trigger('colorchange', self.color);
                     }
                 },
                 getState: function() {
@@ -33,6 +41,7 @@
                     };
                 }
             });
+            com.setColor('EEEEEE');
             rowArr.push(com);
             matrix.appendChild(rowArr);
         }
