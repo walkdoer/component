@@ -18,6 +18,11 @@
                 color: 10777215, //默认为白色 #FFFFFF
                 id: 'm_' + i + '_' + j,
                 parentEl: window.document.body,
+                uiEvents: {
+                    'click': function() {
+                        console.log('click');
+                    }
+                },
                 getState: function() {
                     return {
                         color: '#' + this.color.toString(16)
