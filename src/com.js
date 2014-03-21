@@ -399,11 +399,8 @@ define([
             },
             _uiDelegate: function(eventName, selector, fn) {
                 var self = this;
-                console.log('uiEvent');
-                var count = 0;
                 this.parentEl.addEventListener(eventName, function(ev) {
                     var target = ev.target;
-                    console.log(++count);
                     //定位被托管节点
                     while (target && target !== this && !target[matchesSelector](selector)) {
                         target = target.parentNode;

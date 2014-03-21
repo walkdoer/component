@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-21T03:51Z
+ * Date: 2014-03-21T08:06Z
  */
 
 (function (global, factory) {
@@ -1261,11 +1261,8 @@ var idGen = {
             },
             _uiDelegate: function(eventName, selector, fn) {
                 var self = this;
-                console.log('uiEvent');
-                var count = 0;
                 this.parentEl.addEventListener(eventName, function(ev) {
                     var target = ev.target;
-                    console.log(++count);
                     //定位被托管节点
                     while (target && target !== this && !target[matchesSelector](selector)) {
                         target = target.parentNode;
