@@ -15,20 +15,15 @@
         if (typeof color === 'string') {
             color = parseInt(color, 16);
         }
-        var span = this.color - color;
-        if (span < 100 && this.color < 16777115) {
-            this.color += 100;
-        } else if(span > 100 && span < 1000 && this.color > 200) {
-            this.color -= 200;
-        } else {
-            this.color -= span + getRandomRange(100) * getRandomRange(1000);
-        }
+        this.color = color;
         this.update();
+        /*
         this.timer || (this.timer = setTimeout(function () {
             self.trigger('colorchange', self.color);
             clearTimeout(self.timer);
             self.timer = null;
-        }, 8000));
+        }, 100));
+        */
     }
     var Cell = Com.extend({
         tplContent: '<div class="cell" style="background:<%_state_.color%>"></div>',
@@ -47,7 +42,7 @@
             'click': function(evt, self) {
                 self.setColor(getRandomColor());
                 self.update();
-                self.trigger(evt, self.color);
+                self.trigger('colorchange', self.color);
             }
         },
         getState: function() {
@@ -63,6 +58,6 @@
         colSize: 4,
         Cell: Cell
     });
-    matrix.net('change', onColorChange);
+    matrix.net('colorchange', onColorChange);
     matrix.render().appendToParent();
 })(window);

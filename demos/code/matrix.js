@@ -1,7 +1,6 @@
 (function (window, undefined) {
     'use strict';
     var Com = window.Com,
-        matrixArr = [],
         rowArr;
 
     var Matrix = Com.extend({
@@ -9,21 +8,23 @@
         init: function(option) {
             var Cell = option.Cell;
             this._super(option);
+            this.matrixArr = [];
             //创建 rowSize * colSize 的矩阵
             for(var i = 0; i < this.rowSize; i++) {
                 //二维数组模拟矩阵
-                matrixArr[i] = rowArr = [];
+                this.matrixArr[i] = rowArr = [];
                 //列
                 for(var j = 0; j < this.colSize; j++) {
                     var com = new Cell(i, j, 'cell_' + i + '_' + j);
                     rowArr.push(com);
-                    this.appendChild(rowArr);
                 }
+                this.appendChild(rowArr);
             }
         },
         net: function (evt, fn) {
             var colSize = this.colSize,
-                rowSize = this.rowSize;
+                rowSize = this.rowSize,
+                matrixArr = this.matrixArr;
             var comTop, comRight, comBottom, comLeft;
             //矩阵节点联接
             for(var row = 0; row < rowSize; row++) {
