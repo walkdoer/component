@@ -145,9 +145,13 @@ define([
                     _id_: this.id
                 });
             },
-            _isComNeedUpdate: function(component) {
-                return component._isStateChange(component.getState()) && component.rendered;
+            needUpdate: function () {
+                return this._isStateChange();
             },
+            /*
+            _isComNeedUpdate: function(component) {
+                return component._isStateChange() && component.rendered;
+            },*/
             _changeEl: function($el) {
                 this.el = $el[0];
                 this.$el = $el;
@@ -422,12 +426,8 @@ define([
              * @param  {Object}  newParams 组件的新状态
              * @return {Boolean}
              */
-            _isStateChange: function(newState) {
-                if (!_.isEqual(newState, this.state)) {
-                    return true;
-                } else {
-                    return false;
-                }
+            _isStateChange: function() {
+                return !_.isEqual(this.getState(), this.state);
             },
             /**
              * 创建子组件

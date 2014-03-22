@@ -16,14 +16,14 @@
             color = parseInt(color, 16);
         }
         this.color = color;
-        this.update();
-        /*
-        this.timer || (this.timer = setTimeout(function () {
-            self.trigger('colorchange', self.color);
-            clearTimeout(self.timer);
-            self.timer = null;
-        }, 100));
-        */
+        if (this.needUpdate()) {
+            this.update();
+            this.timer || (this.timer = setTimeout(function () {
+                self.trigger('colorchange', self.color);
+                clearTimeout(self.timer);
+                self.timer = null;
+            }, 100));
+        }
     }
     var Cell = Com.extend({
         tplContent: '<div class="cell" style="background:<%_state_.color%>"></div>',
@@ -54,8 +54,8 @@
     var matrix = new Matrix({
         id: 'color-matrix',
         parentEl: window.document.body,
-        rowSize: 4,
-        colSize: 4,
+        rowSize: 30,
+        colSize: 30,
         Cell: Cell
     });
     matrix.net('colorchange', onColorChange);

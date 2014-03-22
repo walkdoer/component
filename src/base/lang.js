@@ -2,8 +2,17 @@
  * 辅助类
  */
 define(function(require, exports, module) {
-    var _ = {},
-        class2type = {},
+    // Create a safe reference to the Underscore object for use below.
+    var _ = function(obj) {
+        if (obj instanceof _) {
+            return obj;
+        }
+        if (!(this instanceof _)) {
+            return new _(obj);
+        }
+        this._wrapped = obj;
+    };
+    var class2type = {},
         toString = class2type.toString,
         slice = Array.prototype.slice,
         nativeKeys = Object.keys,

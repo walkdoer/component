@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-22T09:02Z
+ * Date: 2014-03-22T10:03Z
  */
 
 (function (global, factory) {
@@ -33,8 +33,17 @@
  * 辅助类
  */
 
-    var _ = {},
-        class2type = {},
+    // Create a safe reference to the Underscore object for use below.
+    var _ = function(obj) {
+        if (obj instanceof _) {
+            return obj;
+        }
+        if (!(this instanceof _)) {
+            return new _(obj);
+        }
+        this._wrapped = obj;
+    };
+    var class2type = {},
         toString = class2type.toString,
         slice = Array.prototype.slice,
         nativeKeys = Object.keys,
@@ -1007,9 +1016,13 @@ var idGen = {
                     _id_: this.id
                 });
             },
-            _isComNeedUpdate: function(component) {
-                return component._isStateChange(component.getState()) && component.rendered;
+            needUpdate: function () {
+                return this._isStateChange();
             },
+            /*
+            _isComNeedUpdate: function(component) {
+                return component._isStateChange() && component.rendered;
+            },*/
             _changeEl: function($el) {
                 this.el = $el[0];
                 this.$el = $el;
@@ -1284,12 +1297,8 @@ var idGen = {
              * @param  {Object}  newParams 组件的新状态
              * @return {Boolean}
              */
-            _isStateChange: function(newState) {
-                if (!_.isEqual(newState, this.state)) {
-                    return true;
-                } else {
-                    return false;
-                }
+            _isStateChange: function() {
+                return !_.isEqual(this.getState(), this.state);
             },
             /**
              * 创建子组件
