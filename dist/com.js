@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-22T07:47Z
+ * Date: 2014-03-22T09:02Z
  */
 
 (function (global, factory) {
@@ -1063,9 +1063,7 @@ var idGen = {
                 if (!comArray) {
                     return;
                 }
-                this._super(comArray);
-                var com = self.firstChild,
-                    onBeforeRender = function(component) {
+                var onBeforeRender = function(component) {
                         //组件还没有渲染
                         if (!self._allowToRender(component)) {
                             component.isContinueRender = false;
@@ -1077,11 +1075,17 @@ var idGen = {
                             component.isContinueRender = true;
                         }
                     };
-                while (com) {
+                var index = comArray.length - 1,
+                    com;
+                while (index >= 0) {
+                    com = comArray[index--];
+                    com.parentNode = this;
                     com._initParent();
+                    com._bindUIEvent();
                     com.on(BEFORE_RENDER, onBeforeRender);
                     com = com.nextNode;
                 }
+                this._super(comArray);
             },
             /**
              * 渲染模板
@@ -1232,6 +1236,9 @@ var idGen = {
              * 绑定UI事件
              */
             _bindUIEvent: function() {
+                if (!this.parentEl) {
+                    return this;
+                }
                 var evts = this.uiEvents,
                     elementSelector,
                     eventType,
@@ -1268,7 +1275,6 @@ var idGen = {
                         target = target.parentNode;
                     }
                     if (target && target !== this) {
-                        console.log('success');
                         return fn.call(target, ev, self);
                     }
                 }, false);
