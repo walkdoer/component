@@ -81,19 +81,19 @@
                         comBottom = matrixArr[row + 1][col];
                         com.listenTo(comRight, evt, fn)
                             .listenTo(comBottom, evt, fn);
-                    } else if (col === colSize && row === 0) {
+                    } else if (col === colSize - 1 && row === 0) {
                         //右上角 B L
                         comLeft = rowArr[col - 1];
                         comBottom = matrixArr[row + 1][col];
                         com.listenTo(comBottom, evt, fn)
                             .listenTo(comLeft, evt, fn);
-                    } else if (col === colSize && row === rowSize) {
+                    } else if (col === colSize - 1 && row === rowSize - 1) {
                         //右下角 T L
                         comTop = matrixArr[row - 1][col];
                         comLeft = rowArr[col - 1];
                         com.listenTo(comTop, evt, fn)
                             .listenTo(comLeft, evt, fn);
-                    } else if (col === 0 && row === rowSize) {
+                    } else if (col === 0 && row === rowSize - 1) {
                         //左下角 T R
                         comTop = matrixArr[row - 1][col];
                         comRight = rowArr[col + 1];
