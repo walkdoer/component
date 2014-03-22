@@ -399,13 +399,11 @@ define([
             if (!callback && typeof name === 'object') {
                 callback = this;
             }
-            for(var i = 0, itm, l = listeningTo.length; i < l; i++) {
+            for(var i = listeningTo.length - 1, itm; i >= 0; i--) {
                 itm = listeningTo[i];
                 itm.off(name, callback, this);
                 if (remove || _.isEmpty(itm._events)) {
                     listeningTo.splice(i, 1);
-                    i--;
-                    l--;
                 }
             }
             return this;

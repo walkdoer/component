@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-22T07:27Z
+ * Date: 2014-03-22T07:47Z
  */
 
 (function (global, factory) {
@@ -720,13 +720,11 @@ var idGen = {
             if (!callback && typeof name === 'object') {
                 callback = this;
             }
-            for(var i = 0, itm, l = listeningTo.length; i < l; i++) {
+            for(var i = listeningTo.length - 1, itm; i >= 0; i--) {
                 itm = listeningTo[i];
                 itm.off(name, callback, this);
                 if (remove || _.isEmpty(itm._events)) {
                     listeningTo.splice(i, 1);
-                    i--;
-                    l--;
                 }
             }
             return this;
