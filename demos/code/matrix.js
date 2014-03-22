@@ -142,10 +142,11 @@
             this.color -= span + getRandomRange(100) * getRandomRange(1000);
         }
         this.update();
-        var timer = setTimeout(function () {
+        this.timer || (this.timer = setTimeout(function () {
             self.trigger('colorchange', self.color);
-            clearTimeout(timer);
-        }, 5000);
+            clearTimeout(self.timer);
+            self.timer = null;
+        }, 8000));
     }
     window.getRandomRange = getRandomRange;
     window.start = function (row, col, color) {

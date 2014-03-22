@@ -68,11 +68,11 @@ define(function (require) {
             Router = new Node();
 
         var functionCallCounter = {
-            onChange: 0,
+            onModelChange: 0,
             Router: 0
         };
-        var onChange = function (data) {
-            functionCallCounter.onChange++;
+        var onModelChange = function (data) {
+            functionCallCounter.onModelChange++;
             QUnit.equal(data, 'model data', 'listenTo API 正常');
         };
 
@@ -80,7 +80,7 @@ define(function (require) {
             functionCallCounter.Router++;
             QUnit.equal(params, 'router params', 'listenTo API 正常');
         }).listenTo(Model, {
-            'change': onChange,
+            'change': onModelChange,
             'delete': function (data) {
                 QUnit.equal(data, 'model delete', 'listenTo API 正常');
             }
@@ -92,9 +92,9 @@ define(function (require) {
 
         View.stopListening(Router);
         Router.trigger('change', 'router params');
-        View.stopListening(Model, 'change', onChange);
+        View.stopListening(Model, 'change', onModelChange);
         Model.trigger('delete', 'model delete');
-        QUnit.equal(functionCallCounter.onChange, 1, 'stopListening API 正常');
+        QUnit.equal(functionCallCounter.onModelChange, 1, 'stopListening API 正常');
         QUnit.equal(functionCallCounter.Router, 1, 'stopListening API 正常');
     });
 

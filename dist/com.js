@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-21T07:46Z
+ * Date: 2014-03-22T07:27Z
  */
 
 (function (global, factory) {
@@ -710,7 +710,7 @@ var idGen = {
          */
         stopListening: function (node, name, callback) {
             var remove = !name && !callback,
-                listeningTo = this.listeningTo;
+                listeningTo = this._listeningTo;
             if (!listeningTo) {
                 return this;
             }
@@ -725,6 +725,8 @@ var idGen = {
                 itm.off(name, callback, this);
                 if (remove || _.isEmpty(itm._events)) {
                     listeningTo.splice(i, 1);
+                    i--;
+                    l--;
                 }
             }
             return this;

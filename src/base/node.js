@@ -389,7 +389,7 @@ define([
          */
         stopListening: function (node, name, callback) {
             var remove = !name && !callback,
-                listeningTo = this.listeningTo;
+                listeningTo = this._listeningTo;
             if (!listeningTo) {
                 return this;
             }
@@ -404,6 +404,8 @@ define([
                 itm.off(name, callback, this);
                 if (remove || _.isEmpty(itm._events)) {
                     listeningTo.splice(i, 1);
+                    i--;
+                    l--;
                 }
             }
             return this;
