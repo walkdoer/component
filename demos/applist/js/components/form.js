@@ -63,16 +63,16 @@ define(function (require, exports) {
         },
         uiEvents: {
             //提交按钮
-            'submit': function (event) {
+            'submit': function (event, form) {
                 event.preventDefault();
-                var data = this._getField();
-                if (this._validate(data)) {
-                    this.trigger('submit', [this, event, data]);
+                var data = form._getField();
+                if (form._validate(data)) {
+                    form.trigger('submit', [this, event, data]);
                 }
             },
             //取消按钮
-            'click .cancel': function (event) {
-                this.trigger('cancel', [this, event]);
+            'click .cancel': function (event, form) {
+                form.trigger('cancel', [this, event]);
             },
             //输入框聚焦
             'focus input': function (event) {

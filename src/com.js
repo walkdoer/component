@@ -371,6 +371,7 @@ define([
                     return;
                 }
                 var evtArr = '',
+                    com,
                     len;
                 for (var evt in listeners) {
                     if (listeners.hasOwnProperty(evt)) {
@@ -378,8 +379,13 @@ define([
                         len = evtArr.length;
                         //TYPE:ID:Event
                         if ( 3 === len) {
-                            this._delegate(evtArr[2], evtArr[0], evtArr[1],
+                            com = this.getChildById(evtArr[1]);
+                            if (!com) {
+                                this._delegate(evtArr[2], evtArr[0], evtArr[1],
                                     onListen(evt, this));
+                            } else {
+                                this.listenTo(com, evtArr[2], onListen(evt, this));
+                            }
                         } else if (1 === len) {
                             this.on(evt, onListen(evt, this));
                         } else {

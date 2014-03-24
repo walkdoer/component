@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-24T11:27Z
+ * Date: 2014-03-24T13:32Z
  */
 
 (function (global, factory) {
@@ -478,9 +478,11 @@ var idGen = {
                     self.lastChild = n;
                 }
                 self.nodeCount++;
+                /*
                 self.listenTo(n, 'all', function() {
                     self.trigger.apply(self, slice.call(arguments, 0));
                 });
+                */
             });
             return this;
         },
@@ -731,7 +733,7 @@ var idGen = {
             }
             var events = this._events[name],
                 allEvents = this._events.all;
-            if (events) {
+            if (events && typeof evt === 'string') {
                 triggerEvent(events, args);
             } else if (events){
                 console.log(this.id + '没有' + args[0].name);
@@ -1292,6 +1294,7 @@ var idGen = {
                     return;
                 }
                 var evtArr = '',
+                    com,
                     len;
                 for (var evt in listeners) {
                     if (listeners.hasOwnProperty(evt)) {
@@ -1299,8 +1302,13 @@ var idGen = {
                         len = evtArr.length;
                         //TYPE:ID:Event
                         if ( 3 === len) {
-                            this._delegate(evtArr[2], evtArr[0], evtArr[1],
+                            com = this.getChildById(evtArr[1]);
+                            if (!com) {
+                                this._delegate(evtArr[2], evtArr[0], evtArr[1],
                                     onListen(evt, this));
+                            } else {
+                                this.listenTo(com, evtArr[2], onListen(evt, this));
+                            }
                         } else if (1 === len) {
                             this.on(evt, onListen(evt, this));
                         } else {

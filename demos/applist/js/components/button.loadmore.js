@@ -49,11 +49,10 @@ define(function (require, exports) {
             return self;
         },
         uiEvents: {
-            'click': function () {
-                var self = this;
-                if (!self.loading) {
-                    self.setStatus(LOADING);
-                    self.trigger('load', [self, event]);
+            'click': function (evt, btn) {
+                if (!btn.loading) {
+                    btn.setStatus(LOADING);
+                    btn.trigger('load', btn, evt);
                 }
             }
         }

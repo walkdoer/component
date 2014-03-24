@@ -9,8 +9,8 @@ define(function (require, exports) {
         type: 'logo',
         tpl: '#tpl-top-nav',
         uiEvents: {
-            'click .h-btn': function () {
-                this.trigger('addurl');
+            'click .h-btn': function (e, logo) {
+                logo.trigger('addurl');
             }
         }
     });
