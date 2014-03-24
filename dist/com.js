@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-24T12:24Z
+ * Date: 2014-03-24T12:33Z
  */
 
 (function (global, factory) {
@@ -478,9 +478,11 @@ var idGen = {
                     self.lastChild = n;
                 }
                 self.nodeCount++;
+                /*
                 self.listenTo(n, 'all', function() {
                     self.trigger.apply(self, slice.call(arguments, 0));
                 });
+                */
             });
             return this;
         },

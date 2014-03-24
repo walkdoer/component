@@ -143,9 +143,11 @@ define([
                     self.lastChild = n;
                 }
                 self.nodeCount++;
+                /*
                 self.listenTo(n, 'all', function() {
                     self.trigger.apply(self, slice.call(arguments, 0));
                 });
+                */
             });
             return this;
         },
