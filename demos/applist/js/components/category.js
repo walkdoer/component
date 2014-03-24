@@ -11,7 +11,7 @@ define(function (require, exports) {
         type: 'app',
         tpl: '#tpl-item-category',
         listeners: {
-            'AFTER_RENDER': function () {
+            'afterrender': function () {
                 var $el = this.$el;
                 Util.loadAppIcon($el.attr('data-icon'), $el.find('.icn'));
             }

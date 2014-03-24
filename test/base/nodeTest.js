@@ -52,14 +52,14 @@ define(function (require) {
         var adder = new Node({
             id: 'adder'
         });
-        adder.on('add', function (a, b, c) {
+        adder.on('add', function (evt, a, b, c) {
             console.log('node1 event fire', a, b, c);
             QUnit.equal(a + b + c, 6, '.on("event", callbakc)形式：事件回调调用正常');
         }).on({
-            sub: function (a, b) {
+            sub: function (evt, a, b) {
                 QUnit.equal(a - b, 2, '.on({event1: foo, event2: bar})形式：事件回调调用正常');
             },
-            increase: function (a) {
+            increase: function (evt, a) {
                 QUnit.equal(a + 1, 3,  '.on({event1: foo, event2: bar})形式：事件回调调用正常');
             }
         });
@@ -76,20 +76,20 @@ define(function (require) {
             onModelChange2: 0,
             Router: 0
         };
-        var onModelChange = function (data) {
+        var onModelChange = function (evt, data) {
             functionCallCounter.onModelChange++;
             QUnit.equal(data, 'model data', 'listenTo API 正常');
         };
 
-        View.listenTo(Router, 'change', function (params) {
+        View.listenTo(Router, 'change', function (evt, params) {
             functionCallCounter.Router++;
             QUnit.equal(params, 'router params', 'listenTo API 正常');
         }).listenTo(Model, {
             'change': onModelChange,
-            'delete': function (data) {
+            'delete': function (evt, data) {
                 QUnit.equal(data, 'model delete', 'listenTo API 正常');
             }
-        }).listenTo(Model, 'change', function (data) {
+        }).listenTo(Model, 'change', function (evt, data) {
             functionCallCounter.onModelChange2++;
             QUnit.equal(data, 'model data', 'listenTo：监听同一个事件正常');
         });
@@ -105,6 +105,33 @@ define(function (require) {
         QUnit.equal(functionCallCounter.onModelChange, 1, 'stopListening(obj, name, func) 正常');
         QUnit.equal(functionCallCounter.onModelChange2, 1, 'stopListening(obj, name) 正常');
         QUnit.equal(functionCallCounter.Router, 1, 'stopListening(obj) 正常');
+
+
+        var Root = Node.extend({
+            type: 'Root'
+        }), A = Node.extend({
+            type: 'A'
+        });
+        var root = new Root({id: 'root'}),
+            c = new Node({id: 'A'}),
+            a1 = new A({id: 'a1'}),
+            a2 = new A({id: 'a2'});
+        root.appendChild(c);
+        c.appendChild([a1, a2]);
+        c.on('event1', function (evt, a) {
+            console.log('haha' + a);
+        });
+        root.on({
+            'event1': function(evt, a) {
+                QUnit.equal(a === 1, true);
+            },
+            'event2': function(evt, a) {
+                QUnit.equal(a === 2, true);
+            }
+        });
+
+        a1.trigger('event1', 1);
+        a2.trigger('event2', 2);
     });
 
 });

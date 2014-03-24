@@ -13,7 +13,7 @@ define([
             emptyFunc = function() {},
             DisplayComponent;
         //添加事件
-        var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender:firstcomponent',
+        var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
             BEFORE_RENDER = 'beforerender',
             AFTER_RENDER = 'afterrender';
         //获取MatchesSelector
@@ -35,21 +35,21 @@ define([
                 var self = this;
                 self._super(option);
                 self.state = {};
-                /*
-            self.initVar([
-                'tpl',
-                'tplContent',
-                'components',
-                'parentNode',
-                'parentEl',
-                '*state*',
-                'getState',
-                'userUpdate:update',
-                'className',
-                'display',
-                'el',
-                'selector'
-            ]);*/
+
+                self.initVar([
+                    'tpl',
+                    'tplContent',
+                    'components',
+                    'parentNode',
+                    'parentEl',
+                    '*state*',
+                    'getState',
+                    'userUpdate:update',
+                    'className',
+                    'display',
+                    'el',
+                    'selector'
+                ]);
                 self._data = option.data;
                 self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
                 self._cpConstructors = self.components;
@@ -60,17 +60,17 @@ define([
                 self._initHTMLElement(function() {
                     self.$el.attr('id', self.id)
                         .attr('class', self.className);
-                    //监听组件原生listener
-                    self._listen(self.listeners);
-                    //用户创建的Listener
-                    self._listen(option.listeners);
-                    self._bindUIEvent();
                     self.initialized = true;
                     if (typeof callback === 'function') {
                         callback();
                     }
                     //添加新建的子组件到组件中
                     self.appendChild(self._buildComponents());
+                    //监听组件原生listener
+                    self._listen(self.listeners);
+                    //用户创建的Listener
+                    self._listen(option.listeners);
+                    self._bindUIEvent();
                     //之前被通知过render，模板准备好之后进行渲染
                     if (self.needToRender) {
                         self.render();
@@ -212,7 +212,7 @@ define([
                 if (!comArray) {
                     return;
                 }
-                var onBeforeRender = function(component) {
+                var onBeforeRender = function(evt, component) {
                         //组件还没有渲染
                         if (!self._allowToRender(component)) {
                             component.isContinueRender = false;
@@ -364,30 +364,26 @@ define([
             _listen: function(listeners) {
                 function onListen(event, self) {
                     return function() {
-                        listeners[event].apply(self, arguments);
+                        listeners[event].apply(self, slice.call(arguments, 0));
                     };
                 }
                 if (!listeners) {
                     return;
                 }
                 var evtArr = '',
-                    len,
-                    com;
+                    len;
                 for (var evt in listeners) {
                     if (listeners.hasOwnProperty(evt)) {
                         evtArr = evt.split(':');
                         len = evtArr.length;
                         //TYPE:ID:Event
                         if ( 3 === len) {
-                            com = this.getChildById(evtArr[1]);
-                            this.listenTo(com, evt, onListen(evt, this));
-                        } else if (2 === len) {
-                            this.listenTo(this.getChildByType(evtArr[0],
-                                        evt, onListen(evt, this)));
+                            this._delegate(evtArr[2], evtArr[0], evtArr[1],
+                                    onListen(evt, this));
                         } else if (1 === len) {
                             this.on(evt, onListen(evt, this));
                         } else {
-                            throw new Error('Wrong Event Formate:' +
+                            throw new Error('Com:Wrong Event Formate[Type:ID:Event]: ' +
                                     evt);
                         }
                     }
@@ -404,7 +400,7 @@ define([
              * 绑定UI事件
              */
             _bindUIEvent: function() {
-                if (!this.parentEl) {
+                if (!this.parentEl || this._uiEventBinded) {
                     return this;
                 }
                 var evts = this.uiEvents,
@@ -433,6 +429,7 @@ define([
                     callback = evts[evt];
                     this._uiDelegate(eventType, elementSelector, callback);
                 }
+                this._uiEventBinded = true;
             },
             /**
              * _uiDelegate
@@ -453,6 +450,22 @@ define([
                         return fn.call(target, ev, self);
                     }
                 }, false);
+            },
+            /**
+             * _delegate
+             * 托管UI事件绑定
+             * @params {String} eventName 事件名称
+             * @params {String} selector 选择器
+             * @params {Function} fn 事件回调函数
+             */
+            _delegate: function(eventName, type, id, fn) {
+                this.on(eventName, function(ev) {
+                    var srcNode = ev.src;
+                    if (srcNode.type === type && srcNode.id === id) {
+                        var args = slice.call(arguments, 0);
+                        fn.apply(srcNode, args);
+                    }
+                });
             },
             /**
              * 组件状态是否有改变

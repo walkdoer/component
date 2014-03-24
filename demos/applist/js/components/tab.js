@@ -18,7 +18,7 @@ define(function (require, exports) {
             'click .n-u-l': function (e, tab) {
                 var $target = $(e.target),
                     tabName = $target.attr('data-target');
-                tab.trigger('click', [this, tabName]);
+                tab.trigger('click', this, tabName);
                 tab.activeTab(tabName);
             }
         },
@@ -34,7 +34,7 @@ define(function (require, exports) {
             if (self.tabName === $tab.attr('data-target')) {
                 return;
             }
-            self.trigger('before:active', [self, next]);
+            self.trigger('beforeactive', self, next);
             if (next.go === false) {
                 //用户取消切换，直接return
                 return;
@@ -44,7 +44,7 @@ define(function (require, exports) {
                 next.go = true;
                 $tab.addClass(self.activeClass);
                 self.$curTab = $tab;
-                self.trigger('actived', [self, next]);
+                self.trigger('actived', self, next);
                 if (next.go === false) {
                     return;
                 }
@@ -59,7 +59,7 @@ define(function (require, exports) {
             var self = this,
                 $pane,
                 next = {};
-            self.trigger('before:change', [self, next]);
+            self.trigger('before:change', self, next);
             if (next.go === false) {
                 return;
             } else {
@@ -72,11 +72,11 @@ define(function (require, exports) {
                 $pane.css('display', 'block');
                 self.$curPane = $pane;
                 self.tabName = tabName;
-                self.trigger('changed', [self]);
+                self.trigger('changed', self);
             }
         },
         listeners: {
-            'afterrender': function (tab) {
+            'afterrender': function (evt, tab) {
                 tab.$tabs = tab.$el.find('ul').find('li');
                 tab.activeTab('recommend');
             }

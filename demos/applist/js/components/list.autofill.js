@@ -23,7 +23,7 @@ define(function (require, exports) {
         appendRecord: function (records, hasMore, callback) {
             var self = this,
                 originLength = records.length;
-            this.trigger('before:append', [records]);
+            this.trigger('beforeappend', [records]);
             console.log('originLength:' + originLength);
             //将上一次存货和这一次的请求合并
             records = records.concat(this.stockItems);

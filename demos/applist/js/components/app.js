@@ -31,7 +31,7 @@ define(function (require, exports) {
             }
         },
         listeners: {
-            'AFTER_RENDER': function () {
+            'afterrender': function () {
                 var self = this,
                     $el = self.$el,
                     appData = self.el.dataset;

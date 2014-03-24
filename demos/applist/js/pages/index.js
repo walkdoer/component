@@ -48,7 +48,7 @@ define(function (require, exports) {
                 }
             },
             listeners: {
-                'SUBMIT': function (event, form, uiEvent, urlInfo) {
+                'submit': function (event, form, uiEvent, urlInfo) {
                     Logger.log({
                         path: form.getAbsPath(),
                         //日志来源区域
@@ -60,7 +60,7 @@ define(function (require, exports) {
                     //清空，隐藏表单
                     this.clear().hide();
                 },
-                'CANCEL': function () {
+                'cancel': function () {
                     this.hide();
                 },
                 'textfield:url:input': _.debounce(function (event, field) {
@@ -101,7 +101,7 @@ define(function (require, exports) {
                         .render()
                         .appendToParent();
                         //让下拉框组件成为该textfield的子组件
-                        field.appendCmp(inputHistory);
+                        field.appendChild(inputHistory);
                     }
                     inputHistory.show().filte(field.value);
                 }),
@@ -162,13 +162,13 @@ define(function (require, exports) {
                     });
                     this._lists[tabName] = list;//TODO 改写了getCmp方法之后可以直接通过getCmp方法来获得
                     //tab添加list组件
-                    tab.appendCmp(list);
+                    tab.appendChild(list);
                     //list组件渲染自己
                     list.render().load().appendToParent();
                 }
             },
             //推荐列表添加到列表项之前检查app的安装状态
-            'autofillList:recommend:before:append': function (event, apps) {
+            'autofillList:recommend:beforeappend': function (event, apps) {
                 //更新app的安装状态
                 Util.updateAppStatus(apps);
                 //从App列表中得已安装剔除掉，并将剔除出来的已安装App暂时保持起来
@@ -194,7 +194,7 @@ define(function (require, exports) {
                 if (!urlAdder) {
                     urlAdder = createUrlAdder(page);
                     //将组件添加到页面中
-                    page.appendCmp(urlAdder);
+                    page.appendChild(urlAdder);
                     //渲染组件并添加到页面中
                     urlAdder.render().appendToParent();
                 }

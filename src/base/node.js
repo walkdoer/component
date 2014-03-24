@@ -7,7 +7,8 @@ define([
     './var/idGen'
 ], function(_, Class, idGen) {
     'use strict';
-    var R_CLONING = /^\*(.*)\*$/,
+    var slice = Array.prototype.slice,
+        R_CLONING = /^\*(.*)\*$/,
         Node;
 
     function getter(propName) {
@@ -117,18 +118,18 @@ define([
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.getType(), self.sn].join('-');
             self.nodeCount = 0;
-            //self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
-            self.initVar(_.keys(option));
+            self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
+            //self.initVar(_.keys(option));
         },
         /**
          * 添加节点
          * @param  {Node} node
          * @return {this}
          */
-        appendChild: function(node) {
+        appendChild: function(nodes) {
             var self = this;
-            _.isArray(node) || (node = [node]);
-            node.forEach(function (n) {
+            _.isArray(nodes) || (nodes = [nodes]);
+            nodes.forEach(function(n) {
                 if (!self.firstChild) {
                     self.firstChild = self.lastChild = n;
                     n._linkNode({
@@ -142,6 +143,9 @@ define([
                     self.lastChild = n;
                 }
                 self.nodeCount++;
+                self.listenTo(n, 'all', function() {
+                    self.trigger.apply(self, slice.call(arguments, 0));
+                });
             });
             return this;
         },
@@ -189,6 +193,7 @@ define([
             } else {
                 this.lastChild = this.prevNode;
             }
+            this.stopListening();
             this.parentNode = null;
         },
         /**
@@ -242,13 +247,14 @@ define([
          * getChildByFilter
          * @params {Function} fileter 过滤器
          */
-        getChildByFilter: function (filter) {
+        getChildByFilter: function(filter) {
             var node = this.firstChild,
                 result = [];
             while (node) {
-                if(filter(node)) {
+                if (filter(node)) {
                     result.push(node);
                 }
+                result = result.concat(node.getChildByFilter(filter));
                 node = node.nextNode;
             }
             return result;
@@ -271,7 +277,7 @@ define([
          * @return {Node/Null} 返回组件,找不到则返回Null
          */
         getChildByType: function(type) {
-            return this.getChildByFilter(function (node) {
+            return this.getChildByFilter(function(node) {
                 return node.type === type;
             });
         },
@@ -369,17 +375,34 @@ define([
          * 触发事件
          * @params {String} name 事件名称
          */
-        trigger: function(name) {
+        trigger: function(evt) {
+            var args, name;
             if (!this._events) {
                 return this;
             }
-            var args = Array.prototype.slice.call(arguments, 1);
+            if (typeof evt === 'string') {
+                name = evt;
+                args = [{
+                    name: evt,
+                    src: this,
+                    cur: this,
+                }].concat(slice.call(arguments, 1));
+            } else {
+                name = evt.name;
+                args = slice.call(arguments, 0);
+            }
             if (!eventsApi(this, 'trigger', name, args)) {
                 return false;
             }
-            var events = this._events[name];
-            if (events) {
+            var events = this._events[name],
+                allEvents = this._events.all;
+            if (events && typeof evt === 'string') {
                 triggerEvent(events, args);
+            } else if (events){
+                console.log(this.id + '没有' + args[0].name);
+            }
+            if (allEvents) {
+                triggerEvent(allEvents, args);
             }
         },
         /**
@@ -390,7 +413,7 @@ define([
          * @params {String} name 事件名稱
          * @params {Function} callback 事件回調函數
          */
-        listenTo: function (node, name, callback) {
+        listenTo: function(node, name, callback) {
             var listeningTo = this._listeningTo || (this._listeningTo = []);
 
             listeningTo.push(node);
@@ -409,7 +432,7 @@ define([
          * @params {String} name 事件名稱
          * @params {Function} callback 事件回調函數
          */
-        stopListening: function (node, name, callback) {
+        stopListening: function(node, name, callback) {
             var remove = !name && !callback,
                 listeningTo = this._listeningTo;
             if (!listeningTo) {
@@ -421,7 +444,7 @@ define([
             if (!callback && typeof name === 'object') {
                 callback = this;
             }
-            for(var i = listeningTo.length - 1, itm; i >= 0; i--) {
+            for (var i = listeningTo.length - 1, itm; i >= 0; i--) {
                 itm = listeningTo[i];
                 itm.off(name, callback, this);
                 if (remove || _.isEmpty(itm._events)) {

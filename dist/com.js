@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-24T04:53Z
+ * Date: 2014-03-24T12:24Z
  */
 
 (function (global, factory) {
@@ -342,7 +342,8 @@ var idGen = {
  */
 
     
-    var R_CLONING = /^\*(.*)\*$/,
+    var slice = Array.prototype.slice,
+        R_CLONING = /^\*(.*)\*$/,
         Node;
 
     function getter(propName) {
@@ -452,18 +453,18 @@ var idGen = {
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.getType(), self.sn].join('-');
             self.nodeCount = 0;
-            //self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
-            self.initVar(_.keys(option));
+            self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
+            //self.initVar(_.keys(option));
         },
         /**
          * 添加节点
          * @param  {Node} node
          * @return {this}
          */
-        appendChild: function(node) {
+        appendChild: function(nodes) {
             var self = this;
-            _.isArray(node) || (node = [node]);
-            node.forEach(function (n) {
+            _.isArray(nodes) || (nodes = [nodes]);
+            nodes.forEach(function(n) {
                 if (!self.firstChild) {
                     self.firstChild = self.lastChild = n;
                     n._linkNode({
@@ -477,6 +478,9 @@ var idGen = {
                     self.lastChild = n;
                 }
                 self.nodeCount++;
+                self.listenTo(n, 'all', function() {
+                    self.trigger.apply(self, slice.call(arguments, 0));
+                });
             });
             return this;
         },
@@ -524,6 +528,7 @@ var idGen = {
             } else {
                 this.lastChild = this.prevNode;
             }
+            this.stopListening();
             this.parentNode = null;
         },
         /**
@@ -577,13 +582,14 @@ var idGen = {
          * getChildByFilter
          * @params {Function} fileter 过滤器
          */
-        getChildByFilter: function (filter) {
+        getChildByFilter: function(filter) {
             var node = this.firstChild,
                 result = [];
             while (node) {
-                if(filter(node)) {
+                if (filter(node)) {
                     result.push(node);
                 }
+                result = result.concat(node.getChildByFilter(filter));
                 node = node.nextNode;
             }
             return result;
@@ -606,7 +612,7 @@ var idGen = {
          * @return {Node/Null} 返回组件,找不到则返回Null
          */
         getChildByType: function(type) {
-            return this.getChildByFilter(function (node) {
+            return this.getChildByFilter(function(node) {
                 return node.type === type;
             });
         },
@@ -704,17 +710,34 @@ var idGen = {
          * 触发事件
          * @params {String} name 事件名称
          */
-        trigger: function(name) {
+        trigger: function(evt) {
+            var args, name;
             if (!this._events) {
                 return this;
             }
-            var args = Array.prototype.slice.call(arguments, 1);
+            if (typeof evt === 'string') {
+                name = evt;
+                args = [{
+                    name: evt,
+                    src: this,
+                    cur: this,
+                }].concat(slice.call(arguments, 1));
+            } else {
+                name = evt.name;
+                args = slice.call(arguments, 0);
+            }
             if (!eventsApi(this, 'trigger', name, args)) {
                 return false;
             }
-            var events = this._events[name];
-            if (events) {
+            var events = this._events[name],
+                allEvents = this._events.all;
+            if (events && typeof evt === 'string') {
                 triggerEvent(events, args);
+            } else if (events){
+                console.log(this.id + '没有' + args[0].name);
+            }
+            if (allEvents) {
+                triggerEvent(allEvents, args);
             }
         },
         /**
@@ -725,7 +748,7 @@ var idGen = {
          * @params {String} name 事件名稱
          * @params {Function} callback 事件回調函數
          */
-        listenTo: function (node, name, callback) {
+        listenTo: function(node, name, callback) {
             var listeningTo = this._listeningTo || (this._listeningTo = []);
 
             listeningTo.push(node);
@@ -744,7 +767,7 @@ var idGen = {
          * @params {String} name 事件名稱
          * @params {Function} callback 事件回調函數
          */
-        stopListening: function (node, name, callback) {
+        stopListening: function(node, name, callback) {
             var remove = !name && !callback,
                 listeningTo = this._listeningTo;
             if (!listeningTo) {
@@ -756,7 +779,7 @@ var idGen = {
             if (!callback && typeof name === 'object') {
                 callback = this;
             }
-            for(var i = listeningTo.length - 1, itm; i >= 0; i--) {
+            for (var i = listeningTo.length - 1, itm; i >= 0; i--) {
                 itm = listeningTo[i];
                 itm.off(name, callback, this);
                 if (remove || _.isEmpty(itm._events)) {
@@ -911,7 +934,7 @@ var idGen = {
             emptyFunc = function() {},
             DisplayComponent;
         //添加事件
-        var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender:firstcomponent',
+        var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
             BEFORE_RENDER = 'beforerender',
             AFTER_RENDER = 'afterrender';
         //获取MatchesSelector
@@ -933,21 +956,21 @@ var idGen = {
                 var self = this;
                 self._super(option);
                 self.state = {};
-                /*
-            self.initVar([
-                'tpl',
-                'tplContent',
-                'components',
-                'parentNode',
-                'parentEl',
-                '*state*',
-                'getState',
-                'userUpdate:update',
-                'className',
-                'display',
-                'el',
-                'selector'
-            ]);*/
+
+                self.initVar([
+                    'tpl',
+                    'tplContent',
+                    'components',
+                    'parentNode',
+                    'parentEl',
+                    '*state*',
+                    'getState',
+                    'userUpdate:update',
+                    'className',
+                    'display',
+                    'el',
+                    'selector'
+                ]);
                 self._data = option.data;
                 self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
                 self._cpConstructors = self.components;
@@ -958,17 +981,17 @@ var idGen = {
                 self._initHTMLElement(function() {
                     self.$el.attr('id', self.id)
                         .attr('class', self.className);
-                    //监听组件原生listener
-                    self._listen(self.listeners);
-                    //用户创建的Listener
-                    self._listen(option.listeners);
-                    self._bindUIEvent();
                     self.initialized = true;
                     if (typeof callback === 'function') {
                         callback();
                     }
                     //添加新建的子组件到组件中
                     self.appendChild(self._buildComponents());
+                    //监听组件原生listener
+                    self._listen(self.listeners);
+                    //用户创建的Listener
+                    self._listen(option.listeners);
+                    self._bindUIEvent();
                     //之前被通知过render，模板准备好之后进行渲染
                     if (self.needToRender) {
                         self.render();
@@ -1110,7 +1133,7 @@ var idGen = {
                 if (!comArray) {
                     return;
                 }
-                var onBeforeRender = function(component) {
+                var onBeforeRender = function(evt, component) {
                         //组件还没有渲染
                         if (!self._allowToRender(component)) {
                             component.isContinueRender = false;
@@ -1262,30 +1285,26 @@ var idGen = {
             _listen: function(listeners) {
                 function onListen(event, self) {
                     return function() {
-                        listeners[event].apply(self, arguments);
+                        listeners[event].apply(self, slice.call(arguments, 0));
                     };
                 }
                 if (!listeners) {
                     return;
                 }
                 var evtArr = '',
-                    len,
-                    com;
+                    len;
                 for (var evt in listeners) {
                     if (listeners.hasOwnProperty(evt)) {
                         evtArr = evt.split(':');
                         len = evtArr.length;
                         //TYPE:ID:Event
                         if ( 3 === len) {
-                            com = this.getChildById(evtArr[1]);
-                            this.listenTo(com, evt, onListen(evt, this));
-                        } else if (2 === len) {
-                            this.listenTo(this.getChildByType(evtArr[0],
-                                        evt, onListen(evt, this)));
+                            this._delegate(evtArr[2], evtArr[0], evtArr[1],
+                                    onListen(evt, this));
                         } else if (1 === len) {
                             this.on(evt, onListen(evt, this));
                         } else {
-                            throw new Error('Wrong Event Formate:' +
+                            throw new Error('Com:Wrong Event Formate[Type:ID:Event]: ' +
                                     evt);
                         }
                     }
@@ -1302,7 +1321,7 @@ var idGen = {
              * 绑定UI事件
              */
             _bindUIEvent: function() {
-                if (!this.parentEl) {
+                if (!this.parentEl || this._uiEventBinded) {
                     return this;
                 }
                 var evts = this.uiEvents,
@@ -1331,6 +1350,7 @@ var idGen = {
                     callback = evts[evt];
                     this._uiDelegate(eventType, elementSelector, callback);
                 }
+                this._uiEventBinded = true;
             },
             /**
              * _uiDelegate
@@ -1351,6 +1371,22 @@ var idGen = {
                         return fn.call(target, ev, self);
                     }
                 }, false);
+            },
+            /**
+             * _delegate
+             * 托管UI事件绑定
+             * @params {String} eventName 事件名称
+             * @params {String} selector 选择器
+             * @params {Function} fn 事件回调函数
+             */
+            _delegate: function(eventName, type, id, fn) {
+                this.on(eventName, function(ev) {
+                    var srcNode = ev.src;
+                    if (srcNode.type === type && srcNode.id === id) {
+                        var args = slice.call(arguments, 0);
+                        fn.apply(srcNode, args);
+                    }
+                });
             },
             /**
              * 组件状态是否有改变
