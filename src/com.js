@@ -160,9 +160,15 @@ define([
                 this.parentEl = $dom[0];
                 this.$parentEl = $dom;
             },
+            /**
+             * _rebuildDomTree
+             * 重新构建组件Dom树
+             * @params {Boolean} isRoot 标志是否为根节点
+             */
             _rebuildDomTree: function(isRoot) {
                 var component = this.firstChild;
                 this._changeEl(this._$tempEl);
+                //非根节点需要更新ParentNode
                 if (!isRoot) {
                     this._changeParentEl(this.parentNode.$el);
                 }
@@ -183,6 +189,7 @@ define([
                 this._$tempEl = $(this.tmpl()).attr('id', this.id);
                 this.className && this._$tempEl.attr('class', this.className);
                 var component = this.firstChild;
+                //通知子组件更新
                 while (component) {
                     component.update();
                     component = component.nextNode;
@@ -231,6 +238,8 @@ define([
             },
             /**
              * 渲染模板
+             * @params {String} tplContent 模板内容
+             * @params {Object} data 渲染数据
              */
             tmpl: function(tplContent, data) {
                 var self = this,
@@ -425,6 +434,13 @@ define([
                     this._uiDelegate(eventType, elementSelector, callback);
                 }
             },
+            /**
+             * _uiDelegate
+             * 托管UI事件绑定
+             * @params {String} eventName 事件名称
+             * @params {String} selector 选择器
+             * @params {Function} fn 事件回调函数
+             */
             _uiDelegate: function(eventName, selector, fn) {
                 var self = this;
                 this.parentEl.addEventListener(eventName, function(ev) {
