@@ -125,9 +125,7 @@ define(function (require, exports) {
             _constructor_: Tab,
             id: 'indexTab',
             getState: function () {
-                return {
-                    tab: this.state.params.tab
-                };
+                return {};
             }
         }],
         init: function (option) {

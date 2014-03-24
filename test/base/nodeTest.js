@@ -24,11 +24,15 @@ define(function (require) {
         var result = node2.getChildById('node_id_3');
         QUnit.equal(node3 === result, true, 'getChildById API 正常');
 
+        var resultList = node2.getChildByType('node');
+        QUnit.equal(resultList[0] === node3 && resultList[1] === node4, true, 'getChildByType API 正常');
+
         //test property nextNode and prevNode
         QUnit.equal(node2.firstChild === node3, true, 'firstChild API 正常');
         QUnit.equal(node2.lastChild === node4, true, 'lastChild API 正常');
         QUnit.equal(node3.nextNode === node4, true, 'nextNode API 正常');
         QUnit.equal(node4.prevNode === node3, true, 'prevNode API 正常');
+
 
         //test api appendChild
         QUnit.equal(node1.nodeCount, 1);

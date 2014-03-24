@@ -91,7 +91,7 @@ define([
     };
 
     Node = Class.extend({
-        type: 'component',
+        type: 'node',
         updating: false, //更新中
         initializing: false, //初始化进行中
         initialized: false, //已初始化
@@ -239,19 +239,41 @@ define([
             });
         },
         /**
+         * getChildByFilter
+         * @params {Function} fileter 过滤器
+         */
+        getChildByFilter: function (filter) {
+            var node = this.firstChild,
+                result = [];
+            while (node) {
+                if(filter(node)) {
+                    result.push(node);
+                }
+                node = node.nextNode;
+            }
+            return result;
+        },
+        /**
          * 根据Id查找组件
          * @param  {String} id 组件编号
          * @return {Node/Null} 返回组件,找不到则返回Null
          */
         getChildById: function(id) {
-            var node = this.firstChild;
-            while (node) {
-                if (node.id === id) {
-                    return node;
-                }
-                node = node.nextNode;
-            }
-            return null;
+            var result = this.getChildByFilter(function(node) {
+                return node.id === id;
+            });
+            //返回唯一的一个 或者 null
+            return result[0] || null;
+        },
+        /**
+         * 根据Type查找组件
+         * @param  {String} id 组件编号
+         * @return {Node/Null} 返回组件,找不到则返回Null
+         */
+        getChildByType: function(type) {
+            return this.getChildByFilter(function (node) {
+                return node.type === type;
+            });
         },
         /**
          * 将组件连接起来

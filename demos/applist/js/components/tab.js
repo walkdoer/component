@@ -15,11 +15,11 @@ define(function (require, exports) {
             this._super(option);
         },
         uiEvents: {
-            'click .n-u-l': function (e) {
+            'click .n-u-l': function (e, tab) {
                 var $target = $(e.target),
                     tabName = $target.attr('data-target');
-                this.trigger('click', [this, tabName]);
-                this.activeTab(tabName);
+                tab.trigger('click', [this, tabName]);
+                tab.activeTab(tabName);
             }
         },
         update: function (state, data) {
@@ -76,9 +76,9 @@ define(function (require, exports) {
             }
         },
         listeners: {
-            'AFTER_RENDER': function (evt, tab) {
+            'afterrender': function (tab) {
                 tab.$tabs = tab.$el.find('ul').find('li');
-                tab.activeTab(tab.params.tab);
+                tab.activeTab('recommend');
             }
         }
     });

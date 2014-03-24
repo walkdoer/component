@@ -38,7 +38,7 @@ define(function(require, exports) {
             } else {
                 //页面没有建立，创建页面
                 this._createPage(pageName, state, data, function (page) {
-                    self.appendCmp(page);
+                    self.appendChild(page);
                     //page.render().appendToParent();
                     self.render().appendToParent();
                 });

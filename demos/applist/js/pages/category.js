@@ -38,7 +38,7 @@ define(function (require, exports) {
         }],
         listeners: {
             //分类详情页渲染结束
-            'AFTER_RENDER': function () {
+            'afterrender': function () {
                 //渲染结束，则通知列表加载数据
                 var list = this.getChildById('cateList');
                 list.load();

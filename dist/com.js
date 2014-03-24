@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-24T03:16Z
+ * Date: 2014-03-24T04:39Z
  */
 
 (function (global, factory) {
@@ -426,7 +426,7 @@ var idGen = {
     };
 
     Node = Class.extend({
-        type: 'component',
+        type: 'node',
         updating: false, //更新中
         initializing: false, //初始化进行中
         initialized: false, //已初始化
@@ -574,19 +574,41 @@ var idGen = {
             });
         },
         /**
+         * getChildByFilter
+         * @params {Function} fileter 过滤器
+         */
+        getChildByFilter: function (filter) {
+            var node = this.firstChild,
+                result = [];
+            while (node) {
+                if(filter(node)) {
+                    result.push(node);
+                }
+                node = node.nextNode;
+            }
+            return result;
+        },
+        /**
          * 根据Id查找组件
          * @param  {String} id 组件编号
          * @return {Node/Null} 返回组件,找不到则返回Null
          */
         getChildById: function(id) {
-            var node = this.firstChild;
-            while (node) {
-                if (node.id === id) {
-                    return node;
-                }
-                node = node.nextNode;
-            }
-            return null;
+            var result = this.getChildByFilter(function(node) {
+                return node.id === id;
+            });
+            //返回唯一的一个 或者 null
+            return result[0] || null;
+        },
+        /**
+         * 根据Type查找组件
+         * @param  {String} id 组件编号
+         * @return {Node/Null} 返回组件,找不到则返回Null
+         */
+        getChildByType: function(type) {
+            return this.getChildByFilter(function (node) {
+                return node.type === type;
+            });
         },
         /**
          * 将组件连接起来
@@ -1229,7 +1251,7 @@ var idGen = {
              * @param  {Object} listeners 事件配置
              */
             _listen: function(listeners) {
-                function onlisten(event, self) {
+                function onListen(event, self) {
                     return function() {
                         listeners[event].apply(self, arguments);
                     };
@@ -1237,9 +1259,26 @@ var idGen = {
                 if (!listeners) {
                     return;
                 }
-                for (var event in listeners) {
-                    if (listeners.hasOwnProperty(event)) {
-                        this.on(event, onlisten(event, this));
+                var evtArr = '',
+                    len,
+                    com;
+                for (var evt in listeners) {
+                    if (listeners.hasOwnProperty(evt)) {
+                        evtArr = evt.split(':');
+                        len = evtArr.length;
+                        //TYPE:ID:Event
+                        if ( 3 === len) {
+                            com = this.getChildById(evtArr[1]);
+                            this.listenTo(com, evt, onListen(evt, this));
+                        } else if (2 === len) {
+                            this.listenTo(this.getChildByType(evtArr[0],
+                                        evt, onListen(evt, this)));
+                        } else if (1 === len) {
+                            this.on(evt, onListen(evt, this));
+                        } else {
+                            throw new Error('Wrong Event Formate:' +
+                                    evt);
+                        }
                     }
                 }
             },

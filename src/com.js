@@ -353,7 +353,7 @@ define([
              * @param  {Object} listeners 事件配置
              */
             _listen: function(listeners) {
-                function onlisten(event, self) {
+                function onListen(event, self) {
                     return function() {
                         listeners[event].apply(self, arguments);
                     };
@@ -361,9 +361,26 @@ define([
                 if (!listeners) {
                     return;
                 }
-                for (var event in listeners) {
-                    if (listeners.hasOwnProperty(event)) {
-                        this.on(event, onlisten(event, this));
+                var evtArr = '',
+                    len,
+                    com;
+                for (var evt in listeners) {
+                    if (listeners.hasOwnProperty(evt)) {
+                        evtArr = evt.split(':');
+                        len = evtArr.length;
+                        //TYPE:ID:Event
+                        if ( 3 === len) {
+                            com = this.getChildById(evtArr[1]);
+                            this.listenTo(com, evt, onListen(evt, this));
+                        } else if (2 === len) {
+                            this.listenTo(this.getChildByType(evtArr[0],
+                                        evt, onListen(evt, this)));
+                        } else if (1 === len) {
+                            this.on(evt, onListen(evt, this));
+                        } else {
+                            throw new Error('Wrong Event Formate:' +
+                                    evt);
+                        }
                     }
                 }
             },
