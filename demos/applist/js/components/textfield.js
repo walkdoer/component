@@ -5,14 +5,9 @@ define(function (require, exports) {
     'use strict';
     var _ = require('core/lang'),
         $ = require('core/selector'),
-        Component = require('base/node.display'),
-        Event = require('base/event'),
+        Component = require('lib/com'),
         typeName = 'textfield',
         Textfield;
-    Event.add(typeName, {
-        'INPUT': 'input',
-        'FLUR': 'blur'
-    });
     Textfield = Component.extend({
         type: typeName,
         uiEvents: {
@@ -25,10 +20,10 @@ define(function (require, exports) {
             //input事件触发比较频繁，需要添加事件防抖
             'input input': _.debounce(function (event) {
                 this.value = event.target.value;
-                this.trigger('INPUT', [this]);
+                this.trigger('input', [this]);
             }, 300),
             'blur input': function () {
-                this.trigger('FLUR', [this]);
+                this.trigger('blur', [this]);
             }
         }
     });

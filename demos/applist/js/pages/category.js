@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/node.display'),
+    var Component = require('lib/com'),
         TopBar = require('components/topbar'),
         AutoFillList = require('components/list.autofill'),
         AppItem = require('components/app'),

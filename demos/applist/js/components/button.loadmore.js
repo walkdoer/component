@@ -4,15 +4,11 @@
 define(function (require, exports) {
     'use strict';
     var Button = require('components/button'),
-        Event = require('base/event'),
         typeName = 'loadMoreButton',
         LoadMoreButton,
         LOADING = 1,
         DONE = 2,
         FAIL = 3;
-    Event.add(typeName, {
-        LOAD_MORE: 'load'
-    });
     LoadMoreButton = Button.extend({
         type: typeName,
         init: function (option) {
@@ -57,7 +53,7 @@ define(function (require, exports) {
                 var self = this;
                 if (!self.loading) {
                     self.setStatus(LOADING);
-                    self.trigger('LOAD_MORE', [self, event]);
+                    self.trigger('load', [self, event]);
                 }
             }
         }

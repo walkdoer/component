@@ -3,18 +3,14 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/node.display'),
-        Event = require('base/event'),
+    var Component = require('lib/com'),
         Logo;
-    Event.add('logo', {
-        'ADD_URL': 'addurl'
-    });
     Logo = Component.extend({
         type: 'logo',
         tpl: '#tpl-top-nav',
         uiEvents: {
             'click .h-btn': function () {
-                this.trigger('ADD_URL');
+                this.trigger('addurl');
             }
         }
     });

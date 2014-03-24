@@ -3,19 +3,15 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/node.display'),
-        Event = require('base/event'),
+    var Component = require('lib/com'),
         typeName = 'button',
         Button;
-    Event.add(typeName, {
-        'CLICK': 'click'
-    });
     Button = Component.extend({
         type: typeName,
         tplContent: '<button><%=data.title%></button>',
         uiEvents: {
             'click': function (event) {
-                this.trigger('CLICK', [this, event]);
+                this.trigger('click', [this, event]);
             }
         }
     });

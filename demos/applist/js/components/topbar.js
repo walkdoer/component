@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/node.display'),
+    var Component = require('lib/com'),
         Button = require('components/button'),
         _ = require('core/lang'),
         TopBar;

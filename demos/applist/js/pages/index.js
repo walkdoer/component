@@ -7,7 +7,7 @@ define(function (require, exports) {
         _ = require('core/lang'),
         Util = require('util'),
         Logger = require('logger'),
-        Component = require('base/node.display'),
+        Component = require('lib/com'),
         Logo = require('components/logo'),
         Tab = require('components/tab'),
         InputHistory = require('components/input_history'),

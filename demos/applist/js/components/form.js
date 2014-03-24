@@ -4,15 +4,10 @@
 define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
-        Component = require('base/node.display'),
-        Event = require('base/event'),
+        Component = require('lib/com'),
         typeName = 'form',
         WARN_CLASS = 'warn',
         Form;
-    Event.add(typeName, {
-        CANCEL: 'cancel',
-        SUBMIT: 'submit'
-    });
     /*
     写给接手的人：由于时间较紧，在做form组件的时候是没有对输入框进行抽象为一个组件的
     所以form表单的粒度比较粗，建议抽出textfield组件
@@ -72,12 +67,12 @@ define(function (require, exports) {
                 event.preventDefault();
                 var data = this._getField();
                 if (this._validate(data)) {
-                    this.trigger('SUBMIT', [this, event, data]);
+                    this.trigger('submit', [this, event, data]);
                 }
             },
             //取消按钮
             'click .cancel': function (event) {
-                this.trigger('CANCEL', [this, event]);
+                this.trigger('cancel', [this, event]);
             },
             //输入框聚焦
             'focus input': function (event) {

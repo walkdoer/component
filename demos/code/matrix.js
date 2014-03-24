@@ -1,4 +1,4 @@
-(function (window, undefined) {
+(function(window, undefined) {
     'use strict';
     var Com = window.Com,
         rowArr;
@@ -10,29 +10,29 @@
             this._super(option);
             this.matrixArr = [];
             //创建 rowSize * colSize 的矩阵
-            for(var i = 0; i < this.rowSize; i++) {
+            for (var i = 0; i < this.rowSize; i++) {
                 //二维数组模拟矩阵
                 this.matrixArr[i] = rowArr = [];
                 //列
-                for(var j = 0; j < this.colSize; j++) {
+                for (var j = 0; j < this.colSize; j++) {
                     var com = new Cell(i, j, 'cell_' + i + '_' + j);
                     rowArr.push(com);
                 }
                 this.appendChild(rowArr);
             }
         },
-        net: function (evt, fn) {
+        net: function(evt, fn) {
             var colSize = this.colSize,
                 rowSize = this.rowSize,
                 matrixArr = this.matrixArr;
             var comTop, comRight, comBottom, comLeft;
             //矩阵节点联接
-            for(var row = 0; row < rowSize; row++) {
+            for (var row = 0; row < rowSize; row++) {
                 rowArr = matrixArr[row];
-                for(var col = 0; col < colSize; col++) {
+                for (var col = 0; col < colSize; col++) {
                     var com = rowArr[col];
                     //先处理矩阵的主体，减少if判断次数
-                    if ( row > 0 && row < rowSize - 1 && col > 0 && col < colSize -1) {
+                    if (row > 0 && row < rowSize - 1 && col > 0 && col < colSize - 1) {
                         //矩阵主体为4联通节点  T R B L
                         comTop = matrixArr[row - 1][col];
                         comRight = rowArr[col + 1];
