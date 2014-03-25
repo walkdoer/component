@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-25T07:11Z
+ * Date: 2014-03-25T07:25Z
  */
 
 (function (global, factory) {
@@ -1445,13 +1445,14 @@ var idGen = {
                 var target = ev.target,
                     evProxy;
                 //定位被托管节点
-                while (target && target !== this && !target[matchesSelector](selector)) {
+                while (target && target !== this &&
+                        !target[matchesSelector](selector)) {
                     target = target.parentNode;
                 }
                 ev.target = target;
                 if (target && target !== this) {
-                    evProxy = createProxy(ev);
-                    return fn.call(target,
+                    evProxy = _.extend(createProxy(ev), {currentTarget: target});
+                    return fn.apply(target,
                             [evProxy, self].concat(slice.call(arguments, 1)));
                 }
 
