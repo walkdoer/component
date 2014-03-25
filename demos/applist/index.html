@@ -64,13 +64,13 @@
       {Component} App Item (应用)
    =========================-->
 <script type="text/template" id="tpl-item-app">
-<li class="app" data-icon="<%=data.logoUrl%>" data-id="<%=data.id%>" data-name="<%=data.name%>" data-url="<%=data.url%>">
+<li class="app" data-icon="<%logoUrl%>" data-id="<%id%>" data-name="<%name%>" data-url="<%url%>">
     <div class="icn"></div>
     <div class="meta">
-        <p class="title"><%=data.name%></p>
-        <p class="desc"><%=data.des%></p>
+        <p class="title"><%name%></p>
+        <p class="desc"><%des%></p>
     </div>
-    <div class="btn"><span class="<%=(data.installed ? 'installed' : 'install')%>"></span></div>
+    <div class="btn"><span class="<%installed%>"></span></div>
 </li>
 </script>
 <!--==========================
@@ -86,11 +86,11 @@
     {Component} Category Item (应用分类)
    =======================-->
 <script type="text/template" id="tpl-item-category">
-<li class="cate" data-icon="<%=data.logoUrl%>" data-info="<%=[data.id, data.name].join(':')%>">
+<li class="cate" data-icon="<%logoUrl%>" data-info="<%id%>">
     <div class="wrapper">
         <div class="meta">
-            <p class="title"><%=data.name%></p>
-            <p class="desc"><%=data.represent%></p>
+            <p class="title"><%name%></p>
+            <p class="desc"><%represent%></p>
         </div>
         <div class="icn"></div>
     </div>
@@ -135,7 +135,7 @@
 <ul class="input-history"></ul>
 </script>
 <script type="text/template" id="tpl-input-history-item">
-<li class="input-history-item" data-name="<%=data.name%>"><%=data.url%></ul>
+<li class="input-history-item" data-name="<%name%>"><%url%></ul>
 </script>
 
 <!-- build:remove -->

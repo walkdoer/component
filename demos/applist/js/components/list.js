@@ -107,7 +107,7 @@ define(function (require, exports) {
             return this;
         },
         appendRecord: function (recordArray) {
-            this.trigger('before:append', [recordArray]);
+            this.trigger('beforeappend', recordArray);
             var self = this,
                 items = [],
                 recordCount = recordArray.length,
@@ -125,13 +125,13 @@ define(function (require, exports) {
                         parentEl: self.$list[0],
                     }));
                 });
-                self.appendCmp(items);
+                self.appendChild(items);
                 self.render();
             }
         },
         uiEvents: {
-            'click li': function (e) {
-                this.trigger('click', [e]);
+            'click li': function (e, list) {
+                list.trigger('click', e);
             },
         }
     });

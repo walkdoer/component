@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-24T13:32Z
+ * Date: 2014-03-24T14:22Z
  */
 
 (function (global, factory) {
@@ -934,6 +934,7 @@ var idGen = {
         
         var slice = Array.prototype.slice,
             emptyFunc = function() {},
+            eventSpliter = ':',
             DisplayComponent;
         //添加事件
         var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
@@ -958,7 +959,7 @@ var idGen = {
                 var self = this;
                 self._super(option);
                 self.state = {};
-
+                self._notFinishListen = {};
                 self.initVar([
                     'tpl',
                     'tplContent',
@@ -1135,6 +1136,7 @@ var idGen = {
                 if (!comArray) {
                     return;
                 }
+                _.isArray(comArray) || (comArray = [comArray]);
                 var onBeforeRender = function(evt, component) {
                         //组件还没有渲染
                         if (!self._allowToRender(component)) {
@@ -1148,12 +1150,17 @@ var idGen = {
                         }
                     };
                 var index = comArray.length - 1,
+                    evt,
                     com;
                 while (index >= 0) {
                     com = comArray[index--];
                     com.parentNode = this;
                     com._initParent();
                     com._bindUIEvent();
+                    evt = this._notFinishListen[[com.type, com.id].join(eventSpliter)];
+                    if (evt) {
+                        this.listenTo(com, evt);
+                    }
                     com.on(BEFORE_RENDER, onBeforeRender);
                     com = com.nextNode;
                 }
@@ -1298,14 +1305,14 @@ var idGen = {
                     len;
                 for (var evt in listeners) {
                     if (listeners.hasOwnProperty(evt)) {
-                        evtArr = evt.split(':');
+                        evtArr = evt.split(eventSpliter);
                         len = evtArr.length;
                         //TYPE:ID:Event
                         if ( 3 === len) {
                             com = this.getChildById(evtArr[1]);
                             if (!com) {
-                                this._delegate(evtArr[2], evtArr[0], evtArr[1],
-                                    onListen(evt, this));
+                                this._delegate(evtArr[0], evtArr[1], evtArr[2],
+                                        onListen(evt, this));
                             } else {
                                 this.listenTo(com, evtArr[2], onListen(evt, this));
                             }
@@ -1387,14 +1394,13 @@ var idGen = {
              * @params {String} selector 选择器
              * @params {Function} fn 事件回调函数
              */
-            _delegate: function(eventName, type, id, fn) {
-                this.on(eventName, function(ev) {
-                    var srcNode = ev.src;
-                    if (srcNode.type === type && srcNode.id === id) {
-                        var args = slice.call(arguments, 0);
-                        fn.apply(srcNode, args);
-                    }
-                });
+            _delegate: function(type, id, eventType, fn) {
+                var eventObj,
+                    typeAndId = [type, id].join(eventSpliter);
+                if(!(eventObj = this._notFinishListen[typeAndId])) {
+                    eventObj = this._notFinishListen[typeAndId] = {};
+                }
+                eventObj[eventType] = fn;
             },
             /**
              * 组件状态是否有改变

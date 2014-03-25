@@ -124,6 +124,27 @@ define(function (require, exports) {
         }, {
             _constructor_: Tab,
             id: 'indexTab',
+            listeners: {
+                //推荐列表添加到列表项之前检查app的安装状态
+                'autofillList:recommend:beforeappend': function (event, apps) {
+                    //更新app的安装状态
+                    Util.updateAppStatus(apps);
+                    //从App列表中得已安装剔除掉，并将剔除出来的已安装App暂时保持起来
+                    installedApps = installedApps.concat(Util.sliceInstalledApps(apps));
+                },
+                //推荐列表加载结束
+                'autofillList:recommend:end': function (event, list) {
+                    //将临时保持的已安装列表添加到列表中
+                    list.appendRecord(installedApps);
+                    installedApps = [];
+                },
+                //点击分类列表的某个子项
+                'list:category:click': function (evt, e) {
+                    var target = e.currentTarget,
+                        info = target.dataset.info.split(':');
+                    this.trigger('route', ['category/' + info[0], {name: info[1]}]);
+                }
+            },
             getState: function () {
                 return {};
             }
@@ -166,25 +187,6 @@ define(function (require, exports) {
                     //list组件渲染自己
                     list.render().load().appendToParent();
                 }
-            },
-            //推荐列表添加到列表项之前检查app的安装状态
-            'autofillList:recommend:beforeappend': function (event, apps) {
-                //更新app的安装状态
-                Util.updateAppStatus(apps);
-                //从App列表中得已安装剔除掉，并将剔除出来的已安装App暂时保持起来
-                installedApps = installedApps.concat(Util.sliceInstalledApps(apps));
-            },
-            //推荐列表加载结束
-            'autofillList:recommend:end': function (event, list) {
-                //将临时保持的已安装列表添加到列表中
-                list.appendRecord(installedApps);
-                installedApps = [];
-            },
-            //点击分类列表的某个子项
-            'list:category:click': function (evt, e) {
-                var target = e.currentTarget,
-                    info = target.dataset.info.split(':');
-                this.trigger('route', ['category/' + info[0], {name: info[1]}]);
             },
             //点击添加Url
             'logo:topLogo:addurl': function () {

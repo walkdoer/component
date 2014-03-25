@@ -11,6 +11,7 @@ define([
         'use strict';
         var slice = Array.prototype.slice,
             emptyFunc = function() {},
+            eventSpliter = ':',
             DisplayComponent;
         //添加事件
         var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
@@ -35,7 +36,7 @@ define([
                 var self = this;
                 self._super(option);
                 self.state = {};
-
+                self._notFinishListener = {};
                 self.initVar([
                     'tpl',
                     'tplContent',
@@ -212,6 +213,7 @@ define([
                 if (!comArray) {
                     return;
                 }
+                _.isArray(comArray) || (comArray = [comArray]);
                 var onBeforeRender = function(evt, component) {
                         //组件还没有渲染
                         if (!self._allowToRender(component)) {
@@ -225,12 +227,22 @@ define([
                         }
                     };
                 var index = comArray.length - 1,
+                    evt,
+                    identity,
                     com;
                 while (index >= 0) {
                     com = comArray[index--];
                     com.parentNode = this;
                     com._initParent();
                     com._bindUIEvent();
+                    //绑定待监听事件，类似于延迟监听，
+                    //因为listener中所要监听的组件在那个时刻还没有存在
+                    identity = [com.type, com.id].join(eventSpliter);
+                    evt = this._notFinishListener[identity];
+                    if (evt) {
+                        this.listenTo(com, evt);
+                        delete this._notFinishListener[identity];
+                    }
                     com.on(BEFORE_RENDER, onBeforeRender);
                     com = com.nextNode;
                 }
@@ -375,18 +387,22 @@ define([
                     len;
                 for (var evt in listeners) {
                     if (listeners.hasOwnProperty(evt)) {
-                        evtArr = evt.split(':');
+                        evtArr = evt.split(eventSpliter);
                         len = evtArr.length;
                         //TYPE:ID:Event
                         if ( 3 === len) {
                             com = this.getChildById(evtArr[1]);
                             if (!com) {
-                                this._delegate(evtArr[2], evtArr[0], evtArr[1],
-                                    onListen(evt, this));
+                                //假如这个时候组件还没有创建，则先记录下来，
+                                //组件创建的时候再监听，详见:appendChild
+                                this._deferListener(evtArr[0], evtArr[1], evtArr[2],
+                                        onListen(evt, this));
                             } else {
                                 this.listenTo(com, evtArr[2], onListen(evt, this));
                             }
+                        //Event
                         } else if (1 === len) {
+                            //只有Event的时候表示监听自身
                             this.on(evt, onListen(evt, this));
                         } else {
                             throw new Error('Com:Wrong Event Formate[Type:ID:Event]: ' +
@@ -459,19 +475,19 @@ define([
             },
             /**
              * _delegate
-             * 托管UI事件绑定
-             * @params {String} eventName 事件名称
-             * @params {String} selector 选择器
+             * 托管事件绑定
+             * @params {String} type 节点类型
+             * @params {String} id   节点id
+             * @params {String} eventType 事件类型
              * @params {Function} fn 事件回调函数
              */
-            _delegate: function(eventName, type, id, fn) {
-                this.on(eventName, function(ev) {
-                    var srcNode = ev.src;
-                    if (srcNode.type === type && srcNode.id === id) {
-                        var args = slice.call(arguments, 0);
-                        fn.apply(srcNode, args);
-                    }
-                });
+            _deferListener: function(type, id, eventType, fn) {
+                var eventObj,
+                    typeAndId = [type, id].join(eventSpliter);
+                if(!(eventObj = this._notFinishListener[typeAndId])) {
+                    eventObj = this._notFinishListener[typeAndId] = {};
+                }
+                eventObj[eventType] = fn;
             },
             /**
              * 组件状态是否有改变
@@ -537,3 +553,4 @@ define([
         });
         return DisplayComponent;
     });
+                                //组件创建的时候再监听
