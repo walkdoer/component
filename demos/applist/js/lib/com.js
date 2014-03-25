@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-25T02:55Z
+ * Date: 2014-03-25T03:30Z
  */
 
 (function (global, factory) {
@@ -1399,6 +1399,7 @@ var idGen = {
                 while (target && target !== this && !target[matchesSelector](selector)) {
                     target = target.parentNode;
                 }
+                ev.target = target;
                 if (target && target !== this) {
                     return fn.call(target, ev, self);
                 }

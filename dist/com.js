@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-25T02:55Z
+ * Date: 2014-03-25T07:11Z
  */
 
 (function (global, factory) {
@@ -946,6 +946,54 @@ var idGen = {
         matchesSelector = ["moz", "webkit", "ms", "o"].filter(function(prefix) {
             return prefix + "MatchesSelector" in div;
         })[0] + "MatchesSelector";
+
+    var returnTrue = function() {
+            return true
+        },
+        returnFalse = function() {
+            return false
+        },
+        ignoreProperties = /^([A-Z]|returnValue$|layer[XY]$)/,
+        eventMethods = {
+            preventDefault: 'isDefaultPrevented',
+            stopImmediatePropagation: 'isImmediatePropagationStopped',
+            stopPropagation: 'isPropagationStopped'
+        };
+    function compatible(ev, source) {
+        if (source || !ev.isDefaultPrevented) {
+            source || (source = ev);
+
+            $.each(eventMethods, function(name, predicate) {
+                var sourceMethod = source[name];
+                ev[name] = function() {
+                    this[predicate] = returnTrue;
+                    return sourceMethod && sourceMethod.apply(source, arguments);
+                };
+                ev[predicate] = returnFalse;
+            });
+
+            if (source.defaultPrevented !== undefined ?
+                    source.defaultPrevented :
+                    'returnValue' in source ?
+                            source.returnValue === false :
+                            source.getPreventDefault &&
+                            source.getPreventDefault()) {
+                    ev.isDefaultPrevented = returnTrue;
+            }
+        }
+        return ev;
+    }
+    function createProxy(ev) {
+        var key, proxy = {
+                originalEvent: ev
+            };
+        for (key in ev) {
+            if (!ignoreProperties.test(key) && ev[key] !== undefined) {
+                proxy[key] = ev[key];
+            }
+        }
+        return compatible(proxy, ev);
+    }
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -1070,13 +1118,13 @@ var idGen = {
                 _id_: this.id
             });
         },
-        needUpdate: function () {
+        needUpdate: function() {
             return this._isStateChange();
         },
         /*
-        _isComNeedUpdate: function(component) {
-            return component._isStateChange() && component.rendered;
-        },*/
+    _isComNeedUpdate: function(component) {
+        return component._isStateChange() && component.rendered;
+    },*/
         _changeEl: function($el) {
             this.el = $el[0];
             this.$el = $el;
@@ -1139,17 +1187,17 @@ var idGen = {
             }
             _.isArray(comArray) || (comArray = [comArray]);
             var onBeforeRender = function(evt, component) {
-                    //组件还没有渲染
-                    if (!self._allowToRender(component)) {
-                        component.isContinueRender = false;
-                    } else {
-                        if (!component.prevNode) {
-                            self.trigger(BEFORE_RENDER_FIRST_COMPONENT, self);
-                        }
-                        // isContinueRender 表示执行下面的Render
-                        component.isContinueRender = true;
+                //组件还没有渲染
+                if (!self._allowToRender(component)) {
+                    component.isContinueRender = false;
+                } else {
+                    if (!component.prevNode) {
+                        self.trigger(BEFORE_RENDER_FIRST_COMPONENT, self);
                     }
-                };
+                    // isContinueRender 表示执行下面的Render
+                    component.isContinueRender = true;
+                }
+            };
             var index = comArray.length - 1,
                 evt,
                 identity,
@@ -1278,13 +1326,13 @@ var idGen = {
             if (self.el) {
                 callback();
 
-            //配置了选择器，直接使用选择器查询
+                //配置了选择器，直接使用选择器查询
             } else if (selector) {
                 self.$el = self.$parentEl.find(selector);
                 self.el = self.$el[0];
                 callback();
 
-            //没有则初始化模板
+                //没有则初始化模板
             } else {
                 self._initTemplate(function(success) {
                     if (success) {
@@ -1321,23 +1369,23 @@ var idGen = {
                     evtArr = evt.split(eventSpliter);
                     len = evtArr.length;
                     //TYPE:ID:Event
-                    if ( 3 === len) {
+                    if (3 === len) {
                         com = this.getChildById(evtArr[1]);
                         if (!com) {
                             //假如这个时候组件还没有创建，则先记录下来，
                             //组件创建的时候再监听，详见:appendChild
                             this._deferListener(evtArr[0], evtArr[1], evtArr[2],
-                                    onListen(evt, this));
+                                onListen(evt, this));
                         } else {
                             this.listenTo(com, evtArr[2], onListen(evt, this));
                         }
-                    //Event
+                        //Event
                     } else if (1 === len) {
                         //只有Event的时候表示监听自身
                         this.on(evt, onListen(evt, this));
                     } else {
                         throw new Error('Com:Wrong Event Formate[Type:ID:Event]: ' +
-                                evt);
+                            evt);
                     }
                 }
             }
@@ -1393,16 +1441,22 @@ var idGen = {
          */
         _uiDelegate: function(eventName, selector, fn) {
             var self = this;
-            this.parentEl.addEventListener(eventName, function(ev) {
-                var target = ev.target;
+            var delegator = function(ev) {
+                var target = ev.target,
+                    evProxy;
                 //定位被托管节点
                 while (target && target !== this && !target[matchesSelector](selector)) {
                     target = target.parentNode;
                 }
+                ev.target = target;
                 if (target && target !== this) {
-                    return fn.call(target, ev, self);
+                    evProxy = createProxy(ev);
+                    return fn.call(target,
+                            [evProxy, self].concat(slice.call(arguments, 1)));
                 }
-            }, false);
+
+            };
+            this.parentEl.addEventListener(eventName, delegator, false);
         },
         /**
          * _delegate
@@ -1415,7 +1469,7 @@ var idGen = {
         _deferListener: function(type, id, eventType, fn) {
             var eventObj,
                 typeAndId = [type, id].join(eventSpliter);
-            if(!(eventObj = this._notFinishListener[typeAndId])) {
+            if (!(eventObj = this._notFinishListener[typeAndId])) {
                 eventObj = this._notFinishListener[typeAndId] = {};
             }
             eventObj[eventType] = fn;
