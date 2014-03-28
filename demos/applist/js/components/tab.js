@@ -22,9 +22,14 @@ define(function (require, exports) {
                 tab.activeTab(tabName);
             }
         },
-        update: function (state, data) {
-            this.activeTab(this.params.tab);
-            this._super(state, data);
+        getState: function () {
+            return {
+                tab: this.evn.params.tab
+            };
+        },
+        update: function () {
+            this.activeTab(this.state.tab);
+            this._super();
         },
         activeTab: function (tabName) {
             if (!tabName) { return; }

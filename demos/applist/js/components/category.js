@@ -13,7 +13,6 @@ define(function (require, exports) {
         listeners: {
             'beforetmpl': function(evt, data) {
                 data.info = data.id + ':' + data.name;
-                console.log('data', data);
             },
             'afterrender': function () {
                 var $el = this.$el;

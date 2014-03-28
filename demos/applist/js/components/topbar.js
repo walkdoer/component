@@ -21,16 +21,6 @@ define(function (require, exports) {
             id: 'back',
             selector: '.b-btn-back'
         }],
-        update: function (state) {
-            this.setTitle(state.queries.name);
-        },
-        init: function (option) {
-            this._super(option);
-            this.setTitle(this.env.queries.name);
-        },
-        setTitle: function (title) {
-            this.$el.find('.b-title').html(_.escapeHTML(title));
-        },
         listeners: {
             'button:back:click': function () {
                 history.back();
