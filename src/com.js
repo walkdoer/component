@@ -109,23 +109,30 @@ function(_, Node, template) {
             //初始化组件HTML元素
             self._listen(self.listeners);
             self._listen(option.listeners);
-            self._initHTMLElement(function() {
-                self.$el.attr('id', self.id)
-                    .attr('class', self.className);
-                self.initialized = true;
-                if (typeof callback === 'function') {
-                    callback();
-                }
-                //添加新建的子组件到组件中
-                self.appendChild(self._buildComponents());
-                //监听组件原生listener
-                //用户创建的Listener
-                self._bindUIEvent();
-                //之前被通知过render，模板准备好之后进行渲染
-                if (self.needToRender) {
-                    self.render();
-                }
-            });
+            var el = self.el;
+            if (!el) {
+                self._initHTMLElement(function(el) {
+                    self.el = el;
+                    self.$el = $(el);
+                    self.$el.attr('id', self.id)
+                        .attr('class', self.className);
+                    self.initialized = true;
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                    //添加新建的子组件到组件中
+                    self.appendChild(self._buildComponents());
+                    //监听组件原生listener
+                    //用户创建的Listener
+                    self._bindUIEvent();
+                    //之前被通知过render，模板准备好之后进行渲染
+                    if (self.needToRender) {
+                        self.render();
+                    }
+                });
+            } else {
+                self.$el = $(el);
+            }
         },
         /**
          * 初始化Parent
@@ -397,31 +404,24 @@ function(_, Node, template) {
          */
         _initHTMLElement: function(callback) {
             var self = this,
-                selector = self.selector;
+                selector = self.selector,
+                el;
             callback = callback || emptyFunc;
-            //已经有了HTML元素
-            if (self.el) {
-                callback();
-
-                //配置了选择器，直接使用选择器查询
-            } else if (selector) {
-                self.$el = self.$parentEl.find(selector);
-                self.el = self.$el[0];
-                callback();
-
-                //没有则初始化模板
+            //配置了选择器，直接使用选择器查询
+            if (selector) {
+                el = self.parentEl.querySelector(selector);
+                callback(el);
+            //没有则初始化模板
             } else {
                 self._initTemplate(function(success) {
                     if (success) {
                         //如果模板初始化成功则渲染模板
-                        self.$el = $(self.tmpl());
-                        self.el = self.$el[0];
+                        el = $(self.tmpl())[0];
                     } else {
                         //没有初始化成功, 需要初始化一个页面的Element
-                        self.el = document.createElement('section');
-                        self.$el = $(self.el);
+                        el = document.createElement('section');
                     }
-                    callback();
+                    callback(el);
                 });
             }
         },
