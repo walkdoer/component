@@ -17,7 +17,7 @@ define(function (require, exports) {
             _constructor_: TopBar,
             getState: function () {
                 return {
-                    name: this.state.queries.name
+                    name: this.env.queries.name
                 };
             }
         }, {
@@ -29,10 +29,10 @@ define(function (require, exports) {
             api: 'apps',
             li: AppItem,
             getState: function () {
-                var state = this.state;
+                var env = this.env;
                 return {
-                    cat: state.params.cat,
-                    name: state.queries.name
+                    cat: env.params.cat,
+                    name: env.queries.name
                 };
             }
         }],

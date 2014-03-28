@@ -92,7 +92,7 @@ function(_, Node, template) {
                 'components',
                 'parentNode',
                 'parentEl',
-                '*state*',
+                '*env*',
                 'getState',
                 'userUpdate:update',
                 'className',
@@ -590,7 +590,8 @@ function(_, Node, template) {
                     }
                     //创建组件
                     cp = new Component(_.extend({
-                        parentNode: self
+                        parentNode: self,
+                        env: this.env
                     }, cItm /*cItm为组件的配置*/ ));
                     components.push(cp);
                 }

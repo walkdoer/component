@@ -13,7 +13,7 @@ define(function (require, exports) {
         tpl: '#tpl-bar-top',
         getState: function () {
             return {
-                name: this.state.queries.name
+                name: this.env.queries.name
             };
         },
         components: [{
@@ -26,7 +26,7 @@ define(function (require, exports) {
         },
         init: function (option) {
             this._super(option);
-            this.setTitle(this.state.queries.name);
+            this.setTitle(this.env.queries.name);
         },
         setTitle: function (title) {
             this.$el.find('.b-title').html(_.escapeHTML(title));

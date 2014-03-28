@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-28T08:28Z
+ * Date: 2014-03-28T08:53Z
  */
 
 (function (global, factory) {
@@ -1015,7 +1015,7 @@ var idGen = {
                 'components',
                 'parentNode',
                 'parentEl',
-                '*state*',
+                '*env*',
                 'getState',
                 'userUpdate:update',
                 'className',
@@ -1513,7 +1513,8 @@ var idGen = {
                     }
                     //创建组件
                     cp = new Component(_.extend({
-                        parentNode: self
+                        parentNode: self,
+                        env: this.env
                     }, cItm /*cItm为组件的配置*/ ));
                     components.push(cp);
                 }
