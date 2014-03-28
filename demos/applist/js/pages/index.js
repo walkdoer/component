@@ -7,6 +7,7 @@ define(function (require, exports) {
         _ = require('core/lang'),
         Util = require('util'),
         Logger = require('logger'),
+        router = require('core/router'),
         Component = require('lib/com'),
         Logo = require('components/logo'),
         Tab = require('components/tab'),
@@ -140,9 +141,21 @@ define(function (require, exports) {
                 },
                 //点击分类列表的某个子项
                 'list:category:click': function (evt, e) {
+                    function route(path, params) {
+                        var queryStr;
+                        if (params) { //构造query
+                            var queryArr = [];
+                            $.each(params, function (key, value) {
+                                queryArr.push([key, value].join('='));
+                            });
+                            queryStr = queryArr.join('!!');
+                            path += ~path.indexOf('?') ? queryStr : '?' + queryStr;
+                        }
+                        router.route(path);
+                    }
                     var target = e.currentTarget,
                         info = target.dataset.info.split(':');
-                    this.trigger('route', ['category/' + info[0], {name: info[1]}]);
+                    route('category/' + info[0], {name: info[1]});
                 }
             },
             getState: function () {

@@ -21,21 +21,6 @@ define(function(require, exports) {
             name: option.name,
             parentEl: option.parent,
             beforeLoad: option.beforeLoad, //加载中提示
-            listeners: {
-                /*注册route事件，改变路由*/
-                route: function (evt, path, params) {
-                    var queryStr;
-                    if (params) { //构造query
-                        var queryArr = [];
-                        $.each(params, function (key, value) {
-                            queryArr.push([key, value].join('='));
-                        });
-                        queryStr = queryArr.join('!!');
-                        path += ~path.indexOf('?') ? queryStr : '?' + queryStr;
-                    }
-                    router.route(path);
-                }
-            }
         });
         //监听页面路由配置
         $.each(pages, function (path) {
@@ -43,7 +28,7 @@ define(function(require, exports) {
                 var pathname = ctx.pathname,
                     pageName = pathname.split('/')[1];
                 //切换页面
-                app.changePage(pageName, 
+                app.changePage(pageName,
                     {params: ctx.params, queries: ctx.queries}, pages[pageName]);
             });
         });

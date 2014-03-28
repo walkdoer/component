@@ -44,7 +44,7 @@ define(function (require, exports) {
                 list.load();
             },
             //剔除已安装App,并保存到临时数组installedApps中
-            'autofillList:cateList:before:append': function (event, apps) {
+            'autofillList:cateList:beforeappend': function (event, apps) {
                 util.updateAppStatus(apps);
                 installedApps = installedApps.concat(util.sliceInstalledApps(apps));
             },

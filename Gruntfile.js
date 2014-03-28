@@ -51,6 +51,15 @@ module.exports = function(grunt) {
             scripts: {
                 files: ['src/**/*.js'],
                 tasks: ['build']
+            },
+            lib: {
+                files: ['dist/com.js'],
+                tasks: ['commander:cp2Demo']
+            }
+        },
+        commander: {
+            cp2Demo: {
+                command: 'cp dist/com.js demos/applist/js/lib/'
             }
         },
         build: {

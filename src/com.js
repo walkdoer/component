@@ -25,10 +25,10 @@ function(_, Node, template) {
         })[0] + "MatchesSelector";
 
     var returnTrue = function() {
-            return true
+            return true;
         },
         returnFalse = function() {
-            return false
+            return false;
         },
         ignoreProperties = /^([A-Z]|returnValue$|layer[XY]$)/,
         eventMethods = {

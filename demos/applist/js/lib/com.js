@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-25T07:25Z
+ * Date: 2014-03-28T08:28Z
  */
 
 (function (global, factory) {
@@ -948,10 +948,10 @@ var idGen = {
         })[0] + "MatchesSelector";
 
     var returnTrue = function() {
-            return true
+            return true;
         },
         returnFalse = function() {
-            return false
+            return false;
         },
         ignoreProperties = /^([A-Z]|returnValue$|layer[XY]$)/,
         eventMethods = {
