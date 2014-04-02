@@ -40,7 +40,7 @@ function(_, Node, template) {
         if (source || !ev.isDefaultPrevented) {
             source || (source = ev);
 
-            $.each(eventMethods, function(name, predicate) {
+            _.each(eventMethods, function(predicate, name) {
                 var sourceMethod = source[name];
                 ev[name] = function() {
                     this[predicate] = returnTrue;
@@ -113,9 +113,8 @@ function(_, Node, template) {
             if (!el) {
                 self._initHTMLElement(function(el) {
                     self.el = el;
-                    self.$el = $(el);
-                    self.$el.attr('id', self.id)
-                        .attr('class', self.className);
+                    el.setAttribute('id', self.id);
+                    el.setAttribute('class', self.className);
                     self.initialized = true;
                     if (typeof callback === 'function') {
                         callback();
@@ -209,13 +208,11 @@ function(_, Node, template) {
     _isComNeedUpdate: function(component) {
         return component._isStateChange() && component.rendered;
     },*/
-        _changeEl: function($el) {
-            this.el = $el[0];
-            this.$el = $el;
+        _changeEl: function(el) {
+            this.el = el;
         },
-        _changeParentEl: function($dom) {
-            this.parentEl = $dom[0];
-            this.$parentEl = $dom;
+        _changeParentEl: function(el) {
+            this.parentEl = el;
         },
         /**
          * _rebuildDomTree
@@ -224,27 +221,27 @@ function(_, Node, template) {
          */
         _rebuildDomTree: function(isRoot) {
             var component = this.firstChild;
-            this._changeEl(this._$tempEl);
+            this._changeEl(this._tempEl);
             //非根节点需要更新ParentNode
             if (!isRoot) {
-                this._changeParentEl(this.parentNode.$el);
+                this._changeParentEl(this.parentNode.el);
             }
             while (component) {
                 component._rebuildDomTree(false);
                 component = component.nextNode;
             }
-            delete this._$tempEl;
+            delete this._tempEl;
         },
         /**
          * 更新组件
          * @return {Object} this
          */
         update: function() {
-            //首先自我更新，保存到临时_$tempEl中
+            //首先自我更新，保存到临时_tempEl中
             this.updating = true;
             this.state = this.getState();
-            this._$tempEl = $(this.tmpl()).attr('id', this.id);
-            this.className && this._$tempEl.attr('class', this.className);
+            this._tempEl = $(this.tmpl()).attr('id', this.id);
+            this.className && this._tempEl.attr('class', this.className);
             var component = this.firstChild;
             //通知子组件更新
             while (component) {
@@ -252,10 +249,10 @@ function(_, Node, template) {
                 component = component.nextNode;
             }
             if (this.parentNode == null || !this.parentNode.updating) {
-                this.parentEl.replaceChild(this._$tempEl[0], this.el);
+                this.parentEl.replaceChild(this._tempEl[0], this.el);
                 this._rebuildDomTree(true);
             } else {
-                this.parentNode._$tempEl.append(this._$tempEl);
+                this.parentNode._tempEl.append(this._tempEl);
             }
             this.updating = false;
             return this;
@@ -332,7 +329,7 @@ function(_, Node, template) {
          */
         appendToParent: function() {
             if (this.parentEl) {
-                this.$el.appendTo(this.parentEl);
+                this.parentEl.appendChild(this.el);
             }
             return this;
         },
