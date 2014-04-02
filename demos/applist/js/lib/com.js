@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-02T09:11Z
+ * Date: 2014-04-02T09:32Z
  */
 
 (function (global, factory) {
@@ -245,6 +245,23 @@
         aStack.pop();
         bStack.pop();
         return result;
+    };
+    _.each = function(elements, callback) {
+        var i, key;
+        if (isArray(elements)) {
+            for (i = 0; i < elements.length; i++) {
+                if (callback.call(elements[i], i, elements[i]) === false) {
+                    return elements;
+                }
+            }
+        } else {
+            for (key in elements) {
+                if (callback.call(elements[key], key, elements[key]) === false) {
+                    return elements;
+                }
+            }
+        }
+        return elements;
     };
 
     // Perform a deep comparison to check if two objects are equal.
@@ -1048,7 +1065,7 @@ var idGen = {
         if (source || !ev.isDefaultPrevented) {
             source || (source = ev);
 
-            _.each(eventMethods, function(predicate, name) {
+            _.each(eventMethods, function(name, predicate) {
                 var sourceMethod = source[name];
                 ev[name] = function() {
                     this[predicate] = returnTrue;
@@ -1126,7 +1143,7 @@ var idGen = {
                 self._initHTMLElement(function(el) {
                     self.el = el;
                     el.setAttribute('id', self.id);
-                    el.setAttribute('class', self.className);
+                    self.className && el.setAttribute('class', self.className);
                     self.initialized = true;
                     if (typeof callback === 'function') {
                         callback();

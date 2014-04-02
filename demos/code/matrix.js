@@ -8,6 +8,8 @@
         init: function(option) {
             var Cell = option.Cell;
             this._super(option);
+            this.rowSize = option.rowSize;
+            this.colSize = option.colSize;
             this.matrixArr = [];
             //创建 rowSize * colSize 的矩阵
             for (var i = 0; i < this.rowSize; i++) {

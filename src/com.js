@@ -125,7 +125,7 @@ function(_, Node, template) {
         if (source || !ev.isDefaultPrevented) {
             source || (source = ev);
 
-            _.each(eventMethods, function(predicate, name) {
+            _.each(eventMethods, function(name, predicate) {
                 var sourceMethod = source[name];
                 ev[name] = function() {
                     this[predicate] = returnTrue;
@@ -203,7 +203,7 @@ function(_, Node, template) {
                 self._initHTMLElement(function(el) {
                     self.el = el;
                     el.setAttribute('id', self.id);
-                    el.setAttribute('class', self.className);
+                    self.className && el.setAttribute('class', self.className);
                     self.initialized = true;
                     if (typeof callback === 'function') {
                         callback();
