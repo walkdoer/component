@@ -247,8 +247,11 @@ function(_, Node, template) {
             //首先自我更新，保存到临时_tempEl中
             this.updating = true;
             this.state = this.getState();
-            this._tempEl = $(this.tmpl()).attr('id', this.id);
-            this.className && this._tempEl.attr('class', this.className);
+            this._tempEl = createElement(this.tmpl());
+            this._tempEl.setAttribute(('id', this.id));
+            if (this.className) {
+                this._tempEl.setAttribute('class', this.className);
+            }
             var component = this.firstChild;
             //通知子组件更新
             while (component) {
