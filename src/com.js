@@ -129,8 +129,6 @@ function(_, Node, template) {
                         self.render();
                     }
                 });
-            } else {
-                self.$el = $(el);
             }
         },
         /**
@@ -138,13 +136,9 @@ function(_, Node, template) {
          */
         _initParent: function() {
             var parentNode = this.parentNode;
-            if (this.parentEl) {
-                this.$parentEl = $(this.parentEl);
-            } else if (parentNode) {
+            //指定了parentNode 没有指定parentEl
+            if (parentNode && !this.parentEl) {
                 this.parentEl = parentNode.el;
-                this.$parentEl = parentNode.$el;
-            } else {
-                //throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
             }
         },
         /**
