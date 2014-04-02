@@ -569,15 +569,16 @@ function(_, Node, template) {
          */
         _buildComponents: function() {
             var self = this,
-                cpConstructors = self._cpConstructors, //组件构造函数列表
+                comConstru = self._cpConstructors, //组件构造函数列表
                 components = [],
                 Component,
                 cItm,
                 cp = null;
             //构造子组件（sub Component）
-            if (_.isArray(cpConstructors)) {
-                for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
-                    cItm = cpConstructors[i];
+            if (_.isArray(comConstru)) {
+                var len = comConstru ? comConstru.length : 0;
+                for (var i = 0; i < len; i++) {
+                    cItm = comConstru[i];
                     //构造函数
                     if (typeof cItm === 'function') {
                         Component = cItm;
