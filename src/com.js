@@ -49,6 +49,47 @@ function(_, Node, template) {
         }
         return css;
     }
+    var table = document.createElement('table'),
+        tableRow = document.createElement('tr'),
+        containers = {
+            'tr': document.createElement('tbody'),
+            'tbody': table, 'thead': table, 'tfoot': table,
+            'td': tableRow, 'th': tableRow,
+            '*': document.createElement('div')
+        };
+    /**
+     * createElement
+     * 根据HTML文本创建Dom节点，兼容一些错误处理，参考Zepto
+     * @Params {String} html html字符串
+     * @return {Array} dom数组
+     */
+    function createElement(html) {
+        var tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/ig,
+            singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/,
+            fragmentRE = /^\s*<(\w+|!)[^>]*>/,
+            container,
+            name,
+            dom;
+        // 对于单个标签的进行优化 例如<div></div>
+        if (singleTagRE.test(html)) {
+            dom = [document.createElement(RegExp.$1)];
+        }
+        //提取出标签名称
+        if (name === undefined) {
+            name = fragmentRE.test(html) && RegExp.$1;
+        }
+        //替换非法的半闭合标签，合法的有br hr img 等，详见tagExpanderRE
+        if (html.replace) {
+            html = html.replace(tagExpanderRE, "<$1></$2>");
+        }
+        if (!(name in containers)) {
+            name = '*';
+        }
+        container = containers[name];
+        container.innerHTML = '' + html;
+        dom = container.childNodes;
+        return dom;
+    }
     function compatible(ev, source) {
         if (source || !ev.isDefaultPrevented) {
             source || (source = ev);
@@ -398,7 +439,7 @@ function(_, Node, template) {
             callback = callback || emptyFunc;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl && tpl.indexOf('#') === 0) {
-                html = $(tpl).html();
+                html = document.getElementById(tpl).innerHTML;
                 if (html) {
                     self.tplContent = html;
                 }
@@ -423,7 +464,7 @@ function(_, Node, template) {
                 self._initTemplate(function(success) {
                     if (success) {
                         //如果模板初始化成功则渲染模板
-                        el = $(self.tmpl())[0];
+                        el = createElement(self.tmpl())[0];
                     } else {
                         //没有初始化成功, 需要初始化一个页面的Element
                         el = document.createElement('section');
