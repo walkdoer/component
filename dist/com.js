@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-02T09:37Z
+ * Date: 2014-04-02T11:15Z
  */
 
 (function (global, factory) {
@@ -1225,12 +1225,8 @@ var idGen = {
             });
         },
         needUpdate: function() {
-            return this._isStateChange();
+            return this._isStateChange(this.getState());
         },
-        /*
-    _isComNeedUpdate: function(component) {
-        return component._isStateChange() && component.rendered;
-    },*/
         _changeEl: function(el) {
             this.el = el;
         },
@@ -1256,17 +1252,23 @@ var idGen = {
             delete this._tempEl;
         },
         /**
-         * 更新组件
+         * 更新操作
+         * 更新自身，及通知子组件进行更新
          * @return {Object} this
          */
         update: function() {
             //首先自我更新，保存到临时_tempEl中
             this.updating = true;
-            this.state = this.getState();
-            this._tempEl = createElement(this.tmpl())[0];
-            this._tempEl.setAttribute('id', this.id);
-            if (this.className) {
-                this._tempEl.setAttribute('class', this.className);
+            var newState = this.getState(),
+                tempEl,
+                stateChange;
+            if ((stateChange = this._isStateChange(newState))) {
+                this.state = newState;
+                this._tempEl = tempEl = createElement(this.tmpl())[0];
+                tempEl.setAttribute('id', this.id);
+                if (this.className) {
+                    tempEl.setAttribute('class', this.className);
+                }
             }
             var component = this.firstChild;
             //通知子组件更新
@@ -1274,11 +1276,23 @@ var idGen = {
                 component.update();
                 component = component.nextNode;
             }
-            if (this.parentNode == null || !this.parentNode.updating) {
-                this.parentEl.replaceChild(this._tempEl, this.el);
+            //如果为根节点Root
+            if (this.parentNode == null) {
+                if (tempEl) {
+                    this.parentEl.replaceChild(this._tempEl, this.el);
+                }
                 this._rebuildDomTree(true);
             } else {
-                this.parentNode._tempEl.append(this._tempEl);
+                var pNode = this.parentNode,
+                    newEl = pNode._tempEl,
+                    pEl = pNode.el;
+                if (newEl) {
+                    newEl.appendChild(tempEl);
+                } else {
+                    pEl.replaceChild(tempEl, this.el);
+                    this._changeEl(tempEl);
+                    delete this._tempEl;
+                }
             }
             this.updating = false;
             return this;
@@ -1580,8 +1594,8 @@ var idGen = {
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
          */
-        _isStateChange: function() {
-            return !_.isEqual(this.getState(), this.state);
+        _isStateChange: function(state) {
+            return !_.isEqual(state, this.state);
         },
         /**
          * 创建子组件
