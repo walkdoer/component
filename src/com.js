@@ -323,8 +323,8 @@ function(_, Node, template) {
             //首先自我更新，保存到临时_tempEl中
             this.updating = true;
             this.state = this.getState();
-            this._tempEl = createElement(this.tmpl());
-            this._tempEl.setAttribute(('id', this.id));
+            this._tempEl = createElement(this.tmpl())[0];
+            this._tempEl.setAttribute('id', this.id);
             if (this.className) {
                 this._tempEl.setAttribute('class', this.className);
             }
@@ -335,7 +335,7 @@ function(_, Node, template) {
                 component = component.nextNode;
             }
             if (this.parentNode == null || !this.parentNode.updating) {
-                this.parentEl.replaceChild(this._tempEl[0], this.el);
+                this.parentEl.replaceChild(this._tempEl, this.el);
                 this._rebuildDomTree(true);
             } else {
                 this.parentNode._tempEl.append(this._tempEl);
