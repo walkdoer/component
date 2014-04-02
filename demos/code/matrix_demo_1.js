@@ -10,7 +10,7 @@
     function getRandomRange(range) {
         return Math.round(Math.random() * range);
     }
-    function onColorChange(color) {
+    function onColorChange(ev, color) {
         var self = this;
         if (typeof color === 'string') {
             color = parseInt(color, 16);
@@ -54,8 +54,8 @@
     var matrix = new Matrix({
         id: 'color-matrix',
         parentEl: window.document.body,
-        rowSize: 30,
-        colSize: 30,
+        rowSize: 4,
+        colSize: 4,
         Cell: Cell
     });
     matrix.net('colorchange', onColorChange);
