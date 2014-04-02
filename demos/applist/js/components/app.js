@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/node.display'),
+    var Component = require('lib/com'),
         Util = require('util'),
         Logger = require('logger'),
         /* --- Start of 常量 --- */
@@ -31,7 +31,7 @@ define(function (require, exports) {
             }
         },
         listeners: {
-            'AFTER_RENDER': function () {
+            'afterrender': function () {
                 var self = this,
                     $el = self.$el,
                     appData = self.el.dataset;

@@ -15,7 +15,8 @@
     var testModules = [
         "base/classTest.js",
         "base/nodeTest.js",
-        "base/templateTest.js"
+        "base/templateTest.js",
+        "comTest.js"
     ];
 
     // Resolve all testModules and then start the Test Runner.

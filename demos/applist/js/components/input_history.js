@@ -4,13 +4,9 @@
 define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
-        Event = require('base/event'),
-        Component = require('base/node.display'),
+        Component = require('lib/com'),
         typeName = 'inputHistory',
         InputHistory;
-    Event.add(typeName, {
-        CLICK: 'click'
-    });
     InputHistory = Component.extend({
         type: typeName,
         init: function (option) {

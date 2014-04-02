@@ -4,9 +4,8 @@
 define(function (require, exports) {
     'use strict';
     var $ = require('core/selector'),
-        Component = require('base/node.display'),
+        Component = require('lib/com'),
         Model = require('model'),
-        Event = require('base/event'),
         LoadMoreButton = require('components/button.loadmore'),
         typeName = 'list',
         loadBtnId = 'loadMore',
@@ -15,11 +14,6 @@ define(function (require, exports) {
         DONE = 2,
         NO_DATA = 3,
         List;
-    Event.add(typeName, {
-        BEFORE_APPEND: 'before:append',
-        CLICK: 'click',
-        END: 'end'
-    });
     List = Component.extend({
         type: typeName,
         components: [{
@@ -113,7 +107,7 @@ define(function (require, exports) {
             return this;
         },
         appendRecord: function (recordArray) {
-            this.trigger('BEFORE_APPEND', [recordArray]);
+            this.trigger('beforeappend', recordArray);
             var self = this,
                 items = [],
                 recordCount = recordArray.length,
@@ -131,13 +125,13 @@ define(function (require, exports) {
                         parentEl: self.$list[0],
                     }));
                 });
-                self.appendCmp(items);
+                self.appendChild(items);
                 self.render();
             }
         },
         uiEvents: {
-            'click li': function (e) {
-                this.trigger('CLICK', [e]);
+            'click li': function (e, list) {
+                list.trigger('click', e);
             },
         }
     });

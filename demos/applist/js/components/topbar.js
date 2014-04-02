@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/node.display'),
+    var Component = require('lib/com'),
         Button = require('components/button'),
         _ = require('core/lang'),
         TopBar;
@@ -13,7 +13,7 @@ define(function (require, exports) {
         tpl: '#tpl-bar-top',
         getState: function () {
             return {
-                name: this.state.queries.name
+                name: this.env.queries.name
             };
         },
         components: [{
@@ -21,16 +21,6 @@ define(function (require, exports) {
             id: 'back',
             selector: '.b-btn-back'
         }],
-        update: function (state) {
-            this.setTitle(state.queries.name);
-        },
-        init: function (option) {
-            this._super(option);
-            this.setTitle(this.state.queries.name);
-        },
-        setTitle: function (title) {
-            this.$el.find('.b-title').html(_.escapeHTML(title));
-        },
         listeners: {
             'button:back:click': function () {
                 history.back();

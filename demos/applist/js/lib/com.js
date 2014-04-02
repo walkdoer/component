@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-02T09:52Z
+ * Date: 2014-04-02T09:37Z
  */
 
 (function (global, factory) {

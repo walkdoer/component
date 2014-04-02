@@ -2,8 +2,17 @@
  * 辅助类
  */
 define(function(require, exports, module) {
-    var _ = {},
-        class2type = {},
+    // Create a safe reference to the Underscore object for use below.
+    var _ = function(obj) {
+        if (obj instanceof _) {
+            return obj;
+        }
+        if (!(this instanceof _)) {
+            return new _(obj);
+        }
+        this._wrapped = obj;
+    };
+    var class2type = {},
         toString = class2type.toString,
         slice = Array.prototype.slice,
         nativeKeys = Object.keys,
@@ -200,6 +209,23 @@ define(function(require, exports, module) {
         aStack.pop();
         bStack.pop();
         return result;
+    };
+    _.each = function(elements, callback) {
+        var i, key;
+        if (isArray(elements)) {
+            for (i = 0; i < elements.length; i++) {
+                if (callback.call(elements[i], i, elements[i]) === false) {
+                    return elements;
+                }
+            }
+        } else {
+            for (key in elements) {
+                if (callback.call(elements[key], key, elements[key]) === false) {
+                    return elements;
+                }
+            }
+        }
+        return elements;
     };
 
     // Perform a deep comparison to check if two objects are equal.

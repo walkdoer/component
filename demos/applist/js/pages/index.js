@@ -7,7 +7,8 @@ define(function (require, exports) {
         _ = require('core/lang'),
         Util = require('util'),
         Logger = require('logger'),
-        Component = require('base/node.display'),
+        router = require('core/router'),
+        Component = require('lib/com'),
         Logo = require('components/logo'),
         Tab = require('components/tab'),
         InputHistory = require('components/input_history'),
@@ -48,7 +49,7 @@ define(function (require, exports) {
                 }
             },
             listeners: {
-                'SUBMIT': function (event, form, uiEvent, urlInfo) {
+                'submit': function (event, form, uiEvent, urlInfo) {
                     Logger.log({
                         path: form.getAbsPath(),
                         //日志来源区域
@@ -60,7 +61,7 @@ define(function (require, exports) {
                     //清空，隐藏表单
                     this.clear().hide();
                 },
-                'CANCEL': function () {
+                'cancel': function () {
                     this.hide();
                 },
                 'textfield:url:input': _.debounce(function (event, field) {
@@ -101,7 +102,7 @@ define(function (require, exports) {
                         .render()
                         .appendToParent();
                         //让下拉框组件成为该textfield的子组件
-                        field.appendCmp(inputHistory);
+                        field.appendChild(inputHistory);
                     }
                     inputHistory.show().filte(field.value);
                 }),
@@ -124,10 +125,41 @@ define(function (require, exports) {
         }, {
             _constructor_: Tab,
             id: 'indexTab',
+            listeners: {
+                //推荐列表添加到列表项之前检查app的安装状态
+                'autofillList:recommend:beforeappend': function (event, apps) {
+                    //更新app的安装状态
+                    Util.updateAppStatus(apps);
+                    //从App列表中得已安装剔除掉，并将剔除出来的已安装App暂时保持起来
+                    installedApps = installedApps.concat(Util.sliceInstalledApps(apps));
+                },
+                //推荐列表加载结束
+                'autofillList:recommend:end': function (event, list) {
+                    //将临时保持的已安装列表添加到列表中
+                    list.appendRecord(installedApps);
+                    installedApps = [];
+                },
+                //点击分类列表的某个子项
+                'list:category:click': function (evt, e) {
+                    function route(path, params) {
+                        var queryStr;
+                        if (params) { //构造query
+                            var queryArr = [];
+                            $.each(params, function (key, value) {
+                                queryArr.push([key, value].join('='));
+                            });
+                            queryStr = queryArr.join('!!');
+                            path += ~path.indexOf('?') ? queryStr : '?' + queryStr;
+                        }
+                        router.route(path);
+                    }
+                    var target = e.currentTarget,
+                        info = target.dataset.info.split(':');
+                    route('category/' + info[0], {name: info[1]});
+                }
+            },
             getState: function () {
-                return {
-                    tab: this.state.params.tab
-                };
+                return {};
             }
         }],
         init: function (option) {
@@ -164,29 +196,10 @@ define(function (require, exports) {
                     });
                     this._lists[tabName] = list;//TODO 改写了getCmp方法之后可以直接通过getCmp方法来获得
                     //tab添加list组件
-                    tab.appendCmp(list);
+                    tab.appendChild(list);
                     //list组件渲染自己
                     list.render().load().appendToParent();
                 }
-            },
-            //推荐列表添加到列表项之前检查app的安装状态
-            'autofillList:recommend:before:append': function (event, apps) {
-                //更新app的安装状态
-                Util.updateAppStatus(apps);
-                //从App列表中得已安装剔除掉，并将剔除出来的已安装App暂时保持起来
-                installedApps = installedApps.concat(Util.sliceInstalledApps(apps));
-            },
-            //推荐列表加载结束
-            'autofillList:recommend:end': function (event, list) {
-                //将临时保持的已安装列表添加到列表中
-                list.appendRecord(installedApps);
-                installedApps = [];
-            },
-            //点击分类列表的某个子项
-            'list:category:click': function (evt, e) {
-                var target = e.currentTarget,
-                    info = target.dataset.info.split(':');
-                this.trigger('route', ['category/' + info[0], {name: info[1]}]);
             },
             //点击添加Url
             'logo:topLogo:addurl': function () {
@@ -196,7 +209,7 @@ define(function (require, exports) {
                 if (!urlAdder) {
                     urlAdder = createUrlAdder(page);
                     //将组件添加到页面中
-                    page.appendCmp(urlAdder);
+                    page.appendChild(urlAdder);
                     //渲染组件并添加到页面中
                     urlAdder.render().appendToParent();
                 }

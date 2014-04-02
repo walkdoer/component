@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/node.display'),
+    var Component = require('lib/com'),
         TopBar = require('components/topbar'),
         AutoFillList = require('components/list.autofill'),
         AppItem = require('components/app'),
@@ -17,7 +17,7 @@ define(function (require, exports) {
             _constructor_: TopBar,
             getState: function () {
                 return {
-                    name: this.state.queries.name
+                    name: this.env.queries.name
                 };
             }
         }, {
@@ -29,22 +29,22 @@ define(function (require, exports) {
             api: 'apps',
             li: AppItem,
             getState: function () {
-                var state = this.state;
+                var env = this.env;
                 return {
-                    cat: state.params.cat,
-                    name: state.queries.name
+                    cat: env.params.cat,
+                    name: env.queries.name
                 };
             }
         }],
         listeners: {
             //分类详情页渲染结束
-            'AFTER_RENDER': function () {
+            'afterrender': function () {
                 //渲染结束，则通知列表加载数据
                 var list = this.getChildById('cateList');
                 list.load();
             },
             //剔除已安装App,并保存到临时数组installedApps中
-            'autofillList:cateList:before:append': function (event, apps) {
+            'autofillList:cateList:beforeappend': function (event, apps) {
                 util.updateAppStatus(apps);
                 installedApps = installedApps.concat(util.sliceInstalledApps(apps));
             },

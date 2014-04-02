@@ -3,7 +3,7 @@
  */
 define(function (require, exports) {
     'use strict';
-    var Component = require('base/node.display'),
+    var Component = require('lib/com'),
         Util = require('util'),
         Category;
 
@@ -11,7 +11,10 @@ define(function (require, exports) {
         type: 'app',
         tpl: '#tpl-item-category',
         listeners: {
-            'AFTER_RENDER': function () {
+            'beforetmpl': function(evt, data) {
+                data.info = data.id + ':' + data.name;
+            },
+            'afterrender': function () {
                 var $el = this.$el;
                 Util.loadAppIcon($el.attr('data-icon'), $el.find('.icn'));
             }

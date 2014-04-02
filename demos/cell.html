@@ -16,7 +16,14 @@
 <script type="text/javascript" src="./vendor/underscore.js"></script>
 <script type="text/javascript" src="../dist/com.js"></script>
 <script>
-var bigCell = new Com({
+
+var Cell = Com.extend({
+    init: function (option) {
+        this.color = option.color;
+        this._super(option);
+    }
+})
+var bigCell = new Cell({
         id: 'bigCell',
         className: 'bigCell',
         parentEl: $('body')[0]
@@ -25,13 +32,13 @@ var bigCell = new Com({
 var prevCell,
     firstCell;
 for (var i = 0; i < 4; i++) {
-    var rowCell = new Com({
+    var row = new Com({
         id: 'rowCell_' + i,
         className: 'rowCell'
     });
-    bigCell.appendChild(rowCell);
+    bigCell.appendChild(row);
     for (var j = 0; j < 4; j++) {
-        var colCell = new Com({
+        var colCell = new Cell({
             id: 'colCell_' + i + '_' + j,
             tplContent: '<div style="background:<%_state_.color%>"></div>',
             className: 'colCell',
@@ -45,7 +52,7 @@ for (var i = 0; i < 4; i++) {
         if (!firstCell) {
             firstCell = colCell;
         }
-        prevCell && colCell.listenTo(prevCell, 'change', function (num) {
+        prevCell && colCell.listenTo(prevCell, 'change', function (ev, num) {
             var self= this;
             var random = Math.round(Math.random() * 100);
             this.color -= num * random;
@@ -54,11 +61,11 @@ for (var i = 0; i < 4; i++) {
                 self.trigger('change', num + random);
             }, 50);
         })
-        rowCell.appendChild(colCell);
+        row.appendChild(colCell);
         prevCell = colCell;
     }
 }
-firstCell.listenTo(colCell, 'change', function(num) {
+firstCell.listenTo(colCell, 'change', function(ev, num) {
     var self= this;
     var random = Math.round(Math.random() * 100);
     this.color += num * random;
