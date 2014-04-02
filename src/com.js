@@ -36,6 +36,19 @@ function(_, Node, template) {
             stopImmediatePropagation: 'isImmediatePropagationStopped',
             stopPropagation: 'isPropagationStopped'
         };
+    function appendPxIfNeed(value) {
+        value += typeof value === 'number' ? 'px' : '';
+    }
+    function setCss(el, properties) {
+        el.style.cssText += ';' + getStyleText(properties);
+    }
+    function getStyleText(properties) {
+        var css = '';
+        for (var key in properties) {
+            css += key + ':' + appendPxIfNeed(properties[key]) + ';';
+        }
+        return css;
+    }
     function compatible(ev, source) {
         if (source || !ev.isDefaultPrevented) {
             source || (source = ev);
@@ -169,12 +182,12 @@ function(_, Node, template) {
                     self.trigger(BEFORE_RENDER, self);
                     if (self.isContinueRender !== false) {
                         self.isContinueRender = true;
-                        self.$el.css({
+                        setCss(self.el, {
                             width: originOption.width,
                             height: originOption.height
                         });
                         if (self.display === false) {
-                            self.$el.css('display', 'none');
+                            setCss(self.el, {'display': 'none'});
                         }
                         self._finishRender();
                     }
@@ -599,12 +612,12 @@ function(_, Node, template) {
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-    ['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
+    /*['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
         DisplayComponent.prototype[method] = function() {
             var args = slice.call(arguments);
             this.$el[method].apply(this.$el, args);
             return this;
         };
-    });
+    });*/
     return DisplayComponent;
 });
