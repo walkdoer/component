@@ -36,12 +36,36 @@ function(_, Node, template) {
             stopImmediatePropagation: 'isImmediatePropagationStopped',
             stopPropagation: 'isPropagationStopped'
         };
+
+    /**
+     * appendPxIfNeed
+     * 为数字添加单位 'px'
+     * @params {Number/String} value 数量
+     * @return {String} 添加了单位的数量
+     */
     function appendPxIfNeed(value) {
-        value += typeof value === 'number' ? 'px' : '';
+        return value += typeof value === 'number' ? 'px' : '';
     }
+
+
+    /**
+     * setCss
+     * @params {Dom} el Dom节点
+     * @params {Object} properties css属性对象
+     */
     function setCss(el, properties) {
         el.style.cssText += ';' + getStyleText(properties);
     }
+
+    /**
+     * getStyleText
+     * 根据object获取css定义文本
+     * @example
+     *   输入： { height: 300}
+     *   输出： height:300px;
+     * @params {Object} properties css属性对象
+     * @return {String} css定义文本
+     */
     function getStyleText(properties) {
         var css = '';
         for (var key in properties) {
@@ -49,6 +73,9 @@ function(_, Node, template) {
         }
         return css;
     }
+
+
+    //用于兼容用户HTML字符串不完整 例如 <tr></tr>
     var table = document.createElement('table'),
         tableRow = document.createElement('tr'),
         containers = {
@@ -57,6 +84,8 @@ function(_, Node, template) {
             'td': tableRow, 'th': tableRow,
             '*': document.createElement('div')
         };
+
+
     /**
      * createElement
      * 根据HTML文本创建Dom节点，兼容一些错误处理，参考Zepto
@@ -90,6 +119,8 @@ function(_, Node, template) {
         dom = container.childNodes;
         return dom;
     }
+
+
     function compatible(ev, source) {
         if (source || !ev.isDefaultPrevented) {
             source || (source = ev);
@@ -114,6 +145,8 @@ function(_, Node, template) {
         }
         return ev;
     }
+
+
     function createProxy(ev) {
         var key, proxy = {
                 originalEvent: ev
@@ -125,6 +158,8 @@ function(_, Node, template) {
         }
         return compatible(proxy, ev);
     }
+
+
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/

@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-03-28T09:58Z
+ * Date: 2014-04-02T09:11Z
  */
 
 (function (global, factory) {
@@ -959,11 +959,96 @@ var idGen = {
             stopImmediatePropagation: 'isImmediatePropagationStopped',
             stopPropagation: 'isPropagationStopped'
         };
+
+    /**
+     * appendPxIfNeed
+     * 为数字添加单位 'px'
+     * @params {Number/String} value 数量
+     * @return {String} 添加了单位的数量
+     */
+    function appendPxIfNeed(value) {
+        return value += typeof value === 'number' ? 'px' : '';
+    }
+
+
+    /**
+     * setCss
+     * @params {Dom} el Dom节点
+     * @params {Object} properties css属性对象
+     */
+    function setCss(el, properties) {
+        el.style.cssText += ';' + getStyleText(properties);
+    }
+
+    /**
+     * getStyleText
+     * 根据object获取css定义文本
+     * @example
+     *   输入： { height: 300}
+     *   输出： height:300px;
+     * @params {Object} properties css属性对象
+     * @return {String} css定义文本
+     */
+    function getStyleText(properties) {
+        var css = '';
+        for (var key in properties) {
+            css += key + ':' + appendPxIfNeed(properties[key]) + ';';
+        }
+        return css;
+    }
+
+
+    //用于兼容用户HTML字符串不完整 例如 <tr></tr>
+    var table = document.createElement('table'),
+        tableRow = document.createElement('tr'),
+        containers = {
+            'tr': document.createElement('tbody'),
+            'tbody': table, 'thead': table, 'tfoot': table,
+            'td': tableRow, 'th': tableRow,
+            '*': document.createElement('div')
+        };
+
+
+    /**
+     * createElement
+     * 根据HTML文本创建Dom节点，兼容一些错误处理，参考Zepto
+     * @Params {String} html html字符串
+     * @return {Array} dom数组
+     */
+    function createElement(html) {
+        var tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/ig,
+            singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/,
+            fragmentRE = /^\s*<(\w+|!)[^>]*>/,
+            container,
+            name,
+            dom;
+        // 对于单个标签的进行优化 例如<div></div>
+        if (singleTagRE.test(html)) {
+            dom = [document.createElement(RegExp.$1)];
+        }
+        //提取出标签名称
+        if (name === undefined) {
+            name = fragmentRE.test(html) && RegExp.$1;
+        }
+        //替换非法的半闭合标签，合法的有br hr img 等，详见tagExpanderRE
+        if (html.replace) {
+            html = html.replace(tagExpanderRE, "<$1></$2>");
+        }
+        if (!(name in containers)) {
+            name = '*';
+        }
+        container = containers[name];
+        container.innerHTML = '' + html;
+        dom = container.childNodes;
+        return dom;
+    }
+
+
     function compatible(ev, source) {
         if (source || !ev.isDefaultPrevented) {
             source || (source = ev);
 
-            $.each(eventMethods, function(name, predicate) {
+            _.each(eventMethods, function(predicate, name) {
                 var sourceMethod = source[name];
                 ev[name] = function() {
                     this[predicate] = returnTrue;
@@ -983,6 +1068,8 @@ var idGen = {
         }
         return ev;
     }
+
+
     function createProxy(ev) {
         var key, proxy = {
                 originalEvent: ev
@@ -994,6 +1081,8 @@ var idGen = {
         }
         return compatible(proxy, ev);
     }
+
+
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -1036,9 +1125,8 @@ var idGen = {
             if (!el) {
                 self._initHTMLElement(function(el) {
                     self.el = el;
-                    self.$el = $(el);
-                    self.$el.attr('id', self.id)
-                        .attr('class', self.className);
+                    el.setAttribute('id', self.id);
+                    el.setAttribute('class', self.className);
                     self.initialized = true;
                     if (typeof callback === 'function') {
                         callback();
@@ -1053,8 +1141,6 @@ var idGen = {
                         self.render();
                     }
                 });
-            } else {
-                self.$el = $(el);
             }
         },
         /**
@@ -1062,13 +1148,9 @@ var idGen = {
          */
         _initParent: function() {
             var parentNode = this.parentNode;
-            if (this.parentEl) {
-                this.$parentEl = $(this.parentEl);
-            } else if (parentNode) {
+            //指定了parentNode 没有指定parentEl
+            if (parentNode && !this.parentEl) {
                 this.parentEl = parentNode.el;
-                this.$parentEl = parentNode.$el;
-            } else {
-                //throw new Error('component [' + this.getId() + '] has no parentNode or parentEl, should have one of those at least');
             }
         },
         /**
@@ -1099,12 +1181,12 @@ var idGen = {
                     self.trigger(BEFORE_RENDER, self);
                     if (self.isContinueRender !== false) {
                         self.isContinueRender = true;
-                        self.$el.css({
+                        setCss(self.el, {
                             width: originOption.width,
                             height: originOption.height
                         });
                         if (self.display === false) {
-                            self.$el.css('display', 'none');
+                            setCss(self.el, {'display': 'none'});
                         }
                         self._finishRender();
                     }
@@ -1132,13 +1214,11 @@ var idGen = {
     _isComNeedUpdate: function(component) {
         return component._isStateChange() && component.rendered;
     },*/
-        _changeEl: function($el) {
-            this.el = $el[0];
-            this.$el = $el;
+        _changeEl: function(el) {
+            this.el = el;
         },
-        _changeParentEl: function($dom) {
-            this.parentEl = $dom[0];
-            this.$parentEl = $dom;
+        _changeParentEl: function(el) {
+            this.parentEl = el;
         },
         /**
          * _rebuildDomTree
@@ -1147,27 +1227,30 @@ var idGen = {
          */
         _rebuildDomTree: function(isRoot) {
             var component = this.firstChild;
-            this._changeEl(this._$tempEl);
+            this._changeEl(this._tempEl);
             //非根节点需要更新ParentNode
             if (!isRoot) {
-                this._changeParentEl(this.parentNode.$el);
+                this._changeParentEl(this.parentNode.el);
             }
             while (component) {
                 component._rebuildDomTree(false);
                 component = component.nextNode;
             }
-            delete this._$tempEl;
+            delete this._tempEl;
         },
         /**
          * 更新组件
          * @return {Object} this
          */
         update: function() {
-            //首先自我更新，保存到临时_$tempEl中
+            //首先自我更新，保存到临时_tempEl中
             this.updating = true;
             this.state = this.getState();
-            this._$tempEl = $(this.tmpl()).attr('id', this.id);
-            this.className && this._$tempEl.attr('class', this.className);
+            this._tempEl = createElement(this.tmpl());
+            this._tempEl.setAttribute(('id', this.id));
+            if (this.className) {
+                this._tempEl.setAttribute('class', this.className);
+            }
             var component = this.firstChild;
             //通知子组件更新
             while (component) {
@@ -1175,10 +1258,10 @@ var idGen = {
                 component = component.nextNode;
             }
             if (this.parentNode == null || !this.parentNode.updating) {
-                this.parentEl.replaceChild(this._$tempEl[0], this.el);
+                this.parentEl.replaceChild(this._tempEl[0], this.el);
                 this._rebuildDomTree(true);
             } else {
-                this.parentNode._$tempEl.append(this._$tempEl);
+                this.parentNode._tempEl.append(this._tempEl);
             }
             this.updating = false;
             return this;
@@ -1255,7 +1338,7 @@ var idGen = {
          */
         appendToParent: function() {
             if (this.parentEl) {
-                this.$el.appendTo(this.parentEl);
+                this.parentEl.appendChild(this.el);
             }
             return this;
         },
@@ -1314,7 +1397,7 @@ var idGen = {
             callback = callback || emptyFunc;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl && tpl.indexOf('#') === 0) {
-                html = $(tpl).html();
+                html = document.getElementById(tpl).innerHTML;
                 if (html) {
                     self.tplContent = html;
                 }
@@ -1339,7 +1422,7 @@ var idGen = {
                 self._initTemplate(function(success) {
                     if (success) {
                         //如果模板初始化成功则渲染模板
-                        el = $(self.tmpl())[0];
+                        el = createElement(self.tmpl())[0];
                     } else {
                         //没有初始化成功, 需要初始化一个页面的Element
                         el = document.createElement('section');
@@ -1488,15 +1571,16 @@ var idGen = {
          */
         _buildComponents: function() {
             var self = this,
-                cpConstructors = self._cpConstructors, //组件构造函数列表
+                comConstru = self._cpConstructors, //组件构造函数列表
                 components = [],
                 Component,
                 cItm,
                 cp = null;
             //构造子组件（sub Component）
-            if (_.isArray(cpConstructors)) {
-                for (var i = 0, len = cpConstructors ? cpConstructors.length : 0; i < len; i++) {
-                    cItm = cpConstructors[i];
+            if (_.isArray(comConstru)) {
+                var len = comConstru ? comConstru.length : 0;
+                for (var i = 0; i < len; i++) {
+                    cItm = comConstru[i];
                     //构造函数
                     if (typeof cItm === 'function') {
                         Component = cItm;
@@ -1531,12 +1615,12 @@ var idGen = {
         }
     });
     //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-    ['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
+    /*['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
         DisplayComponent.prototype[method] = function() {
             var args = slice.call(arguments);
             this.$el[method].apply(this.$el, args);
             return this;
         };
-    });
+    });*/
     return DisplayComponent;
 }));
