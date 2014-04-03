@@ -255,6 +255,8 @@ function(_, Node, template) {
             //如果已经渲染过了，同样不需要再渲染
             if (!self.selector || !self.rendered) {
                 self.trigger(BEFORE_RENDER, self);
+                //如果在before render的处理函数中将isContinueRender置为true
+                //则停止后续执行,后续考虑使用AOP改造此方式
                 if (self.isContinueRender !== false) {
                     self.isContinueRender = true;
                     setCss(self.el, {
