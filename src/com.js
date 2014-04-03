@@ -204,7 +204,6 @@ function(_, Node, template) {
                     self.el = el;
                     el.setAttribute('id', self.id);
                     self.className && el.setAttribute('class', self.className);
-                    self.initialized = true;
                     if (typeof callback === 'function') {
                         callback();
                     }
@@ -252,24 +251,20 @@ function(_, Node, template) {
             //     firstChild.parentEl.appendChild(fragment);
             // }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
-            //如果有selector则表明该元素已经在页面上了，不需要再渲染
-            if (!self.selector || self.rendered) {
-                if (self.initialized) {
-                    self.trigger(BEFORE_RENDER, self);
-                    if (self.isContinueRender !== false) {
-                        self.isContinueRender = true;
-                        setCss(self.el, {
-                            width: originOption.width,
-                            height: originOption.height
-                        });
-                        if (self.display === false) {
-                            setCss(self.el, {'display': 'none'});
-                        }
-                        self._finishRender();
+            //有selector则表明该元素已经在页面上了，不需要再渲染
+            //如果已经渲染过了，同样不需要再渲染
+            if (!self.selector || !self.rendered) {
+                self.trigger(BEFORE_RENDER, self);
+                if (self.isContinueRender !== false) {
+                    self.isContinueRender = true;
+                    setCss(self.el, {
+                        width: originOption.width,
+                        height: originOption.height
+                    });
+                    if (self.display === false) {
+                        setCss(self.el, {'display': 'none'});
                     }
-                } else {
-                    //异步情况下，用户通知渲染时尚未初始化结束
-                    self.needToRender = true;
+                    self._finishRender();
                 }
             }
             return self;
