@@ -238,6 +238,8 @@ function(_, Node, template) {
                 // fragment = document.createDocumentFragment(),
                 firstChild = self.firstChild,
                 component = firstChild;
+            //trigger event beforerender
+            self.trigger(BEFORE_RENDER, self);
             //先渲染组件的子组件
             while (component) {
                 if (!component.selector) {
@@ -247,27 +249,20 @@ function(_, Node, template) {
                 }
                 component = component.nextNode;
             }
-            // if (firstChild) {
-            //     firstChild.parentEl.appendChild(fragment);
-            // }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             //有selector则表明该元素已经在页面上了，不需要再渲染
-            //如果已经渲染过了，同样不需要再渲染
-            if (!self.selector || !self.rendered) {
-                self.trigger(BEFORE_RENDER, self);
-                //如果在before render的处理函数中将isContinueRender置为true
-                //则停止后续执行,后续考虑使用AOP改造此方式
-                if (self.isContinueRender !== false) {
-                    self.isContinueRender = true;
-                    setCss(self.el, {
-                        width: originOption.width,
-                        height: originOption.height
-                    });
-                    if (self.display === false) {
-                        setCss(self.el, {'display': 'none'});
-                    }
-                    self._finishRender();
+            //如果在before render的处理函数中将isContinueRender置为true
+            //则停止后续执行,后续考虑使用AOP改造此方式
+            if (self.isContinueRender !== false) {
+                self.isContinueRender = true;
+                setCss(self.el, {
+                    width: originOption.width,
+                    height: originOption.height
+                });
+                if (self.display === false) {
+                    setCss(self.el, {'display': 'none'});
                 }
+                self._finishRender();
             }
             return self;
         },
@@ -281,6 +276,11 @@ function(_, Node, template) {
                 _id_: this.id
             });
         },
+        /**
+         * 查询组件是否需要更新
+         * 如果组件的状态发生改变，则需要更新
+         * @return {Boolean} true:需要 ,false:不需要
+         */
         needUpdate: function() {
             return this._isStateChange(this.getState());
         },
