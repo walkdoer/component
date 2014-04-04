@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-02T11:15Z
+ * Date: 2014-04-04T06:46Z
  */
 
 (function (global, factory) {
@@ -957,7 +957,8 @@ var idGen = {
     var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
         BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
-        BEFORE_TMPL = 'beforetmpl';
+        BEFORE_TMPL = 'beforetmpl',
+        STATE_CHANGE = 'statechange';
     //获取MatchesSelector
     var div = document.createElement("div"),
         matchesSelector = ["moz", "webkit", "ms", "o"].filter(function(prefix) {
@@ -1087,6 +1088,11 @@ var idGen = {
     }
 
 
+    /**
+     * 创建事件代理
+     * 由于事件机制中的Event变量是只读的，但是托管（delegate）的时候需要修改
+     * currentTarget,所以只能创建事件代理，这个代理中又所有的event属性.
+     */
     function createProxy(ev) {
         var key, proxy = {
                 originalEvent: ev
@@ -1100,6 +1106,14 @@ var idGen = {
     }
 
 
+    /**
+     * 显示节点类
+     *
+     * 可以运行于浏览器中，可以根据需要来自定义自己的组件。通过组合和继承来创建出
+     * 需要的web应用
+     *
+     * @extend Node
+     */
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -1110,7 +1124,22 @@ var idGen = {
         getState: function() {
             return null;
         },
-        init: function(option, callback) {
+        /**
+         * 构造函数
+         * @params {object} option 组件配置项
+         * @example
+         * {
+         *    id: 'test-id'
+         *    className: 'test-class',
+         *    getState: function () {
+         *        return {
+         *            state: 'this is a state';
+         *        }
+         *    }
+         * }
+         *
+         */
+        init: function(option) {
             var self = this;
             self._super(option);
             self.state = {};
@@ -1144,10 +1173,6 @@ var idGen = {
                     self.el = el;
                     el.setAttribute('id', self.id);
                     self.className && el.setAttribute('class', self.className);
-                    self.initialized = true;
-                    if (typeof callback === 'function') {
-                        callback();
-                    }
                     //添加新建的子组件到组件中
                     self.appendChild(self._buildComponents());
                     //监听组件原生listener
@@ -1162,6 +1187,7 @@ var idGen = {
         },
         /**
          * 初始化Parent
+         * @private
          */
         _initParent: function() {
             var parentNode = this.parentNode;
@@ -1179,6 +1205,8 @@ var idGen = {
                 // fragment = document.createDocumentFragment(),
                 firstChild = self.firstChild,
                 component = firstChild;
+            //trigger event beforerender
+            self.trigger(BEFORE_RENDER, self);
             //先渲染组件的子组件
             while (component) {
                 if (!component.selector) {
@@ -1188,29 +1216,20 @@ var idGen = {
                 }
                 component = component.nextNode;
             }
-            // if (firstChild) {
-            //     firstChild.parentEl.appendChild(fragment);
-            // }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
-            //如果有selector则表明该元素已经在页面上了，不需要再渲染
-            if (!self.selector || self.rendered) {
-                if (self.initialized) {
-                    self.trigger(BEFORE_RENDER, self);
-                    if (self.isContinueRender !== false) {
-                        self.isContinueRender = true;
-                        setCss(self.el, {
-                            width: originOption.width,
-                            height: originOption.height
-                        });
-                        if (self.display === false) {
-                            setCss(self.el, {'display': 'none'});
-                        }
-                        self._finishRender();
-                    }
-                } else {
-                    //异步情况下，用户通知渲染时尚未初始化结束
-                    self.needToRender = true;
+            //有selector则表明该元素已经在页面上了，不需要再渲染
+            //如果在before render的处理函数中将isContinueRender置为true
+            //则停止后续执行,后续考虑使用AOP改造此方式
+            if (self.isContinueRender !== false) {
+                self.isContinueRender = true;
+                setCss(self.el, {
+                    width: originOption.width,
+                    height: originOption.height
+                });
+                if (self.display === false) {
+                    setCss(self.el, {'display': 'none'});
                 }
+                self._finishRender();
             }
             return self;
         },
@@ -1224,18 +1243,32 @@ var idGen = {
                 _id_: this.id
             });
         },
+        /**
+         * 查询组件是否需要更新
+         * 如果组件的状态发生改变，则需要更新
+         * @return {Boolean} true:需要 ,false:不需要
+         */
         needUpdate: function() {
             return this._isStateChange(this.getState());
         },
+        /**
+         * 改变节点Dom元素
+         * @private
+         */
         _changeEl: function(el) {
             this.el = el;
         },
+        /**
+         * 改变节点父节点Dom元素
+         * @private
+         */
         _changeParentEl: function(el) {
             this.parentEl = el;
         },
         /**
          * _rebuildDomTree
          * 重新构建组件Dom树
+         * @private
          * @params {Boolean} isRoot 标志是否为根节点
          */
         _rebuildDomTree: function(isRoot) {
@@ -1264,6 +1297,7 @@ var idGen = {
                 stateChange;
             if ((stateChange = this._isStateChange(newState))) {
                 this.state = newState;
+                this.trigger(STATE_CHANGE, newState);
                 this._tempEl = tempEl = createElement(this.tmpl())[0];
                 tempEl.setAttribute('id', this.id);
                 if (this.className) {
@@ -1284,10 +1318,13 @@ var idGen = {
                 this._rebuildDomTree(true);
             } else {
                 var pNode = this.parentNode,
-                    newEl = pNode._tempEl,
+                    pNewEl = pNode._tempEl,
                     pEl = pNode.el;
-                if (newEl) {
-                    newEl.appendChild(tempEl);
+                //pNewEl不为空，表示父节点更新了，则子节点要append To Parent
+                if (pNewEl) {
+                    //如果组件自身没有更新，则添加当前el
+                    pNewEl.appendChild(tempEl);
+                //父节点不需要更新, 则父节点Replace子节点即可
                 } else {
                     pEl.replaceChild(tempEl, this.el);
                     this._changeEl(tempEl);
@@ -1419,6 +1456,7 @@ var idGen = {
         /**
          * 初始化模板
          * tpl的取值: #a-tpl-id 或者 'tpl.file.name'
+         * @private
          * @param  {Function} callback 回调
          */
         _initTemplate: function(callback) {
@@ -1437,6 +1475,7 @@ var idGen = {
         },
         /**
          * 初始化HTML元素
+         * @private
          * @param  {Function} callback 回调函数
          */
         _initHTMLElement: function(callback) {
@@ -1464,6 +1503,7 @@ var idGen = {
         },
         /**
          * 监听事件
+         * @private
          * @param  {Object} listeners 事件配置
          */
         _listen: function(listeners) {
@@ -1506,6 +1546,7 @@ var idGen = {
         },
         /**
          * 结束渲染
+         * @private
          */
         _finishRender: function() {
             this.rendered = true; //标志已经渲染完毕
@@ -1513,6 +1554,7 @@ var idGen = {
         },
         /**
          * 绑定UI事件
+         * @private
          */
         _bindUIEvent: function() {
             if (!this.parentEl || this._uiEventBinded) {
@@ -1549,6 +1591,7 @@ var idGen = {
         /**
          * _uiDelegate
          * 托管UI事件绑定
+         * @private
          * @params {String} eventName 事件名称
          * @params {String} selector 选择器
          * @params {Function} fn 事件回调函数
@@ -1576,6 +1619,7 @@ var idGen = {
         /**
          * _delegate
          * 托管事件绑定
+         * @private
          * @params {String} type 节点类型
          * @params {String} id   节点id
          * @params {String} eventType 事件类型
@@ -1591,6 +1635,7 @@ var idGen = {
         },
         /**
          * 组件状态是否有改变
+         * @private
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
          */
@@ -1599,6 +1644,7 @@ var idGen = {
         },
         /**
          * 创建子组件
+         * @private
          */
         _buildComponents: function() {
             var self = this,

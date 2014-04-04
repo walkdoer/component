@@ -199,7 +199,7 @@ function(_, Node, template) {
          * }
          *
          */
-        init: function(option, callback) {
+        init: function(option) {
             var self = this;
             self._super(option);
             self.state = {};
@@ -233,9 +233,6 @@ function(_, Node, template) {
                     self.el = el;
                     el.setAttribute('id', self.id);
                     self.className && el.setAttribute('class', self.className);
-                    if (typeof callback === 'function') {
-                        callback();
-                    }
                     //添加新建的子组件到组件中
                     self.appendChild(self._buildComponents());
                     //监听组件原生listener
