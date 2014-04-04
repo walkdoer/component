@@ -40,6 +40,10 @@ define(function (require) {
                         location.hash = newName;
                     }
                 }
+            }, {
+                _constructor_: Com,
+                id: 'about',
+                tplContent: '<button>about me</button>',
             }],
             getState: function () {
                 return {

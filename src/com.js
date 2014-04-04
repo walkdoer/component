@@ -262,20 +262,21 @@ function(_, Node, template) {
         render: function() {
             var self = this,
                 originOption = self.originOption,
-                // fragment = document.createDocumentFragment(),
                 firstChild = self.firstChild,
                 component = firstChild;
             //trigger event beforerender
             self.trigger(BEFORE_RENDER, self);
             //先渲染组件的子组件
+            var fragment = document.createDocumentFragment();
             while (component) {
                 if (!component.selector) {
-                    component.parentEl.appendChild(component.render().el);
+                    fragment.appendChild(component.render().el);
                 } else {
                     component._finishRender();
                 }
                 component = component.nextNode;
             }
+            this.el.appendChild(fragment);
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             //有selector则表明该元素已经在页面上了，不需要再渲染
             //如果在before render的处理函数中将isContinueRender置为true
