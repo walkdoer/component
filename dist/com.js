@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-04T08:08Z
+ * Date: 2014-04-04T08:49Z
  */
 
 (function (global, factory) {
@@ -363,11 +363,6 @@ var idGen = {
         R_CLONING = /^\*(.*)\*$/,
         Node;
 
-    function getter(propName) {
-        return function() {
-            return this[propName];
-        };
-    }
     var eventSplitter = /\s+/;
     /**
      * eventApi
@@ -448,14 +443,6 @@ var idGen = {
         updating: false, //更新中
         initializing: false, //初始化进行中
         initialized: false, //已初始化
-
-        /*-------- START OF GETTER -----*/
-
-        getType: getter('type'),
-        getId: getter('id'),
-
-        /*---------- END OF GETTER -----*/
-
         /**
          * 组件构造函数, 组件的初始化操作
          * @param  {Object} option 组件配置
@@ -481,6 +468,7 @@ var idGen = {
         appendChild: function(nodes) {
             var self = this;
             _.isArray(nodes) || (nodes = [nodes]);
+            //建立子节点链表
             nodes.forEach(function(n) {
                 if (!self.firstChild) {
                     self.firstChild = self.lastChild = n;
@@ -495,11 +483,6 @@ var idGen = {
                     self.lastChild = n;
                 }
                 self.nodeCount++;
-                /*
-                self.listenTo(n, 'all', function() {
-                    self.trigger.apply(self, slice.call(arguments, 0));
-                });
-                */
             });
             return this;
         },
@@ -752,7 +735,7 @@ var idGen = {
                 allEvents = this._events.all;
             if (events && typeof evt === 'string') {
                 triggerEvent(events, args);
-            } else if (events){
+            } else if (events) {
                 console.log(this.id + '没有' + args[0].name);
             }
             if (allEvents) {
