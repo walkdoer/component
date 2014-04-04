@@ -103,7 +103,7 @@ define([
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
-            self.id = [self.getType(), self.sn].join('-');
+            self.id = [self.type, self.sn].join('-');
             self.nodeCount = 0;
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
             //self.initVar(_.keys(option));
