@@ -52,9 +52,11 @@ define(function (require) {
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
 
+        QUnit.stop();
         window.onhashchange = function () {
             app.update();
-            QUnit.equal(topBar.el.className, newName, 'API getState()正常');
+            QUnit.equal(topBar.el.className, newName, 'API Update() 正常');
+            QUnit.start();
         };
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initEvent('click', true, true);
