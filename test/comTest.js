@@ -8,6 +8,8 @@ define(function (require) {
 
     QUnit.test("com Api test", function () {
 
+        var newName = 'andrew';
+
         var app = new Com({
             id: 'application',
             tplContent: '<div><p class="title">test</p></div>',
@@ -31,15 +33,17 @@ define(function (require) {
                 uiEvents: {
                     'click': function (e, btn) {
                         var target = e.currentTarget;
+                        QUnit.ok(btn.id === target.id, '属性selector正常');
                         QUnit.equal(target === btn.el &&
                             target.id === btn.id,
-                            true, '事件机制参数e正常');
+                            true, '事件机制正常');
+                        location.hash = newName;
                     }
                 }
             }],
             getState: function () {
                 return {
-                    name: 'name'
+                    name: location.hash.slice(1) || 'name'
                 };
             }
         });
@@ -48,6 +52,10 @@ define(function (require) {
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
 
+        window.onhashchange = function () {
+            app.update();
+            QUnit.equal(topBar.el.className, newName, 'API getState()正常');
+        };
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initEvent('click', true, true);
         document.getElementById('go-back-home').dispatchEvent(clickEvent);

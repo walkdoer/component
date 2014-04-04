@@ -17,7 +17,8 @@ function(_, Node, template) {
     var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
         BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
-        BEFORE_TMPL = 'beforetmpl';
+        BEFORE_TMPL = 'beforetmpl',
+        STATE_CHANGE = 'statechange';
     //获取MatchesSelector
     var div = document.createElement("div"),
         matchesSelector = ["moz", "webkit", "ms", "o"].filter(function(prefix) {
@@ -147,6 +148,11 @@ function(_, Node, template) {
     }
 
 
+    /**
+     * 创建事件代理
+     * 由于事件机制中的Event变量是只读的，但是托管（delegate）的时候需要修改
+     * currentTarget,所以只能创建事件代理，这个代理中又所有的event属性.
+     */
     function createProxy(ev) {
         var key, proxy = {
                 originalEvent: ev
@@ -160,6 +166,14 @@ function(_, Node, template) {
     }
 
 
+    /**
+     * 显示节点类
+     *
+     * 可以运行于浏览器中，可以根据需要来自定义自己的组件。通过组合和继承来创建出
+     * 需要的web应用
+     *
+     * @extend Node
+     */
     DisplayComponent = Node.extend({
         type: 'display',
         /*------- Status --------*/
@@ -170,6 +184,21 @@ function(_, Node, template) {
         getState: function() {
             return null;
         },
+        /**
+         * 构造函数
+         * @params {object} option 组件配置项
+         * @example
+         * {
+         *    id: 'test-id'
+         *    className: 'test-class',
+         *    getState: function () {
+         *        return {
+         *            state: 'this is a state';
+         *        }
+         *    }
+         * }
+         *
+         */
         init: function(option, callback) {
             var self = this;
             self._super(option);
@@ -221,6 +250,7 @@ function(_, Node, template) {
         },
         /**
          * 初始化Parent
+         * @private
          */
         _initParent: function() {
             var parentNode = this.parentNode;
@@ -284,15 +314,24 @@ function(_, Node, template) {
         needUpdate: function() {
             return this._isStateChange(this.getState());
         },
+        /**
+         * 改变节点Dom元素
+         * @private
+         */
         _changeEl: function(el) {
             this.el = el;
         },
+        /**
+         * 改变节点父节点Dom元素
+         * @private
+         */
         _changeParentEl: function(el) {
             this.parentEl = el;
         },
         /**
          * _rebuildDomTree
          * 重新构建组件Dom树
+         * @private
          * @params {Boolean} isRoot 标志是否为根节点
          */
         _rebuildDomTree: function(isRoot) {
@@ -321,6 +360,7 @@ function(_, Node, template) {
                 stateChange;
             if ((stateChange = this._isStateChange(newState))) {
                 this.state = newState;
+                this.trigger(STATE_CHANGE, newState);
                 this._tempEl = tempEl = createElement(this.tmpl())[0];
                 tempEl.setAttribute('id', this.id);
                 if (this.className) {
@@ -341,10 +381,13 @@ function(_, Node, template) {
                 this._rebuildDomTree(true);
             } else {
                 var pNode = this.parentNode,
-                    newEl = pNode._tempEl,
+                    pNewEl = pNode._tempEl,
                     pEl = pNode.el;
-                if (newEl) {
-                    newEl.appendChild(tempEl);
+                //pNewEl不为空，表示父节点更新了，则子节点要append To Parent
+                if (pNewEl) {
+                    //如果组件自身没有更新，则添加当前el
+                    pNewEl.appendChild(tempEl);
+                //父节点不需要更新, 则父节点Replace子节点即可
                 } else {
                     pEl.replaceChild(tempEl, this.el);
                     this._changeEl(tempEl);
@@ -476,6 +519,7 @@ function(_, Node, template) {
         /**
          * 初始化模板
          * tpl的取值: #a-tpl-id 或者 'tpl.file.name'
+         * @private
          * @param  {Function} callback 回调
          */
         _initTemplate: function(callback) {
@@ -494,6 +538,7 @@ function(_, Node, template) {
         },
         /**
          * 初始化HTML元素
+         * @private
          * @param  {Function} callback 回调函数
          */
         _initHTMLElement: function(callback) {
@@ -521,6 +566,7 @@ function(_, Node, template) {
         },
         /**
          * 监听事件
+         * @private
          * @param  {Object} listeners 事件配置
          */
         _listen: function(listeners) {
@@ -563,6 +609,7 @@ function(_, Node, template) {
         },
         /**
          * 结束渲染
+         * @private
          */
         _finishRender: function() {
             this.rendered = true; //标志已经渲染完毕
@@ -570,6 +617,7 @@ function(_, Node, template) {
         },
         /**
          * 绑定UI事件
+         * @private
          */
         _bindUIEvent: function() {
             if (!this.parentEl || this._uiEventBinded) {
@@ -606,6 +654,7 @@ function(_, Node, template) {
         /**
          * _uiDelegate
          * 托管UI事件绑定
+         * @private
          * @params {String} eventName 事件名称
          * @params {String} selector 选择器
          * @params {Function} fn 事件回调函数
@@ -633,6 +682,7 @@ function(_, Node, template) {
         /**
          * _delegate
          * 托管事件绑定
+         * @private
          * @params {String} type 节点类型
          * @params {String} id   节点id
          * @params {String} eventType 事件类型
@@ -648,6 +698,7 @@ function(_, Node, template) {
         },
         /**
          * 组件状态是否有改变
+         * @private
          * @param  {Object}  newParams 组件的新状态
          * @return {Boolean}
          */
@@ -656,6 +707,7 @@ function(_, Node, template) {
         },
         /**
          * 创建子组件
+         * @private
          */
         _buildComponents: function() {
             var self = this,
