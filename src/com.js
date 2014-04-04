@@ -450,12 +450,16 @@ function(_, Node, template) {
          */
         tmpl: function(tplContent, data) {
             var self = this,
+                tplCompile = self._tplCompile,
                 html;
             tplContent = tplContent || self.tplContent;
             data = data || self.getData();
             this.trigger(BEFORE_TMPL, data);
             if (tplContent) {
-                html = template.tmpl(tplContent, data, self.helper);
+                if (!tplCompile) {
+                    this._tplCompile = tplCompile = template.tmpl(tplContent);
+                }
+                html = tplCompile(data, self.helper);
             } else {
                 console.warn(['Has no template content for',
                     '[', self.getType() || '[unknow type]', ']',

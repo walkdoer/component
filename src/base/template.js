@@ -103,13 +103,7 @@ define([
                     .replace(/"/g, '\\"')
                     //replace code <%=data.name%>
                     .replace(settings.interpolate, function(match, code) {
-                        var objKeyArray = code.split('.'),
-                            objItem = data;
-                        objKeyArray.forEach(function (value) {
-                            objItem = objItem[value];
-                        });
-                        var execute = code.replace(/\\"/g, '"') +
-                           (typeof objItem === 'function' ? '()' : '');
+                        var execute = code.replace(/\\"/g, '"');
                         return '"+data.' + execute + '+"';
                     })
                     // .replace(settings.evaluate || null, function(match, code) {

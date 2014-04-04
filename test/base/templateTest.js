@@ -6,7 +6,7 @@ define(function (require) {
 
     QUnit.test("template test", function () {
 
-        var tplContent = '<div class="name"><%firstName%></div><div class="fullname"><%fullname%></div>',
+        var tplContent = '<div class="name"><%firstName%></div><div class="fullname"><%fullname()%></div>',
             data = {
                 firstName: 'andrew',
                 lastName: 'zhang',

@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-04T07:37Z
+ * Date: 2014-04-04T08:08Z
  */
 
 (function (global, factory) {
@@ -911,13 +911,7 @@ var idGen = {
                     .replace(/"/g, '\\"')
                     //replace code <%=data.name%>
                     .replace(settings.interpolate, function(match, code) {
-                        var objKeyArray = code.split('.'),
-                            objItem = data;
-                        objKeyArray.forEach(function (value) {
-                            objItem = objItem[value];
-                        });
-                        var execute = code.replace(/\\"/g, '"') +
-                           (typeof objItem === 'function' ? '()' : '');
+                        var execute = code.replace(/\\"/g, '"');
                         return '"+data.' + execute + '+"';
                     })
                     // .replace(settings.evaluate || null, function(match, code) {
@@ -1390,12 +1384,16 @@ var idGen = {
          */
         tmpl: function(tplContent, data) {
             var self = this,
+                tplCompile = self._tplCompile,
                 html;
             tplContent = tplContent || self.tplContent;
             data = data || self.getData();
             this.trigger(BEFORE_TMPL, data);
             if (tplContent) {
-                html = template.tmpl(tplContent, data, self.helper);
+                if (!tplCompile) {
+                    this._tplCompile = tplCompile = template.tmpl(tplContent);
+                }
+                html = tplCompile(data, self.helper);
             } else {
                 console.warn(['Has no template content for',
                     '[', self.getType() || '[unknow type]', ']',
