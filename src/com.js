@@ -333,7 +333,7 @@ function(_, Node, template) {
          */
         _rebuildDomTree: function(isRoot) {
             var component = this.firstChild;
-            this._changeEl(this._tempEl);
+            this._changeEl(this._tempEl || this.el);
             //非根节点需要更新ParentNode
             if (!isRoot) {
                 this._changeParentEl(this.parentNode.el);
@@ -382,8 +382,12 @@ function(_, Node, template) {
                     pEl = pNode.el;
                 //pNewEl不为空，表示父节点更新了，则子节点要append To Parent
                 if (pNewEl) {
-                    //如果组件自身没有更新，则添加当前el
-                    pNewEl.appendChild(tempEl);
+                    //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
+                    //详细参考selector的定义
+                    if (!this.selector) {
+                        //添加更新后的组件Dom或原dom（组件不需要更新）
+                        pNewEl.appendChild(tempEl || this.el);
+                    }
                 //父节点不需要更新, 则父节点Replace子节点即可
                 } else {
                     pEl.replaceChild(tempEl, this.el);
