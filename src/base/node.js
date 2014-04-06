@@ -140,12 +140,13 @@ define([
          * @return {this}
          */
         removeChild: function(nodeWillRemove) {
+            //确认该节点属于这棵树
             var node = this.getChildById(nodeWillRemove.id);
+            //是则删除
             if (node) {
                 node.destroy();
+                this.childCount--;
             }
-            this.childCount--;
-            node = null;
             return this;
         },
         /**
@@ -171,12 +172,13 @@ define([
             if (this.prevNode) {
                 this.prevNode.nextNode = this.nextNode;
             } else {
-                this.firstChild = this.nextNode;
+                //将第一个节点指向下一个节点
+                this.parentNode.firstChild = this.nextNode;
             }
             if (this.nextNode) {
                 this.nextNode.prevNode = this.prevNode;
             } else {
-                this.lastChild = this.prevNode;
+                this.parentNode.lastChild = this.prevNode;
             }
             this.stopListening();
             this.parentNode = null;
