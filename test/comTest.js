@@ -13,7 +13,18 @@ define(function (require) {
         var app = new Com({
             id: 'application',
             tplContent: '<div><p class="title">test</p></div>',
-            parentEl: document.body
+            parentEl: document.body,
+            listeners: {
+                'display:topbar:statechange': 'change',
+                'display:topbar:aboutme': function () {
+                    console.log('about me');
+                    QUnit.ok(true, 'listeners 函数回调方式 正常');
+                }
+            },
+            change: function (state) {
+                console.log(state);
+                QUnit.ok(true, 'listeners 字符串函数名回调方式 正常');
+            }
         });
 
         app.render();
@@ -44,6 +55,11 @@ define(function (require) {
                 _constructor_: Com,
                 id: 'about',
                 tplContent: '<button>about me</button>',
+                uiEvents: {
+                    'click' : function (e, btn) {
+                        btn.parentNode.trigger('aboutme');
+                    }
+                }
             }],
             getState: function () {
                 return {
@@ -79,6 +95,7 @@ define(function (require) {
         var clickEvent = document.createEvent('MouseEvents');
         clickEvent.initEvent('click', true, true);
         document.getElementById('go-back-home').dispatchEvent(clickEvent);
+        document.getElementById('about').dispatchEvent(clickEvent);
     });
 
 });

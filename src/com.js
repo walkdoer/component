@@ -579,21 +579,29 @@ function(_, Node, template) {
          * @param  {Object} listeners 事件配置
          */
         _listen: function(listeners) {
-            function onListen(event, self) {
+            function bind(func, self) {
                 return function() {
-                    listeners[event].apply(self, slice.call(arguments, 0));
+                    func.apply(self, slice.call(arguments, 0));
                 };
             }
             if (!listeners) {
                 return;
             }
             var evtArr = '',
+                callback,
                 com,
                 len;
             for (var evt in listeners) {
                 if (listeners.hasOwnProperty(evt)) {
                     evtArr = evt.split(eventSpliter);
                     len = evtArr.length;
+                    callback = listeners[evt];
+                    //if listeners[evt] is string
+                    //then this string would be a function name
+                    if (typeof callback === 'string') {
+                        callback = this.originOption[callback];
+                    }
+                    if (!callback) { continue; }
                     //TYPE:ID:Event
                     if (3 === len) {
                         com = this.getChildById(evtArr[1]);
@@ -601,14 +609,14 @@ function(_, Node, template) {
                             //假如这个时候组件还没有创建，则先记录下来，
                             //组件创建的时候再监听，详见:appendChild
                             this._deferListener(evtArr[0], evtArr[1], evtArr[2],
-                                onListen(evt, this));
+                                bind(callback, this));
                         } else {
-                            this.listenTo(com, evtArr[2], onListen(evt, this));
+                            this.listenTo(com, evtArr[2], bind(callback, this));
                         }
                         //Event
                     } else if (1 === len) {
                         //只有Event的时候表示监听自身
-                        this.on(evt, onListen(evt, this));
+                        this.on(evt, bind(callback, this));
                     } else {
                         throw new Error('Com:Wrong Event Formate[Type:ID:Event]: ' +
                             evt);
