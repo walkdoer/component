@@ -211,6 +211,7 @@ function(_, Node, template) {
                 'parentNode',
                 'parentEl',
                 '*env*',
+                '*_data:data*',
                 'getState',
                 'userUpdate:update',
                 'className',
@@ -218,7 +219,6 @@ function(_, Node, template) {
                 'el',
                 'selector'
             ]);
-            self._data = option.data;
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
             self._initParent(self.parentNode);
@@ -414,6 +414,8 @@ function(_, Node, template) {
                 if (!self._allowToRender(component)) {
                     component.isContinueRender = false;
                 } else {
+                    //如果渲染的是第一个组件，则触发 BEFORE_RENDER_FIRST_COMPONENT
+                    //的消息
                     if (!component.prevNode) {
                         self.trigger(BEFORE_RENDER_FIRST_COMPONENT, self);
                     }
@@ -436,6 +438,7 @@ function(_, Node, template) {
                 evt = this._notFinishListener[identity];
                 if (evt) {
                     this.listenTo(com, evt);
+                    //删除已监听事件
                     delete this._notFinishListener[identity];
                 }
                 com.on(BEFORE_RENDER, onBeforeRender);

@@ -49,8 +49,13 @@ define(function (require) {
                 return {
                     name: location.hash.slice(1) || 'name'
                 };
+            },
+            data: {
+                title: 'andrew\'s homepage'
             }
         });
+
+        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
         app.appendChild(topBar);
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
