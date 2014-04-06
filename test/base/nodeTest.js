@@ -35,16 +35,16 @@ define(function (require) {
 
 
         //test api appendChild
-        QUnit.equal(node1.nodeCount, 1);
-        QUnit.equal(node2.nodeCount, 2);
+        QUnit.equal(node1.childCount, 1);
+        QUnit.equal(node2.childCount, 2);
 
         //test api removeChild
         node1.removeChild(node1);
-        QUnit.equal(node1.nodeCount, 0, 'removeChild API 正常');
+        QUnit.equal(node1.childCount, 0, 'removeChild API 正常');
 
         //test api removeAllChild
         node2.removeAllChild();
-        QUnit.equal(node2.nodeCount, 0, 'removeAllChild API 正常');
+        QUnit.equal(node2.childCount, 0, 'removeAllChild API 正常');
 
     });
 

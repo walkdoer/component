@@ -64,6 +64,7 @@ define(function (require) {
         }, 'API getData() 正常');
         QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
         app.appendChild(topBar);
+        QUnit.equal(app.firstChild === topBar && app.childCount === 1, true, 'API appendChild() 正常');
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();

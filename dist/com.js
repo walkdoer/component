@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-06T04:57Z
+ * Date: 2014-04-06T05:24Z
  */
 
 (function (global, factory) {
@@ -456,7 +456,7 @@ var idGen = {
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.type, self.sn].join('-');
-            self.nodeCount = 0;
+            self.childCount = 0;
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
             //self.initVar(_.keys(option));
         },
@@ -482,7 +482,7 @@ var idGen = {
                     });
                     self.lastChild = n;
                 }
-                self.nodeCount++;
+                self.childCount++;
             });
             return this;
         },
@@ -496,7 +496,7 @@ var idGen = {
             if (node) {
                 node.destroy();
             }
-            this.nodeCount--;
+            this.childCount--;
             node = null;
             return this;
         },
@@ -508,7 +508,7 @@ var idGen = {
             var children = this.firstChild;
             while (children) {
                 children.destroy();
-                this.nodeCount--;
+                this.childCount--;
                 children = children.nextNode;
             }
             this.firstChild = null;

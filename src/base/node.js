@@ -104,7 +104,7 @@ define([
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
             self.id = [self.type, self.sn].join('-');
-            self.nodeCount = 0;
+            self.childCount = 0;
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
             //self.initVar(_.keys(option));
         },
@@ -130,7 +130,7 @@ define([
                     });
                     self.lastChild = n;
                 }
-                self.nodeCount++;
+                self.childCount++;
             });
             return this;
         },
@@ -144,7 +144,7 @@ define([
             if (node) {
                 node.destroy();
             }
-            this.nodeCount--;
+            this.childCount--;
             node = null;
             return this;
         },
@@ -156,7 +156,7 @@ define([
             var children = this.firstChild;
             while (children) {
                 children.destroy();
-                this.nodeCount--;
+                this.childCount--;
                 children = children.nextNode;
             }
             this.firstChild = null;
