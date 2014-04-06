@@ -364,7 +364,7 @@ function(_, Node, template) {
                         tempEl.appendChild(component._tempEl || component.el);
                     }
                     component._changeParentEl(tempEl);
-                    component._bindUIEvent();
+                    component._unbindUIEvent()._bindUIEvent();
                 }
                 //更新子节点节点Dom
                 component._tempEl && component._changeEl(component._tempEl);
@@ -647,6 +647,10 @@ function(_, Node, template) {
                 this._uiDelegate(eventType, elementSelector, callback);
             }
             this._uiEventBinded = true;
+        },
+        _unbindUIEvent: function () {
+            this._uiEventBinded = false;
+            return this;
         },
         /**
          * _uiDelegate

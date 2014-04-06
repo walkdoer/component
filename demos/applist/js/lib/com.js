@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-06T12:16Z
+ * Date: 2014-04-06T13:14Z
  */
 
 (function (global, factory) {
@@ -1283,7 +1283,7 @@ var idGen = {
                         tempEl.appendChild(component._tempEl || component.el);
                     }
                     component._changeParentEl(tempEl);
-                    component._bindUIEvent();
+                    component._unbindUIEvent()._bindUIEvent();
                 }
                 //更新子节点节点Dom
                 component._tempEl && component._changeEl(component._tempEl);
@@ -1566,6 +1566,10 @@ var idGen = {
                 this._uiDelegate(eventType, elementSelector, callback);
             }
             this._uiEventBinded = true;
+        },
+        _unbindUIEvent: function () {
+            this._uiEventBinded = false;
+            return this;
         },
         /**
          * _uiDelegate
