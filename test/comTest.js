@@ -55,6 +55,13 @@ define(function (require) {
             }
         });
 
+        QUnit.deepEqual(topBar.getData(), {
+            _id_: 'topbar',
+            _state_: {
+                name: 'name'
+            },
+            title: 'andrew\'s homepage'
+        }, 'API getData() 正常');
         QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
         app.appendChild(topBar);
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
