@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-06T09:48Z
+ * Date: 2014-04-06T10:14Z
  */
 
 (function (global, factory) {
@@ -1310,9 +1310,9 @@ var idGen = {
                     }
                 //父节点不需要更新, 则父节点Replace子节点即可
                 } else {
-                    pEl.replaceChild(tempEl, this.el);
-                    this._changeEl(tempEl);
-                    delete this._tempEl;
+                    if (tempEl) {
+                        pEl.replaceChild(tempEl, this.el);
+                    }
                 }
             }
             this.updating = false;

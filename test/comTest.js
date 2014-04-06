@@ -34,6 +34,24 @@ define(function (require) {
             app.el,
             'API appendToParent() 正常');
 
+        var List = Com.extend({
+            type: 'list',
+            append: function (item) {
+                this.appendChild(item);
+            }
+        }), Li = Com.extend({
+            type: 'li'
+        });
+        var list = new List({
+            tplContent: '<ul></ul>'
+        });
+
+        var index = 5;
+        while (index-- > 0) {
+            list.append(new Li({
+                tplContent: '<li>item' + index + '</li>'
+            }));
+        }
         var topBar = new Com({
             id: 'topbar',
             tplContent: '<nav class="<%_state_.name%>"><%title%><button class="home">home</button></nav>',
@@ -81,8 +99,8 @@ define(function (require) {
             title: 'andrew\'s homepage'
         }, 'API getData() 正常');
         QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
-        app.appendChild(topBar);
-        QUnit.equal(app.firstChild === topBar && app.childCount === 1, true, 'API appendChild() 正常');
+        app.appendChild([topBar, list]);
+        QUnit.equal(app.firstChild === topBar && app.childCount === 2, true, 'API appendChild() 正常');
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
