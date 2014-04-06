@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-06T13:14Z
+ * Date: 2014-04-06T14:17Z
  */
 
 (function (global, factory) {
@@ -929,7 +929,6 @@ var idGen = {
 
     
     var slice = Array.prototype.slice,
-        emptyFunc = function() {},
         eventSpliter = ':',
         DisplayComponent;
     //添加事件
@@ -1148,21 +1147,17 @@ var idGen = {
             self._listen(option.listeners);
             var el = self.el;
             if (!el) {
-                self._initHTMLElement(function(el) {
-                    self.el = el;
-                    el.setAttribute('id', self.id);
-                    self.className && el.setAttribute('class', self.className);
-                    //添加新建的子组件到组件中
-                    self.appendChild(self._buildComponents());
-                    //监听组件原生listener
-                    //用户创建的Listener
-                    self._bindUIEvent();
-                    //之前被通知过render，模板准备好之后进行渲染
-                    if (self.needToRender) {
-                        self.render();
-                    }
-                });
+                self._initTemplate();
+                self.el = self._createHTMLElement(self.parentEl);
+                //用户创建的Listener
+                self._bindUIEvent();
+                //添加新建的子组件到组件中
+                self.appendChild(self._buildComponents());
             }
+        },
+        _setIdAndClass: function (el) {
+            el.setAttribute('id', this.id);
+            this.className && el.setAttribute('class', this.className);
         },
         /**
          * 初始化Parent
@@ -1260,33 +1255,24 @@ var idGen = {
             if ((stateChange = this._isStateChange(newState))) {
                 this.state = newState;
                 this.trigger(STATE_CHANGE, newState);
-                this._tempEl = tempEl = createElement(this.tmpl())[0];
-                tempEl.setAttribute('id', this.id);
-                if (this.className) {
-                    tempEl.setAttribute('class', this.className);
-                }
             }
+            var pEl = isRoot ? this.parentEl :
+                this.parentNode._tempEl;
+            tempEl = this._tempEl = this._createHTMLElement(pEl);
             var component = this.firstChild;
             //通知子组件更新
             while (component) {
                 component.update();
-                //节点没有更新，则在原Dom上替换子组件的el
-                if (!stateChange) {
-                    //子组件若没有更新，则不需要替换
-                    component._tempEl &&
-                        this.el.replaceChild(component._tempEl, component.el);
                 //节点有更新，在新Dom节点上添加子组件el 或者 tempEl
-                } else {
-                    //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
-                    //详细参考selector的定义
-                    if(!component.selector) {
-                        tempEl.appendChild(component._tempEl || component.el);
-                    }
-                    component._changeParentEl(tempEl);
-                    component._unbindUIEvent()._bindUIEvent();
+                //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
+                //详细参考selector的定义
+                if(!component.selector) {
+                    tempEl.appendChild(component._tempEl || component.el);
                 }
+                component._changeParentEl(tempEl);
+                component._unbindUIEvent()._bindUIEvent();
                 //更新子节点节点Dom
-                component._tempEl && component._changeEl(component._tempEl);
+                component._changeEl(component._tempEl);
                 delete component._tempEl;
                 component = component.nextNode;
             }
@@ -1427,11 +1413,10 @@ var idGen = {
          * @private
          * @param  {Function} callback 回调
          */
-        _initTemplate: function(callback) {
+        _initTemplate: function() {
             var self = this,
                 tpl = self.tpl,
                 html;
-            callback = callback || emptyFunc;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl && tpl.indexOf('#') === 0) {
                 html = document.getElementById(tpl).innerHTML;
@@ -1439,35 +1424,31 @@ var idGen = {
                     self.tplContent = html;
                 }
             }
-            callback( !! self.tplContent);
         },
         /**
          * 初始化HTML元素
          * @private
-         * @param  {Function} callback 回调函数
+         * @params {DOM} 父亲Dom节点
          */
-        _initHTMLElement: function(callback) {
+        _createHTMLElement: function(parentEl) {
             var self = this,
                 selector = self.selector,
                 el;
-            callback = callback || emptyFunc;
             //配置了选择器，直接使用选择器查询
             if (selector) {
-                el = self.parentEl.querySelector(selector);
-                callback(el);
+                el = parentEl.querySelector(selector);
             //没有则初始化模板
             } else {
-                self._initTemplate(function(success) {
-                    if (success) {
-                        //如果模板初始化成功则渲染模板
-                        el = createElement(self.tmpl())[0];
-                    } else {
-                        //没有初始化成功, 需要初始化一个页面的Element
-                        el = document.createElement('section');
-                    }
-                    callback(el);
-                });
+                //如果模板初始化成功则渲染模板
+                if (self.tplContent) {
+                    el = createElement(self.tmpl())[0];
+                } else {
+                    //没有初始化成功, 需要初始化一个页面的Element
+                    el = document.createElement('section');
+                }
             }
+            self._setIdAndClass(el);
+            return el;
         },
         /**
          * 监听事件
