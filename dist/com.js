@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-06T11:37Z
+ * Date: 2014-04-06T12:16Z
  */
 
 (function (global, factory) {
@@ -1279,13 +1279,14 @@ var idGen = {
                 } else {
                     //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
                     //详细参考selector的定义
-                    !component.selector &&
+                    if(!component.selector) {
                         tempEl.appendChild(component._tempEl || component.el);
+                    }
+                    component._changeParentEl(tempEl);
+                    component._bindUIEvent();
                 }
                 //更新子节点节点Dom
                 component._tempEl && component._changeEl(component._tempEl);
-                //若组件有更新，则需要更新子组件的parentEl
-                stateChange && component._changeParentEl(this.tempEl);
                 delete component._tempEl;
                 component = component.nextNode;
             }
