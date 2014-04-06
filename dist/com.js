@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-06T10:14Z
+ * Date: 2014-04-06T11:37Z
  */
 
 (function (global, factory) {
@@ -1246,33 +1246,15 @@ var idGen = {
             this.parentEl = el;
         },
         /**
-         * _rebuildDomTree
-         * 重新构建组件Dom树
-         * @private
-         * @params {Boolean} isRoot 标志是否为根节点
-         */
-        _rebuildDomTree: function(isRoot) {
-            var component = this.firstChild;
-            this._changeEl(this._tempEl || this.el);
-            //非根节点需要更新ParentNode
-            if (!isRoot) {
-                this._changeParentEl(this.parentNode.el);
-            }
-            while (component) {
-                component._rebuildDomTree(false);
-                component = component.nextNode;
-            }
-            delete this._tempEl;
-        },
-        /**
          * 更新操作
          * 更新自身，及通知子组件进行更新
          * @return {Object} this
          */
         update: function() {
             //首先自我更新，保存到临时_tempEl中
-            this.updating = true;
+            //this.updating = true;
             var newState = this.getState(),
+                isRoot = !this.parentNode,
                 tempEl,
                 stateChange;
             if ((stateChange = this._isStateChange(newState))) {
@@ -1288,34 +1270,28 @@ var idGen = {
             //通知子组件更新
             while (component) {
                 component.update();
-                component = component.nextNode;
-            }
-            //如果为根节点Root
-            if (this.parentNode == null) {
-                if (tempEl) {
-                    this.parentEl.replaceChild(this._tempEl, this.el);
-                }
-                this._rebuildDomTree(true);
-            } else {
-                var pNode = this.parentNode,
-                    pNewEl = pNode._tempEl,
-                    pEl = pNode.el;
-                //pNewEl不为空，表示父节点更新了，则子节点要append To Parent
-                if (pNewEl) {
+                //节点没有更新，则在原Dom上替换子组件的el
+                if (!stateChange) {
+                    //子组件若没有更新，则不需要替换
+                    component._tempEl &&
+                        this.el.replaceChild(component._tempEl, component.el);
+                //节点有更新，在新Dom节点上添加子组件el 或者 tempEl
+                } else {
                     //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
                     //详细参考selector的定义
-                    if (!this.selector) {
-                        //添加更新后的组件Dom或原dom（组件不需要更新）
-                        pNewEl.appendChild(tempEl || this.el);
-                    }
-                //父节点不需要更新, 则父节点Replace子节点即可
-                } else {
-                    if (tempEl) {
-                        pEl.replaceChild(tempEl, this.el);
-                    }
+                    !component.selector &&
+                        tempEl.appendChild(component._tempEl || component.el);
                 }
+                //更新子节点节点Dom
+                component._tempEl && component._changeEl(component._tempEl);
+                //若组件有更新，则需要更新子组件的parentEl
+                stateChange && component._changeParentEl(this.tempEl);
+                delete component._tempEl;
+                component = component.nextNode;
             }
-            this.updating = false;
+            if (isRoot) {
+                this.parentEl.replaceChild(tempEl, this.el);
+            }
             return this;
         },
         /**

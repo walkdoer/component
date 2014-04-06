@@ -9,11 +9,17 @@ define(function (require) {
     QUnit.test("com Api test", function () {
 
         var newName = 'andrew';
+        var counter = 1;
 
         var app = new Com({
             id: 'application',
-            tplContent: '<div><p class="title">test</p></div>',
+            tplContent: '<div><p class="title"><%_state_.name%></p></div>',
             parentEl: document.body,
+            getState: function () {
+                return {
+                    name: 'application' + counter++
+                };
+            },
             listeners: {
                 'display:topbar:statechange': 'change',
                 'display:topbar:aboutme': function () {
@@ -28,7 +34,7 @@ define(function (require) {
         });
 
         app.render();
-        QUnit.equal(app.el.innerHTML, '<p class="title">test</p>', "元素HTML正常");
+        QUnit.equal(app.el.innerHTML, '<p class="title">application1</p>', "元素HTML正常");
         app.appendToParent();
         QUnit.equal(document.getElementById('application'),
             app.el,
@@ -107,7 +113,7 @@ define(function (require) {
 
         QUnit.stop();
         window.onhashchange = function () {
-            QUnit.ok(topBar.needUpdate() === true && app.needUpdate() === false, 'API needUpdate() 正常');
+            QUnit.ok(topBar.needUpdate() === true && app.needUpdate() === true, 'API needUpdate() 正常');
             app.update();
             QUnit.equal(topBar.el.className, newName, 'API Update() 正常');
             QUnit.start();
