@@ -70,6 +70,7 @@ define(function (require) {
 
         QUnit.stop();
         window.onhashchange = function () {
+            QUnit.ok(topBar.needUpdate() === true && app.needUpdate() === false, 'API needUpdate() 正常');
             app.update();
             QUnit.equal(topBar.el.className, newName, 'API Update() 正常');
             QUnit.start();
