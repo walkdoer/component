@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-06T09:35Z
+ * Date: 2014-04-06T09:48Z
  */
 
 (function (global, factory) {
@@ -1583,6 +1583,9 @@ var idGen = {
                 }
                 eventType = evtConf[0];
                 callback = evts[evt];
+                if (typeof callback === 'string') {
+                    callback = this.originOption[callback];
+                }
                 this._uiDelegate(eventType, elementSelector, callback);
             }
             this._uiEventBinded = true;

@@ -664,6 +664,9 @@ function(_, Node, template) {
                 }
                 eventType = evtConf[0];
                 callback = evts[evt];
+                if (typeof callback === 'string') {
+                    callback = this.originOption[callback];
+                }
                 this._uiDelegate(eventType, elementSelector, callback);
             }
             this._uiEventBinded = true;

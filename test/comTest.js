@@ -47,7 +47,7 @@ define(function (require) {
                         QUnit.ok(btn.id === target.id, '属性selector正常');
                         QUnit.equal(target === btn.el &&
                             target.id === btn.id,
-                            true, '事件机制正常');
+                            true, 'uiEvent 函数回调 正常');
                         location.hash = newName;
                     }
                 }
@@ -56,9 +56,11 @@ define(function (require) {
                 id: 'about',
                 tplContent: '<button>about me</button>',
                 uiEvents: {
-                    'click' : function (e, btn) {
-                        btn.parentNode.trigger('aboutme');
-                    }
+                    'click' : 'aboutMe'
+                },
+                aboutMe: function (e, btn) {
+                    btn.parentNode.trigger('aboutme');
+                    QUnit.ok(true, 'uiEvent 字符串回调方式 正常');
                 }
             }],
             getState: function () {
