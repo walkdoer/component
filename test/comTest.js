@@ -116,6 +116,10 @@ define(function (require) {
             QUnit.ok(topBar.needUpdate() === true && app.needUpdate() === true, 'API needUpdate() 正常');
             app.update();
             QUnit.equal(topBar.el.className, newName, 'API Update() 正常');
+            var clickEvent = document.createEvent('MouseEvents');
+            clickEvent.initEvent('click', true, true);
+            document.getElementById('go-back-home').dispatchEvent(clickEvent);
+
             QUnit.start();
         };
         var clickEvent = document.createEvent('MouseEvents');
