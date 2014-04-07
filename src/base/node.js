@@ -11,11 +11,6 @@ define([
         R_CLONING = /^\*(.*)\*$/,
         Node;
 
-    function getter(propName) {
-        return function() {
-            return this[propName];
-        };
-    }
     var eventSplitter = /\s+/;
     /**
      * eventApi
@@ -96,14 +91,6 @@ define([
         updating: false, //更新中
         initializing: false, //初始化进行中
         initialized: false, //已初始化
-
-        /*-------- START OF GETTER -----*/
-
-        getType: getter('type'),
-        getId: getter('id'),
-
-        /*---------- END OF GETTER -----*/
-
         /**
          * 组件构造函数, 组件的初始化操作
          * @param  {Object} option 组件配置
@@ -116,8 +103,8 @@ define([
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
-            self.id = [self.getType(), self.sn].join('-');
-            self.nodeCount = 0;
+            self.id = [self.type, self.sn].join('-');
+            self.childCount = 0;
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
             //self.initVar(_.keys(option));
         },
@@ -129,6 +116,7 @@ define([
         appendChild: function(nodes) {
             var self = this;
             _.isArray(nodes) || (nodes = [nodes]);
+            //建立子节点链表
             nodes.forEach(function(n) {
                 if (!self.firstChild) {
                     self.firstChild = self.lastChild = n;
@@ -142,12 +130,7 @@ define([
                     });
                     self.lastChild = n;
                 }
-                self.nodeCount++;
-                /*
-                self.listenTo(n, 'all', function() {
-                    self.trigger.apply(self, slice.call(arguments, 0));
-                });
-                */
+                self.childCount++;
             });
             return this;
         },
@@ -157,12 +140,13 @@ define([
          * @return {this}
          */
         removeChild: function(nodeWillRemove) {
+            //确认该节点属于这棵树
             var node = this.getChildById(nodeWillRemove.id);
+            //是则删除
             if (node) {
                 node.destroy();
+                this.childCount--;
             }
-            this.nodeCount--;
-            node = null;
             return this;
         },
         /**
@@ -173,7 +157,7 @@ define([
             var children = this.firstChild;
             while (children) {
                 children.destroy();
-                this.nodeCount--;
+                this.childCount--;
                 children = children.nextNode;
             }
             this.firstChild = null;
@@ -188,12 +172,13 @@ define([
             if (this.prevNode) {
                 this.prevNode.nextNode = this.nextNode;
             } else {
-                this.firstChild = this.nextNode;
+                //将第一个节点指向下一个节点
+                this.parentNode.firstChild = this.nextNode;
             }
             if (this.nextNode) {
                 this.nextNode.prevNode = this.prevNode;
             } else {
-                this.lastChild = this.prevNode;
+                this.parentNode.lastChild = this.prevNode;
             }
             this.stopListening();
             this.parentNode = null;
@@ -400,7 +385,7 @@ define([
                 allEvents = this._events.all;
             if (events && typeof evt === 'string') {
                 triggerEvent(events, args);
-            } else if (events){
+            } else if (events) {
                 console.log(this.id + '没有' + args[0].name);
             }
             if (allEvents) {

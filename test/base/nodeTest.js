@@ -20,6 +20,8 @@ define(function (require) {
         node2.appendChild(node3);
         node2.appendChild(node4);
 
+        var node5 = new Node();
+        node1.appendChild(node5);
         //test api getChildById
         var result = node2.getChildById('node_id_3');
         QUnit.equal(node3 === result, true, 'getChildById API 正常');
@@ -35,16 +37,16 @@ define(function (require) {
 
 
         //test api appendChild
-        QUnit.equal(node1.nodeCount, 1);
-        QUnit.equal(node2.nodeCount, 2);
+        QUnit.equal(node1.childCount, 2);
+        QUnit.equal(node2.childCount, 2);
 
         //test api removeChild
-        node1.removeChild(node1);
-        QUnit.equal(node1.nodeCount, 0, 'removeChild API 正常');
+        node1.removeChild(node5);
+        QUnit.equal(node1.firstChild === node2 && node1.lastChild === node2 && node1.childCount === 1, true, 'removeChild API 正常');
 
         //test api removeAllChild
         node2.removeAllChild();
-        QUnit.equal(node2.nodeCount, 0, 'removeAllChild API 正常');
+        QUnit.equal(!node2.firstChild && !node2.lastChild && node2.childCount === 0, true, 'removeAllChild API 正常');
 
     });
 
