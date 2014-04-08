@@ -99,7 +99,7 @@ define([
         init: function(option) {
             var self = this;
             //保存用户原始配置，已备用
-            self.originOption = _.extend({}, option, true);
+            self.originOption = _.extend(true, {}, option);
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}

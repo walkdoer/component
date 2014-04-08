@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-08T06:35Z
+ * Date: 2014-04-08T07:36Z
  */
 
 (function (global, factory) {
@@ -59,7 +59,7 @@
 
     function type(obj) {
         return obj == null ? String(obj) :
-            class2type[toString.call(obj)] || "object";
+            class2type.toString.call(obj) || "object";
     }
 
     function isFunction(value) {
@@ -467,7 +467,7 @@ var idGen = {
         init: function(option) {
             var self = this;
             //保存用户原始配置，已备用
-            self.originOption = _.extend({}, option, true);
+            self.originOption = _.extend(true, {}, option);
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
@@ -946,6 +946,7 @@ var idGen = {
     
     var slice = Array.prototype.slice,
         eventSpliter = ':',
+        enhancer = null,
         DisplayComponent;
     //添加事件
     var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
@@ -1165,6 +1166,7 @@ var idGen = {
             if (!el) {
                 self._initTemplate();
                 self.el = self._createHTMLElement(self.parentEl);
+                enhancer && (self.$el = enhancer(self.el));
                 //用户创建的Listener
                 self._bindUIEvent();
                 //添加新建的子组件到组件中
@@ -1666,15 +1668,32 @@ var idGen = {
                 return null;
             }
             return null;
-        }
-    });
-    //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-    /*['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
-        DisplayComponent.prototype[method] = function() {
-            var args = slice.call(arguments);
-            this.$el[method].apply(this.$el, args);
+        },
+        /*
+        show: function () {
+            var el = this.el;
+            el.style.display == "none" && (el.style.display = null);
             return this;
-        };
-    });*/
+        },
+        hide: function () {
+            this.el.style.display = 'none';
+            return this;
+        }*/
+    });
+    DisplayComponent.config = function (cfg) {
+        enhancer = cfg.enhancer;
+        if (enhancer) {
+            //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
+            /*
+            ['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
+                DisplayComponent.prototype[method] = function() {
+                    var args = slice.call(arguments);
+                    extend.fn[method].apply(this.$el, args);
+                    return this;
+                };
+            });
+            */
+        }
+    };
     return DisplayComponent;
 }));

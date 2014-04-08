@@ -70,10 +70,10 @@ define(function(require, exports) {
                                     //加载中提示...
                                     $(self.beforeLoad).hide();
                                 }
-                                page.empty();
+                                page.$el.empty();
                                 //取消第一次初始化的标志
                             } else {
-                                page.empty();
+                                page.$el.empty();
                             }
                         },
                         'rendered': function (/*evt, page*/) {
@@ -83,6 +83,7 @@ define(function(require, exports) {
                 };
                 pageOption = $.extend({}, defaultOption, pageOption);
                 var page = new PageClass(pageOption);
+                page.$el = $(page.el);
                 callback(page);
             });
         }

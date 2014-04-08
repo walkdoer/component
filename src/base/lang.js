@@ -23,7 +23,7 @@ define(function(require, exports, module) {
 
     function type(obj) {
         return obj == null ? String(obj) :
-            class2type[toString.call(obj)] || "object";
+            class2type.toString.call(obj) || "object";
     }
 
     function isFunction(value) {

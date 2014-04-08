@@ -12,6 +12,7 @@ function(_, util, Node, template) {
     'use strict';
     var slice = Array.prototype.slice,
         eventSpliter = ':',
+        enhancer = null,
         DisplayComponent;
     //添加事件
     var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
@@ -231,6 +232,7 @@ function(_, util, Node, template) {
             if (!el) {
                 self._initTemplate();
                 self.el = self._createHTMLElement(self.parentEl);
+                enhancer && (self.$el = enhancer(self.el));
                 //用户创建的Listener
                 self._bindUIEvent();
                 //添加新建的子组件到组件中
@@ -732,15 +734,32 @@ function(_, util, Node, template) {
                 return null;
             }
             return null;
-        }
-    });
-    //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-    /*['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
-        DisplayComponent.prototype[method] = function() {
-            var args = slice.call(arguments);
-            this.$el[method].apply(this.$el, args);
+        },
+        /*
+        show: function () {
+            var el = this.el;
+            el.style.display == "none" && (el.style.display = null);
             return this;
-        };
-    });*/
+        },
+        hide: function () {
+            this.el.style.display = 'none';
+            return this;
+        }*/
+    });
+    DisplayComponent.config = function (cfg) {
+        enhancer = cfg.enhancer;
+        if (enhancer) {
+            //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
+            /*
+            ['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
+                DisplayComponent.prototype[method] = function() {
+                    var args = slice.call(arguments);
+                    extend.fn[method].apply(this.$el, args);
+                    return this;
+                };
+            });
+            */
+        }
+    };
     return DisplayComponent;
 });

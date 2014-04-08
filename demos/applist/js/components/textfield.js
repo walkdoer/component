@@ -10,6 +10,10 @@ define(function (require, exports) {
         Textfield;
     Textfield = Component.extend({
         type: typeName,
+        init: function (option) {
+            this._super(option);
+            this.$el = $(this.el);
+        },
         uiEvents: {
             'click .clear': function (event) {
                 var $icon = $(event.target),
