@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-08T08:59Z
+ * Date: 2014-04-08T09:11Z
  */
 
 (function (global, factory) {
@@ -1203,15 +1203,22 @@ var idGen = {
                 parentElArr = [],
                 fragmentArr = [],
                 comParentEl,
-                fragmentTmp;
+                fragmentTmp,
+                index;
             while (component) {
                 component.render();
                 comParentEl = component.parentEl;
                 if (self.el !== comParentEl) {
-                    fragmentTmp = document.createDocumentFragment();
+                    //取出对应的DocumentFragment
+                    index = parentElArr.indexOf(comParentEl);
+                    fragmentTmp = index >= 0 ?
+                        fragmentArr[index] :
+                        document.createDocumentFragment();
                     fragmentTmp.appendChild(component.el);
-                    parentElArr.push(component.parentEl);
-                    fragmentArr.push(fragmentTmp);
+                    if (index < 0) {
+                        parentElArr.push(component.parentEl);
+                        fragmentArr.push(fragmentTmp);
+                    }
                 } else {
                     fragment.appendChild(component.el);
                 }

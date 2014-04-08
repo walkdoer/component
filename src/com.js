@@ -269,15 +269,22 @@ function(_, util, Node, template) {
                 parentElArr = [],
                 fragmentArr = [],
                 comParentEl,
-                fragmentTmp;
+                fragmentTmp,
+                index;
             while (component) {
                 component.render();
                 comParentEl = component.parentEl;
                 if (self.el !== comParentEl) {
-                    fragmentTmp = document.createDocumentFragment();
+                    //取出对应的DocumentFragment
+                    index = parentElArr.indexOf(comParentEl);
+                    fragmentTmp = index >= 0 ?
+                        fragmentArr[index] :
+                        document.createDocumentFragment();
                     fragmentTmp.appendChild(component.el);
-                    parentElArr.push(component.parentEl);
-                    fragmentArr.push(fragmentTmp);
+                    if (index < 0) {
+                        parentElArr.push(component.parentEl);
+                        fragmentArr.push(fragmentTmp);
+                    }
                 } else {
                     fragment.appendChild(component.el);
                 }
