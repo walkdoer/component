@@ -21,7 +21,7 @@ define(function (require) {
                 };
             },
             listeners: {
-                'display:topbar:statechange': 'change',
+                'display:topbar:statechange:ee': 'change',
                 'display:topbar:aboutme': function () {
                     console.log('about me');
                     QUnit.ok(true, 'listeners 函数回调方式 正常');

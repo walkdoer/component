@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-04T07:47Z
+ * Date: 2014-04-08T06:03Z
  */
 
 (function (global, factory) {
@@ -274,6 +274,22 @@
     };
     _.isFunction = isFunction;
     _.isArray = isArray;
+/**
+ * 工具类
+ */
+
+
+    var util = {};
+
+    util.error = function (functionName, msg) {
+        return new Error([
+            //错误前缀
+            '[Com Error]',
+            !functionName ? '' :
+            'function <' + functionName + '> has an Error:',
+            msg
+        ].join(''));
+    };
 /*jshint loopfunc: true */
 /**
  * Class Module
@@ -363,11 +379,6 @@ var idGen = {
         R_CLONING = /^\*(.*)\*$/,
         Node;
 
-    function getter(propName) {
-        return function() {
-            return this[propName];
-        };
-    }
     var eventSplitter = /\s+/;
     /**
      * eventApi
@@ -448,14 +459,6 @@ var idGen = {
         updating: false, //更新中
         initializing: false, //初始化进行中
         initialized: false, //已初始化
-
-        /*-------- START OF GETTER -----*/
-
-        getType: getter('type'),
-        getId: getter('id'),
-
-        /*---------- END OF GETTER -----*/
-
         /**
          * 组件构造函数, 组件的初始化操作
          * @param  {Object} option 组件配置
@@ -468,8 +471,8 @@ var idGen = {
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
-            self.id = [self.getType(), self.sn].join('-');
-            self.nodeCount = 0;
+            self.id = [self.type, self.sn].join('-');
+            self.childCount = 0;
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
             //self.initVar(_.keys(option));
         },
@@ -481,6 +484,7 @@ var idGen = {
         appendChild: function(nodes) {
             var self = this;
             _.isArray(nodes) || (nodes = [nodes]);
+            //建立子节点链表
             nodes.forEach(function(n) {
                 if (!self.firstChild) {
                     self.firstChild = self.lastChild = n;
@@ -494,12 +498,7 @@ var idGen = {
                     });
                     self.lastChild = n;
                 }
-                self.nodeCount++;
-                /*
-                self.listenTo(n, 'all', function() {
-                    self.trigger.apply(self, slice.call(arguments, 0));
-                });
-                */
+                self.childCount++;
             });
             return this;
         },
@@ -509,12 +508,13 @@ var idGen = {
          * @return {this}
          */
         removeChild: function(nodeWillRemove) {
+            //确认该节点属于这棵树
             var node = this.getChildById(nodeWillRemove.id);
+            //是则删除
             if (node) {
                 node.destroy();
+                this.childCount--;
             }
-            this.nodeCount--;
-            node = null;
             return this;
         },
         /**
@@ -525,7 +525,7 @@ var idGen = {
             var children = this.firstChild;
             while (children) {
                 children.destroy();
-                this.nodeCount--;
+                this.childCount--;
                 children = children.nextNode;
             }
             this.firstChild = null;
@@ -540,12 +540,13 @@ var idGen = {
             if (this.prevNode) {
                 this.prevNode.nextNode = this.nextNode;
             } else {
-                this.firstChild = this.nextNode;
+                //将第一个节点指向下一个节点
+                this.parentNode.firstChild = this.nextNode;
             }
             if (this.nextNode) {
                 this.nextNode.prevNode = this.prevNode;
             } else {
-                this.lastChild = this.prevNode;
+                this.parentNode.lastChild = this.prevNode;
             }
             this.stopListening();
             this.parentNode = null;
@@ -752,7 +753,7 @@ var idGen = {
                 allEvents = this._events.all;
             if (events && typeof evt === 'string') {
                 triggerEvent(events, args);
-            } else if (events){
+            } else if (events) {
                 console.log(this.id + '没有' + args[0].name);
             }
             if (allEvents) {
@@ -911,13 +912,7 @@ var idGen = {
                     .replace(/"/g, '\\"')
                     //replace code <%=data.name%>
                     .replace(settings.interpolate, function(match, code) {
-                        var objKeyArray = code.split('.'),
-                            objItem = data;
-                        objKeyArray.forEach(function (value) {
-                            objItem = objItem[value];
-                        });
-                        var execute = code.replace(/\\"/g, '"') +
-                           (typeof objItem === 'function' ? '()' : '');
+                        var execute = code.replace(/\\"/g, '"');
                         return '"+data.' + execute + '+"';
                     })
                     // .replace(settings.evaluate || null, function(match, code) {
@@ -950,7 +945,6 @@ var idGen = {
 
     
     var slice = Array.prototype.slice,
-        emptyFunc = function() {},
         eventSpliter = ':',
         DisplayComponent;
     //添加事件
@@ -1151,6 +1145,7 @@ var idGen = {
                 'parentNode',
                 'parentEl',
                 '*env*',
+                '*_data:data*',
                 'getState',
                 'userUpdate:update',
                 'className',
@@ -1158,7 +1153,6 @@ var idGen = {
                 'el',
                 'selector'
             ]);
-            self._data = option.data;
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
             self._initParent(self.parentNode);
@@ -1169,21 +1163,17 @@ var idGen = {
             self._listen(option.listeners);
             var el = self.el;
             if (!el) {
-                self._initHTMLElement(function(el) {
-                    self.el = el;
-                    el.setAttribute('id', self.id);
-                    self.className && el.setAttribute('class', self.className);
-                    //添加新建的子组件到组件中
-                    self.appendChild(self._buildComponents());
-                    //监听组件原生listener
-                    //用户创建的Listener
-                    self._bindUIEvent();
-                    //之前被通知过render，模板准备好之后进行渲染
-                    if (self.needToRender) {
-                        self.render();
-                    }
-                });
+                self._initTemplate();
+                self.el = self._createHTMLElement(self.parentEl);
+                //用户创建的Listener
+                self._bindUIEvent();
+                //添加新建的子组件到组件中
+                self.appendChild(self._buildComponents());
             }
+        },
+        _setIdAndClass: function (el) {
+            el.setAttribute('id', this.id);
+            this.className && el.setAttribute('class', this.className);
         },
         /**
          * 初始化Parent
@@ -1267,76 +1257,44 @@ var idGen = {
             this.parentEl = el;
         },
         /**
-         * _rebuildDomTree
-         * 重新构建组件Dom树
-         * @private
-         * @params {Boolean} isRoot 标志是否为根节点
-         */
-        _rebuildDomTree: function(isRoot) {
-            var component = this.firstChild;
-            this._changeEl(this._tempEl || this.el);
-            //非根节点需要更新ParentNode
-            if (!isRoot) {
-                this._changeParentEl(this.parentNode.el);
-            }
-            while (component) {
-                component._rebuildDomTree(false);
-                component = component.nextNode;
-            }
-            delete this._tempEl;
-        },
-        /**
          * 更新操作
          * 更新自身，及通知子组件进行更新
          * @return {Object} this
          */
         update: function() {
             //首先自我更新，保存到临时_tempEl中
-            this.updating = true;
+            //this.updating = true;
             var newState = this.getState(),
+                isRoot = !this.parentNode,
                 tempEl,
                 stateChange;
             if ((stateChange = this._isStateChange(newState))) {
                 this.state = newState;
                 this.trigger(STATE_CHANGE, newState);
-                this._tempEl = tempEl = createElement(this.tmpl())[0];
-                tempEl.setAttribute('id', this.id);
-                if (this.className) {
-                    tempEl.setAttribute('class', this.className);
-                }
             }
+            var pEl = isRoot ? this.parentEl :
+                this.parentNode._tempEl;
+            tempEl = this._tempEl = this._createHTMLElement(pEl);
             var component = this.firstChild;
             //通知子组件更新
             while (component) {
                 component.update();
+                //节点有更新，在新Dom节点上添加子组件el 或者 tempEl
+                //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
+                //详细参考selector的定义
+                if(!component.selector) {
+                    tempEl.appendChild(component._tempEl || component.el);
+                }
+                component._changeParentEl(tempEl);
+                component._unbindUIEvent()._bindUIEvent();
+                //更新子节点节点Dom
+                component._changeEl(component._tempEl);
+                delete component._tempEl;
                 component = component.nextNode;
             }
-            //如果为根节点Root
-            if (this.parentNode == null) {
-                if (tempEl) {
-                    this.parentEl.replaceChild(this._tempEl, this.el);
-                }
-                this._rebuildDomTree(true);
-            } else {
-                var pNode = this.parentNode,
-                    pNewEl = pNode._tempEl,
-                    pEl = pNode.el;
-                //pNewEl不为空，表示父节点更新了，则子节点要append To Parent
-                if (pNewEl) {
-                    //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
-                    //详细参考selector的定义
-                    if (!this.selector) {
-                        //添加更新后的组件Dom或原dom（组件不需要更新）
-                        pNewEl.appendChild(tempEl || this.el);
-                    }
-                //父节点不需要更新, 则父节点Replace子节点即可
-                } else {
-                    pEl.replaceChild(tempEl, this.el);
-                    this._changeEl(tempEl);
-                    delete this._tempEl;
-                }
+            if (isRoot) {
+                this.parentEl.replaceChild(tempEl, this.el);
             }
-            this.updating = false;
             return this;
         },
         /**
@@ -1354,6 +1312,8 @@ var idGen = {
                 if (!self._allowToRender(component)) {
                     component.isContinueRender = false;
                 } else {
+                    //如果渲染的是第一个组件，则触发 BEFORE_RENDER_FIRST_COMPONENT
+                    //的消息
                     if (!component.prevNode) {
                         self.trigger(BEFORE_RENDER_FIRST_COMPONENT, self);
                     }
@@ -1376,6 +1336,7 @@ var idGen = {
                 evt = this._notFinishListener[identity];
                 if (evt) {
                     this.listenTo(com, evt);
+                    //删除已监听事件
                     delete this._notFinishListener[identity];
                 }
                 com.on(BEFORE_RENDER, onBeforeRender);
@@ -1390,12 +1351,16 @@ var idGen = {
          */
         tmpl: function(tplContent, data) {
             var self = this,
+                tplCompile = self._tplCompile,
                 html;
             tplContent = tplContent || self.tplContent;
             data = data || self.getData();
             this.trigger(BEFORE_TMPL, data);
             if (tplContent) {
-                html = template.tmpl(tplContent, data, self.helper);
+                if (!tplCompile) {
+                    this._tplCompile = tplCompile = template.tmpl(tplContent);
+                }
+                html = tplCompile(data, self.helper);
             } else {
                 console.warn(['Has no template content for',
                     '[', self.getType() || '[unknow type]', ']',
@@ -1464,11 +1429,10 @@ var idGen = {
          * @private
          * @param  {Function} callback 回调
          */
-        _initTemplate: function(callback) {
+        _initTemplate: function() {
             var self = this,
                 tpl = self.tpl,
                 html;
-            callback = callback || emptyFunc;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl && tpl.indexOf('#') === 0) {
                 html = document.getElementById(tpl).innerHTML;
@@ -1476,35 +1440,31 @@ var idGen = {
                     self.tplContent = html;
                 }
             }
-            callback( !! self.tplContent);
         },
         /**
          * 初始化HTML元素
          * @private
-         * @param  {Function} callback 回调函数
+         * @params {DOM} 父亲Dom节点
          */
-        _initHTMLElement: function(callback) {
+        _createHTMLElement: function(parentEl) {
             var self = this,
                 selector = self.selector,
                 el;
-            callback = callback || emptyFunc;
             //配置了选择器，直接使用选择器查询
             if (selector) {
-                el = self.parentEl.querySelector(selector);
-                callback(el);
+                el = parentEl.querySelector(selector);
             //没有则初始化模板
             } else {
-                self._initTemplate(function(success) {
-                    if (success) {
-                        //如果模板初始化成功则渲染模板
-                        el = createElement(self.tmpl())[0];
-                    } else {
-                        //没有初始化成功, 需要初始化一个页面的Element
-                        el = document.createElement('section');
-                    }
-                    callback(el);
-                });
+                //如果模板初始化成功则渲染模板
+                if (self.tplContent) {
+                    el = createElement(self.tmpl())[0];
+                } else {
+                    //没有初始化成功, 需要初始化一个页面的Element
+                    el = document.createElement('section');
+                }
             }
+            self._setIdAndClass(el);
+            return el;
         },
         /**
          * 监听事件
@@ -1512,21 +1472,29 @@ var idGen = {
          * @param  {Object} listeners 事件配置
          */
         _listen: function(listeners) {
-            function onListen(event, self) {
+            function bind(func, self) {
                 return function() {
-                    listeners[event].apply(self, slice.call(arguments, 0));
+                    func.apply(self, slice.call(arguments, 0));
                 };
             }
             if (!listeners) {
                 return;
             }
             var evtArr = '',
+                callback,
                 com,
                 len;
             for (var evt in listeners) {
                 if (listeners.hasOwnProperty(evt)) {
                     evtArr = evt.split(eventSpliter);
                     len = evtArr.length;
+                    callback = listeners[evt];
+                    //if listeners[evt] is string
+                    //then this string would be a function name
+                    if (typeof callback === 'string') {
+                        callback = this.originOption[callback];
+                    }
+                    if (!callback) { continue; }
                     //TYPE:ID:Event
                     if (3 === len) {
                         com = this.getChildById(evtArr[1]);
@@ -1534,17 +1502,16 @@ var idGen = {
                             //假如这个时候组件还没有创建，则先记录下来，
                             //组件创建的时候再监听，详见:appendChild
                             this._deferListener(evtArr[0], evtArr[1], evtArr[2],
-                                onListen(evt, this));
+                                bind(callback, this));
                         } else {
-                            this.listenTo(com, evtArr[2], onListen(evt, this));
+                            this.listenTo(com, evtArr[2], bind(callback, this));
                         }
                         //Event
                     } else if (1 === len) {
                         //只有Event的时候表示监听自身
-                        this.on(evt, onListen(evt, this));
+                        this.on(evt, bind(callback, this));
                     } else {
-                        throw new Error('Com:Wrong Event Formate[Type:ID:Event]: ' +
-                            evt);
+                        throw util.error(null, 'Wrong event Format,should be[Type:ID:Event] ' + evt);
                     }
                 }
             }
@@ -1589,9 +1556,16 @@ var idGen = {
                 }
                 eventType = evtConf[0];
                 callback = evts[evt];
+                if (typeof callback === 'string') {
+                    callback = this.originOption[callback];
+                }
                 this._uiDelegate(eventType, elementSelector, callback);
             }
             this._uiEventBinded = true;
+        },
+        _unbindUIEvent: function () {
+            this._uiEventBinded = false;
+            return this;
         },
         /**
          * _uiDelegate
@@ -1675,7 +1649,7 @@ var idGen = {
                         continue;
                         //检查到错误，提示使用者
                     } else {
-                        throw new Error('Component\'s component config is not right');
+                        throw util.error(null, 'option.components is not right');
                     }
                     //创建组件
                     cp = new Component(_.extend({

@@ -4,10 +4,11 @@
  */
 define([
     './base/lang',
+    './base/util',
     './base/node',
     './base/template'
 ],
-function(_, Node, template) {
+function(_, util, Node, template) {
     'use strict';
     var slice = Array.prototype.slice,
         eventSpliter = ':',
@@ -576,8 +577,7 @@ function(_, Node, template) {
                         //只有Event的时候表示监听自身
                         this.on(evt, bind(callback, this));
                     } else {
-                        throw new Error('Com:Wrong Event Formate[Type:ID:Event]: ' +
-                            evt);
+                        throw util.error(null, 'Wrong event Format,should be[Type:ID:Event] ' + evt);
                     }
                 }
             }
@@ -715,7 +715,7 @@ function(_, Node, template) {
                         continue;
                         //检查到错误，提示使用者
                     } else {
-                        throw new Error('Component\'s component config is not right');
+                        throw util.error(null, 'option.components is not right');
                     }
                     //创建组件
                     cp = new Component(_.extend({
