@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-08T09:11Z
+ * Date: 2014-04-08T09:36Z
  */
 
 (function (global, factory) {
@@ -1193,13 +1193,34 @@ var idGen = {
          */
         render: function() {
             var self = this,
-                originOption = self.originOption,
-                firstChild = self.firstChild,
-                component = firstChild;
+                originOption = self.originOption;
             //trigger event beforerender
             self.trigger(BEFORE_RENDER, self);
-            //先渲染组件的子组件
-            var fragment = document.createDocumentFragment(),
+            //先渲染组件的子组件,然后再渲染组件本身
+            //这样子可以尽量减少浏览器的重绘
+            self.firstChild && self._renderChildComponent();
+            //有selector则表明该元素已经在页面上了，不需要再渲染
+            //如果在before render的处理函数中将isContinueRender置为true
+            //则停止后续执行,后续考虑使用AOP改造此方式
+            if (self.isContinueRender !== false) {
+                self.isContinueRender = true;
+                setCss(self.el, {
+                    width: originOption.width,
+                    height: originOption.height
+                });
+                if (self.display === false) {
+                    setCss(self.el, {'display': 'none'});
+                }
+                self._finishRender();
+            }
+            return self;
+        },
+        /*渲染子组件*/
+        _renderChildComponent: function () {
+            var self = this,
+                firstChild = self.firstChild,
+                component = firstChild,
+                fragment = document.createDocumentFragment(),
                 parentElArr = [],
                 fragmentArr = [],
                 comParentEl,
@@ -1222,7 +1243,6 @@ var idGen = {
                 } else {
                     fragment.appendChild(component.el);
                 }
-                component._finishRender();
                 component = component.nextNode;
             }
             this.el.appendChild(fragment);
@@ -1230,22 +1250,6 @@ var idGen = {
             for (var i = 0, k = parentElArr.length; i < k; i++) {
                 parentElArr[i].appendChild(fragmentArr[i]);
             }
-            //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
-            //有selector则表明该元素已经在页面上了，不需要再渲染
-            //如果在before render的处理函数中将isContinueRender置为true
-            //则停止后续执行,后续考虑使用AOP改造此方式
-            if (self.isContinueRender !== false) {
-                self.isContinueRender = true;
-                setCss(self.el, {
-                    width: originOption.width,
-                    height: originOption.height
-                });
-                if (self.display === false) {
-                    setCss(self.el, {'display': 'none'});
-                }
-                self._finishRender();
-            }
-            return self;
         },
         /**
          * 获取组件的数据
