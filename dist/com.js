@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-06T14:17Z
+ * Date: 2014-04-08T09:36Z
  */
 
 (function (global, factory) {
@@ -59,7 +59,7 @@
 
     function type(obj) {
         return obj == null ? String(obj) :
-            class2type[toString.call(obj)] || "object";
+            class2type.toString.call(obj) || "object";
     }
 
     function isFunction(value) {
@@ -274,6 +274,22 @@
     };
     _.isFunction = isFunction;
     _.isArray = isArray;
+/**
+ * 工具类
+ */
+
+
+    var util = {};
+
+    util.error = function (functionName, msg) {
+        return new Error([
+            //错误前缀
+            '[Com Error]',
+            !functionName ? '' :
+            'function <' + functionName + '> has an Error:',
+            msg
+        ].join(''));
+    };
 /*jshint loopfunc: true */
 /**
  * Class Module
@@ -451,7 +467,7 @@ var idGen = {
         init: function(option) {
             var self = this;
             //保存用户原始配置，已备用
-            self.originOption = _.extend({}, option, true);
+            self.originOption = _.extend(true, {}, option);
             //为每一个组件组件实例赋予一个独立的sn
             self.sn = idGen.gen();
             //创建默认的ID，ID格式:{type}-{sn}
@@ -930,6 +946,7 @@ var idGen = {
     
     var slice = Array.prototype.slice,
         eventSpliter = ':',
+        enhancer = null,
         DisplayComponent;
     //添加事件
     var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
@@ -1149,6 +1166,7 @@ var idGen = {
             if (!el) {
                 self._initTemplate();
                 self.el = self._createHTMLElement(self.parentEl);
+                enhancer && (self.$el = enhancer(self.el));
                 //用户创建的Listener
                 self._bindUIEvent();
                 //添加新建的子组件到组件中
@@ -1175,23 +1193,12 @@ var idGen = {
          */
         render: function() {
             var self = this,
-                originOption = self.originOption,
-                firstChild = self.firstChild,
-                component = firstChild;
+                originOption = self.originOption;
             //trigger event beforerender
             self.trigger(BEFORE_RENDER, self);
-            //先渲染组件的子组件
-            var fragment = document.createDocumentFragment();
-            while (component) {
-                if (!component.selector) {
-                    fragment.appendChild(component.render().el);
-                } else {
-                    component._finishRender();
-                }
-                component = component.nextNode;
-            }
-            this.el.appendChild(fragment);
-            //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
+            //先渲染组件的子组件,然后再渲染组件本身
+            //这样子可以尽量减少浏览器的重绘
+            self.firstChild && self._renderChildComponent();
             //有selector则表明该元素已经在页面上了，不需要再渲染
             //如果在before render的处理函数中将isContinueRender置为true
             //则停止后续执行,后续考虑使用AOP改造此方式
@@ -1207,6 +1214,42 @@ var idGen = {
                 self._finishRender();
             }
             return self;
+        },
+        /*渲染子组件*/
+        _renderChildComponent: function () {
+            var self = this,
+                firstChild = self.firstChild,
+                component = firstChild,
+                fragment = document.createDocumentFragment(),
+                parentElArr = [],
+                fragmentArr = [],
+                comParentEl,
+                fragmentTmp,
+                index;
+            while (component) {
+                component.render();
+                comParentEl = component.parentEl;
+                if (self.el !== comParentEl) {
+                    //取出对应的DocumentFragment
+                    index = parentElArr.indexOf(comParentEl);
+                    fragmentTmp = index >= 0 ?
+                        fragmentArr[index] :
+                        document.createDocumentFragment();
+                    fragmentTmp.appendChild(component.el);
+                    if (index < 0) {
+                        parentElArr.push(component.parentEl);
+                        fragmentArr.push(fragmentTmp);
+                    }
+                } else {
+                    fragment.appendChild(component.el);
+                }
+                component = component.nextNode;
+            }
+            this.el.appendChild(fragment);
+            //将指定了特定parentEl的添加到对应的parent中
+            for (var i = 0, k = parentElArr.length; i < k; i++) {
+                parentElArr[i].appendChild(fragmentArr[i]);
+            }
         },
         /**
          * 获取组件的数据
@@ -1419,9 +1462,10 @@ var idGen = {
                 html;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl && tpl.indexOf('#') === 0) {
-                html = document.getElementById(tpl).innerHTML;
+                html = document.getElementById(tpl.slice(1)).innerHTML;
                 if (html) {
-                    self.tplContent = html;
+                    //去除头尾换行
+                    self.tplContent = html.replace(/^\n|\n$/g, '');
                 }
             }
         },
@@ -1495,8 +1539,7 @@ var idGen = {
                         //只有Event的时候表示监听自身
                         this.on(evt, bind(callback, this));
                     } else {
-                        throw new Error('Com:Wrong Event Formate[Type:ID:Event]: ' +
-                            evt);
+                        throw util.error(null, 'Wrong event Format,should be[Type:ID:Event] ' + evt);
                     }
                 }
             }
@@ -1634,7 +1677,7 @@ var idGen = {
                         continue;
                         //检查到错误，提示使用者
                     } else {
-                        throw new Error('Component\'s component config is not right');
+                        throw util.error(null, 'option.components is not right');
                     }
                     //创建组件
                     cp = new Component(_.extend({
@@ -1653,15 +1696,30 @@ var idGen = {
                 return null;
             }
             return null;
-        }
-    });
-    //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-    /*['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
-        DisplayComponent.prototype[method] = function() {
-            var args = slice.call(arguments);
-            this.$el[method].apply(this.$el, args);
+        },
+        /*
+        show: function () {
+            var el = this.el;
+            el.style.display == "none" && (el.style.display = null);
             return this;
-        };
-    });*/
+        },
+        hide: function () {
+            this.el.style.display = 'none';
+            return this;
+        }*/
+    });
+    DisplayComponent.config = function (cfg) {
+        enhancer = cfg.enhancer;
+        if (enhancer) {
+            //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
+            ['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
+                DisplayComponent.prototype[method] = function() {
+                    var args = slice.call(arguments);
+                    enhancer.fn[method].apply(this.$el, args);
+                    return this;
+                };
+            });
+        }
+    };
     return DisplayComponent;
 }));

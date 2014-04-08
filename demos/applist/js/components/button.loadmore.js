@@ -14,6 +14,7 @@ define(function (require, exports) {
         init: function (option) {
             var self = this;
             self._super(option);
+            self.$el = $(self.el);
             self.$loading = self.$el.find('.loading-icon');
             self.$btnText = self.$el.find('.btn-text');
             self.loadingMsg = self.$el.data('loading');

@@ -6,10 +6,14 @@ define(function(require, exports) {
     'use strict';
     var $ = require('core/selector'),
         router = require('core/router'),
+        Com = require('lib/com.js'),
         Application = require('components/application'),
         util = require('util'),
         model = require('model');
 
+    Com.config({
+        enhancer : $
+    });
     exports.init = function (option) {
         var pages = option.pages;
         //初始化数据层
