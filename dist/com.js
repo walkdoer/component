@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-08T07:36Z
+ * Date: 2014-04-08T08:59Z
  */
 
 (function (global, factory) {
@@ -1199,13 +1199,30 @@ var idGen = {
             //trigger event beforerender
             self.trigger(BEFORE_RENDER, self);
             //先渲染组件的子组件
-            var fragment = document.createDocumentFragment();
+            var fragment = document.createDocumentFragment(),
+                parentElArr = [],
+                fragmentArr = [],
+                comParentEl,
+                fragmentTmp;
             while (component) {
-                fragment.appendChild(component.render().el);
+                component.render();
+                comParentEl = component.parentEl;
+                if (self.el !== comParentEl) {
+                    fragmentTmp = document.createDocumentFragment();
+                    fragmentTmp.appendChild(component.el);
+                    parentElArr.push(component.parentEl);
+                    fragmentArr.push(fragmentTmp);
+                } else {
+                    fragment.appendChild(component.el);
+                }
                 component._finishRender();
                 component = component.nextNode;
             }
             this.el.appendChild(fragment);
+            //将指定了特定parentEl的添加到对应的parent中
+            for (var i = 0, k = parentElArr.length; i < k; i++) {
+                parentElArr[i].appendChild(fragmentArr[i]);
+            }
             //然后再渲染组件本身，这样子可以尽量减少浏览器的重绘
             //有selector则表明该元素已经在页面上了，不需要再渲染
             //如果在before render的处理函数中将isContinueRender置为true
@@ -1684,15 +1701,13 @@ var idGen = {
         enhancer = cfg.enhancer;
         if (enhancer) {
             //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-            /*
             ['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
                 DisplayComponent.prototype[method] = function() {
                     var args = slice.call(arguments);
-                    extend.fn[method].apply(this.$el, args);
+                    enhancer.fn[method].apply(this.$el, args);
                     return this;
                 };
             });
-            */
         }
     };
     return DisplayComponent;

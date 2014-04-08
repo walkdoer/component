@@ -12,7 +12,7 @@ define(function(require, exports) {
         model = require('model');
 
     Com.config({
-        extend: $
+        enhancer : $
     });
     exports.init = function (option) {
         var pages = option.pages;
