@@ -265,11 +265,8 @@ function(_, util, Node, template) {
             //先渲染组件的子组件
             var fragment = document.createDocumentFragment();
             while (component) {
-                if (!component.selector) {
-                    fragment.appendChild(component.render().el);
-                } else {
-                    component._finishRender();
-                }
+                fragment.appendChild(component.render().el);
+                component._finishRender();
                 component = component.nextNode;
             }
             this.el.appendChild(fragment);

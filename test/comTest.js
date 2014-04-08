@@ -21,7 +21,7 @@ define(function (require) {
                 };
             },
             listeners: {
-                'display:topbar:statechange:ee': 'change',
+                'display:topbar:statechange': 'change',
                 'display:topbar:aboutme': function () {
                     console.log('about me');
                     QUnit.ok(true, 'listeners 函数回调方式 正常');
@@ -64,6 +64,11 @@ define(function (require) {
             components: [{
                 _constructor_: Com,
                 id: 'go-back-home',
+                //验证多余1层的components配置是否会出现问题
+                components: [{
+                    _constructor_: Com,
+                    id: 'test-component'
+                }],
                 selector: '.home',
                 uiEvents: {
                     'click': function (e, btn) {
@@ -110,7 +115,7 @@ define(function (require) {
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
-
+        QUnit.equal(topBar.getChildById('test-component').el, document.getElementById('test-component'), '多层级Component嵌套正常');
         QUnit.stop();
         window.onhashchange = function () {
             QUnit.ok(topBar.needUpdate() === true && app.needUpdate() === true, 'API needUpdate() 正常');

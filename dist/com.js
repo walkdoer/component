@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-08T06:03Z
+ * Date: 2014-04-08T06:19Z
  */
 
 (function (global, factory) {
@@ -1199,11 +1199,8 @@ var idGen = {
             //先渲染组件的子组件
             var fragment = document.createDocumentFragment();
             while (component) {
-                if (!component.selector) {
-                    fragment.appendChild(component.render().el);
-                } else {
-                    component._finishRender();
-                }
+                fragment.appendChild(component.render().el);
+                component._finishRender();
                 component = component.nextNode;
             }
             this.el.appendChild(fragment);
