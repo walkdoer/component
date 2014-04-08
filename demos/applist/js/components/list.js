@@ -26,7 +26,7 @@ define(function (require, exports) {
             var self = this,
                 $el;
             self._super(option);
-            $el = self.$el; //注意：只有上一级Display初始化之后才会有对象才有$el属性
+            $el = self.$el = $(self.el); //注意：只有上一级Display初始化之后才会有对象才有$el属性
             self.pageNum = 0;
             self.first = true;
             self.initVar(['childTpl', 'api', 'listSize', 'loadSize']);

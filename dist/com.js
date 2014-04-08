@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-08T06:19Z
+ * Date: 2014-04-08T06:35Z
  */
 
 (function (global, factory) {
@@ -1432,9 +1432,10 @@ var idGen = {
                 html;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl && tpl.indexOf('#') === 0) {
-                html = document.getElementById(tpl).innerHTML;
+                html = document.getElementById(tpl.slice(1)).innerHTML;
                 if (html) {
-                    self.tplContent = html;
+                    //去除头尾换行
+                    self.tplContent = html.replace(/^\n|\n$/g, '');
                 }
             }
         },

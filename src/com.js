@@ -498,9 +498,10 @@ function(_, util, Node, template) {
                 html;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tpl && tpl.indexOf('#') === 0) {
-                html = document.getElementById(tpl).innerHTML;
+                html = document.getElementById(tpl.slice(1)).innerHTML;
                 if (html) {
-                    self.tplContent = html;
+                    //去除头尾换行
+                    self.tplContent = html.replace(/^\n|\n$/g, '');
                 }
             }
         },
