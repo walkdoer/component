@@ -763,16 +763,6 @@ function(_, util, Node, template) {
             }
             return null;
         },
-        /*
-        show: function () {
-            var el = this.el;
-            el.style.display == "none" && (el.style.display = null);
-            return this;
-        },
-        hide: function () {
-            this.el.style.display = 'none';
-            return this;
-        }*/
     });
     DisplayComponent.config = function (cfg) {
         enhancer = cfg.enhancer;
