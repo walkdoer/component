@@ -281,7 +281,10 @@ function(_, util, Node, template) {
             }
             return self;
         },
-        /*渲染子组件*/
+        /*
+         * 渲染子组件
+         * @private
+         */
         _renderChildComponent: function () {
             var self = this,
                 firstChild = self.firstChild,

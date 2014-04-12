@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-08T09:36Z
+ * Date: 2014-04-11T13:42Z
  */
 
 (function (global, factory) {
@@ -1215,7 +1215,10 @@ var idGen = {
             }
             return self;
         },
-        /*渲染子组件*/
+        /*
+         * 渲染子组件
+         * @private
+         */
         _renderChildComponent: function () {
             var self = this,
                 firstChild = self.firstChild,
@@ -1697,16 +1700,6 @@ var idGen = {
             }
             return null;
         },
-        /*
-        show: function () {
-            var el = this.el;
-            el.style.display == "none" && (el.style.display = null);
-            return this;
-        },
-        hide: function () {
-            this.el.style.display = 'none';
-            return this;
-        }*/
     });
     DisplayComponent.config = function (cfg) {
         enhancer = cfg.enhancer;

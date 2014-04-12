@@ -75,7 +75,9 @@ module.exports = function(grunt) {
                 options: {
                     preserveComments: false,
                     sourceMap: "dist/com.min.map",
-                    sourceMappingURL: "com.min.map"
+                    sourceMappingURL: "com.min.map",
+                    banner: "/*! Com v<%= pkg.version %> | " +
+                        "(c) 2014, <%= grunt.template.today('yyyy') %>*/"
                 }
             }
         },
