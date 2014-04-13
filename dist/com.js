@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-13T16:03Z
+ * Date: 2014-04-13T16:19Z
  */
 
 (function (global, factory) {
@@ -1224,7 +1224,6 @@ var idGen = {
             var self = this;
             self._super(option);
             self.state = {};
-            self._notFinishListener = {};
             self.initVar([
                 'tpl',
                 'tplContent',

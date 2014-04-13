@@ -203,7 +203,6 @@ function(_, util, Node, template) {
             var self = this;
             self._super(option);
             self.state = {};
-            self._notFinishListener = {};
             self.initVar([
                 'tpl',
                 'tplContent',
