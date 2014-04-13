@@ -21,9 +21,16 @@ define(function(require, exports, module) {
                 return object instanceof Array;
         };
 
+    [
+        "Boolean", "Number", "String",
+        "Function", "Array", "Date", "RegExp",
+        "Object", "Error"
+    ].forEach(function (name) {
+        class2type[ "[object " + name + "]" ] = name.toLowerCase();
+    });
     function type(obj) {
         return obj == null ? String(obj) :
-            class2type.toString.call(obj) || "object";
+            class2type[toString.call(obj)] || "object";
     }
 
     function isFunction(value) {

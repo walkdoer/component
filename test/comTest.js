@@ -25,6 +25,12 @@ define(function (require) {
                 'display:topbar:aboutme': function () {
                     console.log('about me');
                     QUnit.ok(true, 'listeners 函数回调方式 正常');
+                },
+                'list:auto-list-a:beforeappend': function () {
+                    console.log('test');
+                },
+                'autolist:auto-list-a:beforeappend': function () {
+                    QUnit.ok(true, '多继承事件监听正常');
                 }
             },
             change: function (state) {
@@ -43,12 +49,19 @@ define(function (require) {
         var List = Com.extend({
             type: 'list',
             append: function (item) {
+                this.trigger('beforeappend', item);
                 this.appendChild(item);
             }
+        }), AutoList = Com.extend({
+            type: 'autolist'
         }), Li = Com.extend({
             type: 'li'
         });
         var list = new List({
+            tplContent: '<ul></ul>'
+        });
+        var autoListA = new AutoList({
+            id: 'auto-list-a',
             tplContent: '<ul></ul>'
         });
 
@@ -110,8 +123,8 @@ define(function (require) {
             title: 'andrew\'s homepage'
         }, 'API getData() 正常');
         QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
-        app.appendChild([topBar, list]);
-        QUnit.equal(app.firstChild === topBar && app.childCount === 2, true, 'API appendChild() 正常');
+        app.appendChild([topBar, list, autoListA]);
+        QUnit.equal(app.firstChild === topBar && app.childCount === 3, true, 'API appendChild() 正常');
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
