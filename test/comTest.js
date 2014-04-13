@@ -27,10 +27,9 @@ define(function (require) {
                     QUnit.ok(true, 'listeners 函数回调方式 正常');
                 },
                 'list:auto-list-a:beforeappend': function () {
-                    console.log('test');
+                    QUnit.ok(false, '多继承事件监听不正常');
                 },
-                'autolist:auto-list-a:beforeappend': function (evt, list,data) {
-                    console.log(data);
+                'autolist:auto-list-a:beforeappend': function (evt, list, items) {
                     QUnit.ok(true, '多继承事件监听正常');
                 }
             },
@@ -50,11 +49,11 @@ define(function (require) {
         var List = Com.extend({
             type: 'list',
             append: function (item) {
-                this.trigger('beforeappend', item);
+                this.trigger('beforeappend', this, item);
                 this.appendChild(item);
             }
         }), AutoList = List.extend({
-            type: 'autolist'
+            type: 'autolist',
         }), Li = Com.extend({
             type: 'li'
         });
