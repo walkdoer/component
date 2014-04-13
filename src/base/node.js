@@ -110,7 +110,7 @@ define([
             self._notFinishListener = {};
             self.initVar(['id', 'parentNode', 'nextNode', 'prevNode']);
             self._listen(self.listeners);
-            self._listen(option.listeners);
+            self._listen(self.originOption.listeners);
         },
         /**
          * 添加节点
@@ -138,11 +138,11 @@ define([
                 //绑定待监听事件，类似于延迟监听，
                 //因为listener中所要监听的组件在那个时刻还没有存在
                 var identity = [n.type, n.id].join(listenersSpliter),
-                    evt = this._notFinishListener[identity];
+                    evt = self._notFinishListener[identity];
                 if (evt) {
                     self.listenTo(n, evt);
                     //删除已监听事件
-                    delete this._notFinishListener[identity];
+                    delete self._notFinishListener[identity];
                 }
                 self.childCount++;
             });
