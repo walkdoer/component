@@ -50,7 +50,7 @@ module.exports = function(grunt) {
         watch: {
             scripts: {
                 files: ['src/**/*.js'],
-                tasks: ['build']
+                tasks: ['build', 'uglify']
             },
             lib: {
                 files: ['dist/com.js'],
@@ -65,6 +65,20 @@ module.exports = function(grunt) {
         build: {
             all: {
                 dest: 'dist/com.js'
+            }
+        },
+        uglify: {
+            all: {
+                files: {
+                    'dist/com.min.js': ['dist/com.js']
+                },
+                options: {
+                    preserveComments: false,
+                    sourceMap: "dist/com.min.map",
+                    sourceMappingURL: "com.min.map",
+                    banner: "/*! Com v<%= pkg.version %> | " +
+                        "(c) 2014, <%= grunt.template.today('yyyy') %>*/"
+                }
             }
         },
         jshint: {
@@ -97,6 +111,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-bowercopy');
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.registerTask('bower', 'bowercopy');
     grunt.registerTask('dev', ['build', 'jshint', 'watch']);
     grunt.registerTask('default', ['bower', 'build']);

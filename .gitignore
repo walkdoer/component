@@ -53,3 +53,5 @@ demos/applist/js/lib/com.js
 dist/com.min.js
 
 dist/com.min.map
+
+dist/com.js
