@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-15T11:57Z
+ * Date: 2014-04-15T13:00Z
  */
 
 (function (global, factory) {
@@ -1396,8 +1396,10 @@ var idGen = {
                 this.state = newState;
                 this.trigger(STATE_CHANGE, newState);
             }
+            //取出组件的父Dom
             var pEl = isRoot ? this.parentEl :
-                this.parentNode._tempEl;
+                this.parentNode._tempEl || this.parentNode.el;
+            //如果组件需要更新 或者 是 selector
             if (stateChange || this.selector) {
                 newEl = this._tempEl = this._createHTMLElement(pEl);
             }
@@ -1410,7 +1412,11 @@ var idGen = {
                 //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
                 //详细参考selector的定义
                 if(!component.selector) {
-                    newEl.appendChild(component._tempEl || component.el);
+                    if (stateChange) {
+                        newEl.appendChild(component._tempEl || component.el);
+                    } else if (comUpdated) {
+                        newEl.replaceChild(component._tempEl, component.el);
+                    }
                 }
                 if (comUpdated) {
                     //更新父节点
@@ -1421,7 +1427,8 @@ var idGen = {
                 }
                 component = component.nextNode;
             }
-            if (isRoot) {
+            if (isRoot && stateChange) {
+                this._changeEl(newEl);
                 this.parentEl.replaceChild(newEl, this.el);
             }
             return this;

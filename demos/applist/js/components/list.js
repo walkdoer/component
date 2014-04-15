@@ -37,14 +37,16 @@ define(function (require, exports) {
             self.$msg.html(self.loadingMsg);
             self.stockItems = [];
         },
-        update: function () {
-            var self = this;
-            //empty list
-            self.empty();
-            //set list status to loading status
-            self.setStatus(LOADING);
-            //load again
-            self.load(true);
+        listeners: {
+            'statechange': function () {
+                var self = this;
+                //empty list
+                self.empty();
+                //set list status to loading status
+                self.setStatus(LOADING);
+                //load again
+                self.load(true);
+            }
         },
         empty: function () {
             //改变visibility减少浏览器
