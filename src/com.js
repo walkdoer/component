@@ -360,12 +360,12 @@ function(_, util, Node, template) {
          * 更新自身，及通知子组件进行更新
          * @return {Object} this
          */
-        update: function() {
+        update: function(callback) {
             //首先自我更新，保存到临时_tempEl中
             //this.updating = true;
             var newState = this.getState(),
                 isRoot = !this.parentNode,
-                tempEl,
+                newEl = this.el,
                 stateChange;
             if ((stateChange = this._isStateChange(newState))) {
                 this.state = newState;
@@ -373,7 +373,9 @@ function(_, util, Node, template) {
             }
             var pEl = isRoot ? this.parentEl :
                 this.parentNode._tempEl;
-            tempEl = this._tempEl = this._createHTMLElement(pEl);
+            if (stateChange) {
+                newEl = this._tempEl = this._createHTMLElement(pEl);
+            }
             var component = this.firstChild;
             //通知子组件更新
             while (component) {
@@ -382,9 +384,9 @@ function(_, util, Node, template) {
                 //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
                 //详细参考selector的定义
                 if(!component.selector) {
-                    tempEl.appendChild(component._tempEl || component.el);
+                    newEl.appendChild(component._tempEl || component.el);
                 }
-                component._changeParentEl(tempEl);
+                component._changeParentEl(newEl);
                 component._unbindUIEvent()._bindUIEvent();
                 //更新子节点节点Dom
                 component._changeEl(component._tempEl);
@@ -392,8 +394,9 @@ function(_, util, Node, template) {
                 component = component.nextNode;
             }
             if (isRoot) {
-                this.parentEl.replaceChild(tempEl, this.el);
+                this.parentEl.replaceChild(newEl, this.el);
             }
+            callback && callback(newEl);
             return this;
         },
         /**
