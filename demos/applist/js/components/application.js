@@ -21,10 +21,11 @@ define(function(require, exports) {
          */
         changePage: function (pageName, env, data) {
             var self = this,
+                id = 'page-' + pageName,
                 currentPage = self.getChildById(self.currentPage),
-                newPg = self.getChildById(pageName);
+                newPg = self.getChildById(id);
             //当前页面与要切换的页面相同，不需要切换
-            if (currentPage && currentPage.id === pageName) {
+            if (currentPage && currentPage.id === id) {
                 currentPage.update(env, data);
                 return;
             }
@@ -43,7 +44,7 @@ define(function(require, exports) {
                     self.render().appendToParent();
                 });
             }
-            this.currentPage = pageName;
+            this.currentPage = id;
             return this;
         },
         _createPage: function (pageName, env, pageOption, callback) {
@@ -52,7 +53,7 @@ define(function(require, exports) {
             require.async('pages/' + pageName, function (PageClass) {
                 //创建类
                 var defaultOption = {
-                    id: pageName,
+                    id: 'page-' + pageName,
                     parentNode: self,
                     env: env,
                     listeners: {

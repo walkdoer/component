@@ -12,7 +12,7 @@ define(function (require, exports) {
         Category;
 
     Category = Component.extend({
-        name: 'category',
+        type: 'page',
         components: [{
             _constructor_: TopBar,
             getState: function () {

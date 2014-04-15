@@ -294,19 +294,26 @@ function(_, util, Node, template) {
             while (component) {
                 component.render();
                 comParentEl = component.parentEl;
-                if (self.el !== comParentEl) {
-                    //取出对应的DocumentFragment
-                    index = parentElArr.indexOf(comParentEl);
-                    fragmentTmp = index >= 0 ?
-                        fragmentArr[index] :
-                        document.createDocumentFragment();
-                    fragmentTmp.appendChild(component.el);
-                    if (index < 0) {
-                        parentElArr.push(component.parentEl);
-                        fragmentArr.push(fragmentTmp);
+                //如果该元素还没被添加到parent中
+                if (!component.el.parentNode) {
+                    //如果子组件的parentEl !== 父组件的el
+                    //则表示子组件是要添加到父节点的某一个子节点Dom中
+                    if (self.el !== comParentEl) {
+                        //取出对应的DocumentFragment
+                        index = parentElArr.indexOf(comParentEl);
+                        fragmentTmp = index >= 0 ?
+                            fragmentArr[index] :
+                            document.createDocumentFragment();
+                        fragmentTmp.appendChild(component.el);
+                        if (index < 0) {
+                            parentElArr.push(component.parentEl);
+                            fragmentArr.push(fragmentTmp);
+                        }
+
+                    //添加到默认的父节点el中
+                    } else {
+                        fragment.appendChild(component.el);
                     }
-                } else {
-                    fragment.appendChild(component.el);
                 }
                 component = component.nextNode;
             }
