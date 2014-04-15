@@ -363,9 +363,10 @@ function(_, util, Node, template) {
          * 更新自身，及通知子组件进行更新
          * @return {Object} this
          */
-        update: function() {
+        update: function(env) {
             //首先自我更新，保存到临时_tempEl中
             //this.updating = true;
+            env && (this.env = env);
             var newState = this.getState(),
                 isRoot = !this.parentNode,
                 newEl = this.el,
@@ -385,7 +386,7 @@ function(_, util, Node, template) {
             var component = this.firstChild;
             //通知子组件更新
             while (component) {
-                component.update();
+                component.update(env);
                 comUpdated = !!component._tempEl;
                 //节点有更新，在新Dom节点上添加子组件el 或者 tempEl
                 //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
@@ -447,6 +448,11 @@ function(_, util, Node, template) {
                 com = com.nextNode;
             }
             this._super(comArray);
+        },
+        destroy: function () {
+            this.parentEl.removeChild(this.el);
+            this.el = null;
+            this._super();
         },
         /**
          * 渲染模板
