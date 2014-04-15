@@ -218,6 +218,7 @@ function(_, util, Node, template) {
                 'userUpdate:update',
                 'className',
                 'display',
+                'selector',
                 'el'
             ]);
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
@@ -384,7 +385,12 @@ function(_, util, Node, template) {
             while (component) {
                 component.update();
                 comUpdated = !!component._tempEl;
-                newEl.appendChild(component._tempEl || component.el);
+                //节点有更新，在新Dom节点上添加子组件el 或者 tempEl
+                //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
+                //详细参考selector的定义
+                if(!component.selector) {
+                    newEl.appendChild(component._tempEl || component.el);
+                }
                 if (comUpdated) {
                     //更新父节点
                     component._changeParentEl(newEl);
@@ -538,15 +544,22 @@ function(_, util, Node, template) {
          * @private
          * @params {DOM} 父亲Dom节点
          */
-        _createHTMLElement: function() {
+        _createHTMLElement: function(parentEl) {
             var self = this,
+                selector = self.selector,
                 el;
-                //如果模板初始化成功则渲染模板
-            if (self.tplContent) {
-                el = createElement(self.tmpl())[0];
+             //配置了选择器，直接使用选择器查询
+            if (selector) {
+                el = parentEl.querySelector(selector);
+            //没有则初始化模板
             } else {
-                //没有初始化成功, 需要初始化一个页面的Element
-                el = document.createElement('section');
+                //如果模板初始化成功则渲染模板
+                if (self.tplContent) {
+                    el = createElement(self.tmpl())[0];
+                } else {
+                    //没有初始化成功, 需要初始化一个页面的Element
+                    el = document.createElement('section');
+                }
             }
             self._setIdAndClass(el);
             return el;

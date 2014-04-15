@@ -67,11 +67,11 @@ define(function (require) {
 
         var topBar = new Com({
             id: 'topbar',
-            tplContent: '<nav class="<%_state_.name%>"><%title%></nav>',
+            tplContent: '<nav class="<%_state_.name%>"><%title%><button class="home">home</button></nav>',
             components: [{
                 _constructor_: Com,
                 id: 'go-back-home',
-                tplContent: '<button class="home">home</button>',
+                selector: '.home',
                 //验证多余1层的components配置是否会出现问题
                 components: [{
                     _constructor_: Com,
@@ -116,7 +116,7 @@ define(function (require) {
             },
             title: 'andrew\'s homepage'
         }, 'API getData() 正常');
-        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage', 'tmpl接口正常');
+        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home">home</button>', 'tmpl接口正常');
         app.appendChild([topBar, list, autoListA]);
         var index = 5;
         while (index-- > 0) {
