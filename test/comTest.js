@@ -116,7 +116,7 @@ define(function (require) {
             },
             title: 'andrew\'s homepage'
         }, 'API getData() 正常');
-        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home">home</button>', 'tmpl接口正常');
+        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
         app.appendChild([topBar, list, autoListA]);
         var index = 5;
         while (index-- > 0) {

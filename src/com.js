@@ -377,7 +377,7 @@ function(_, util, Node, template) {
             }
             var pEl = isRoot ? this.parentEl :
                 this.parentNode._tempEl;
-            if (stateChange) {
+            if (stateChange || this.selector) {
                 newEl = this._tempEl = this._createHTMLElement(pEl);
             }
             var component = this.firstChild;

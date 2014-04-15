@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-15T11:42Z
+ * Date: 2014-04-15T11:57Z
  */
 
 (function (global, factory) {
@@ -1398,7 +1398,7 @@ var idGen = {
             }
             var pEl = isRoot ? this.parentEl :
                 this.parentNode._tempEl;
-            if (stateChange) {
+            if (stateChange || this.selector) {
                 newEl = this._tempEl = this._createHTMLElement(pEl);
             }
             var component = this.firstChild;
