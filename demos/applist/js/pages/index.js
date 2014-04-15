@@ -1,7 +1,7 @@
 /**
  * [页面] 首页
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var $ = require('core/selector'),
         _ = require('core/lang'),
@@ -35,12 +35,20 @@ define(function (require, exports) {
             parentNode: parent,
             components: [{
                 _constructor_: TextField,
-                id: 'url',
-                selector: '#field-url'
+                tpl: '#tpl-field',
+                id: 'field-url',
+                data: {
+                    text: 'Url',
+                    name: 'url'
+                }
             }, {
                 _constructor_: TextField,
-                id: 'name',
-                selector: '#field-name'
+                tpl: '#tpl-field',
+                id: 'field-name',
+                data: {
+                    text: 'Name',
+                    name: 'name'
+                }
             }],
             uiEvents: {
                 'touchmove': function (event) {

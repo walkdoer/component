@@ -99,10 +99,10 @@ function(_, util, Node, template) {
             fragmentRE = /^\s*<(\w+|!)[^>]*>/,
             container,
             name,
-            dom;
+            doms;
         // 对于单个标签的进行优化 例如<div></div>
         if (singleTagRE.test(html)) {
-            dom = [document.createElement(RegExp.$1)];
+            doms = [document.createElement(RegExp.$1)];
         }
         //提取出标签名称
         if (name === undefined) {
@@ -117,8 +117,11 @@ function(_, util, Node, template) {
         }
         container = containers[name];
         container.innerHTML = '' + html;
-        dom = container.childNodes;
-        return dom;
+        doms = _.each(slice.call(container.childNodes), function (index, dom) {
+            return container.removeChild(dom);
+        });
+
+        return doms;
     }
 
 

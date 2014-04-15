@@ -104,6 +104,14 @@
     <span class="btn-text">load more</span>
 </p>
 </script>
+
+<script type="text/template" id="tpl-field">
+<p class="inputbox">
+    <label class="ipb-label" for="url"><%text%></label>
+    <input type="text" id="<%name%>" class="ipb-input" name="<%name%>" required/>
+    <i class="clear">&times;</i>
+</p>
+</script>
 <!--==============
    {Component} 添加Url
 ================= -->
@@ -114,18 +122,7 @@
         <button type="submit" class="b-btn-ok submit">Ok</button>
         <p class="b-title-center">Add URL</p>
     </div>
-    <div class="form-fields">
-        <p class="inputbox" id="field-url">
-            <label class="ipb-label" for="url">Url</label>
-            <input type="text" id= "url" class="ipb-input" name="url" required/>
-            <i class="clear">&times;</i>
-        </p>
-        <p class="inputbox" id="field-name">
-            <label class="ipb-label" for="name">Name</label>
-            <input type="text" id="name" class="ipb-input" name="name" required/>
-            <i class="clear">&times;</i>
-        </p>
-    </div>
+    <div class="form-fields"></div>
 </form>
 </script>
 <!--====================================

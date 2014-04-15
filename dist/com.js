@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-15T09:43Z
+ * Date: 2014-04-15T11:21Z
  */
 
 (function (global, factory) {
@@ -1120,10 +1120,10 @@ var idGen = {
             fragmentRE = /^\s*<(\w+|!)[^>]*>/,
             container,
             name,
-            dom;
+            doms;
         // 对于单个标签的进行优化 例如<div></div>
         if (singleTagRE.test(html)) {
-            dom = [document.createElement(RegExp.$1)];
+            doms = [document.createElement(RegExp.$1)];
         }
         //提取出标签名称
         if (name === undefined) {
@@ -1138,8 +1138,11 @@ var idGen = {
         }
         container = containers[name];
         container.innerHTML = '' + html;
-        dom = container.childNodes;
-        return dom;
+        doms = _.each(slice.call(container.childNodes), function (index, dom) {
+            return container.removeChild(dom);
+        });
+
+        return doms;
     }
 
 
