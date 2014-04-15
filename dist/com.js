@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-15T07:47Z
+ * Date: 2014-04-15T09:43Z
  */
 
 (function (global, factory) {
@@ -1236,8 +1236,7 @@ var idGen = {
                 'userUpdate:update',
                 'className',
                 'display',
-                'el',
-                'selector'
+                'el'
             ]);
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
@@ -1381,12 +1380,13 @@ var idGen = {
          * 更新自身，及通知子组件进行更新
          * @return {Object} this
          */
-        update: function(callback) {
+        update: function() {
             //首先自我更新，保存到临时_tempEl中
             //this.updating = true;
             var newState = this.getState(),
                 isRoot = !this.parentNode,
                 newEl = this.el,
+                comUpdated,
                 stateChange;
             if ((stateChange = this._isStateChange(newState))) {
                 this.state = newState;
@@ -1401,23 +1401,20 @@ var idGen = {
             //通知子组件更新
             while (component) {
                 component.update();
-                //节点有更新，在新Dom节点上添加子组件el 或者 tempEl
-                //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
-                //详细参考selector的定义
-                if(!component.selector) {
-                    newEl.appendChild(component._tempEl || component.el);
+                comUpdated = !!component._tempEl;
+                newEl.appendChild(component._tempEl || component.el);
+                if (comUpdated) {
+                    //更新父节点
+                    component._changeParentEl(newEl);
+                    component._unbindUIEvent()._bindUIEvent();
+                    component._changeEl(component._tempEl);
+                    delete component._tempEl;
                 }
-                component._changeParentEl(newEl);
-                component._unbindUIEvent()._bindUIEvent();
-                //更新子节点节点Dom
-                component._changeEl(component._tempEl);
-                delete component._tempEl;
                 component = component.nextNode;
             }
             if (isRoot) {
                 this.parentEl.replaceChild(newEl, this.el);
             }
-            callback && callback(newEl);
             return this;
         },
         /**
@@ -1559,22 +1556,15 @@ var idGen = {
          * @private
          * @params {DOM} 父亲Dom节点
          */
-        _createHTMLElement: function(parentEl) {
+        _createHTMLElement: function() {
             var self = this,
-                selector = self.selector,
                 el;
-            //配置了选择器，直接使用选择器查询
-            if (selector) {
-                el = parentEl.querySelector(selector);
-            //没有则初始化模板
-            } else {
                 //如果模板初始化成功则渲染模板
-                if (self.tplContent) {
-                    el = createElement(self.tmpl())[0];
-                } else {
-                    //没有初始化成功, 需要初始化一个页面的Element
-                    el = document.createElement('section');
-                }
+            if (self.tplContent) {
+                el = createElement(self.tmpl())[0];
+            } else {
+                //没有初始化成功, 需要初始化一个页面的Element
+                el = document.createElement('section');
             }
             self._setIdAndClass(el);
             return el;
