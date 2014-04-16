@@ -1,7 +1,7 @@
 /**
  * [组件] 按钮
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var Component = require('lib/com'),
         Util = require('util'),
@@ -19,18 +19,21 @@ define(function (require, exports) {
         type: 'app',
         tpl: '#tpl-item-app',
         uiEvents: {
-            'click .install': function () {
-                var appInfo = this.originOption.data;
+            'click .install': function (e, app) {
+                var appInfo = app.originOption.data;
                 Logger.log({
-                    path: this.getAbsPath(),
+                    path: app.getAbsPath(),
                     r: 'add_app',
                     n: appInfo.name,
                     id: appInfo.id
                 });
-                this.install();
+                app.install();
             }
         },
         listeners: {
+            'beforetmpl': function (evt, data) {
+                data.installed = data.installed ? 'installed' : 'install';
+            },
             'afterrender': function () {
                 var self = this,
                     $el = self.$el,
