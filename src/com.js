@@ -31,6 +31,8 @@ function(_, util, Node, template) {
         returnFalse = function() {
             return false;
         },
+        focusinSupported = 'onfocusin' in window,
+        focus = { focus: 'focusin', blur: 'focusout' },
         ignoreProperties = /^([A-Z]|returnValue$|layer[XY]$)/,
         eventMethods = {
             preventDefault: 'isDefaultPrevented',
@@ -38,6 +40,12 @@ function(_, util, Node, template) {
             stopPropagation: 'isPropagationStopped'
         };
 
+    /**
+     * 处理blur事件
+     */
+    function eventCapture(e) {
+        return !focusinSupported && (e in focus);
+    }
     /**
      * appendPxIfNeed
      * 为数字添加单位 'px'
@@ -667,7 +675,7 @@ function(_, util, Node, template) {
                 }
 
             };
-            this.parentEl.addEventListener(eventName, delegator, false);
+            this.parentEl.addEventListener(eventName, delegator, eventCapture(eventName));
         },
         /**
          * 组件状态是否有改变
