@@ -230,7 +230,8 @@ function(_, util, Node, template) {
             //初始化组件HTML元素
             var el = self.el;
             if (!el) {
-                self.initTemplate(self.tpl);
+                //初始化模板
+                self.tplContent = self.initTemplate(self.tpl) || self.tplContent;
                 self.el = self._createHTMLElement(self.parentEl);
                 enhancer && (self.$el = enhancer(self.el));
                 //用户创建的Listener
@@ -548,21 +549,20 @@ function(_, util, Node, template) {
         },
         /**
          * 初始化模板
-         * tpl的取值: #a-tpl-id 或者 'tpl.file.name'
-         * @private
-         * @param  {Function} callback 回调
+         * @param  {String} tplId 模板Id
+         * @return {String} 后去Template模板
          */
         initTemplate: function(tplId) {
-            var self = this,
-                html;
+            var html;
             //使用HTML文件中的<script type="template" id="{id}"></script>
             if (tplId && tplId.indexOf('#') === 0) {
                 html = document.getElementById(tplId.slice(1)).innerHTML;
                 if (html) {
                     //去除头尾换行
-                    self.tplContent = html.replace(/^\n|\n$/g, '');
+                    html = html.replace(/^\n|\n$/g, '');
                 }
             }
+            return html;
         },
         /**
          * 初始化HTML元素
