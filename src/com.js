@@ -219,6 +219,7 @@ function(_, util, Node, template) {
                 'className',
                 'display',
                 'selector',
+                'parentSelector',
                 'el'
             ]);
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
@@ -229,7 +230,7 @@ function(_, util, Node, template) {
             //初始化组件HTML元素
             var el = self.el;
             if (!el) {
-                self._initTemplate();
+                self.initTemplate(self.tpl);
                 self.el = self._createHTMLElement(self.parentEl);
                 enhancer && (self.$el = enhancer(self.el));
                 //用户创建的Listener
@@ -247,10 +248,17 @@ function(_, util, Node, template) {
          * @private
          */
         _initParent: function() {
-            var parentNode = this.parentNode;
+            if (this.parentEl) {
+                return;
+            }
+            var parentNode = this.parentNode,
+                parentSelector = this.parentSelector;
             //指定了parentNode 没有指定parentEl
-            if (parentNode && !this.parentEl) {
-                this.parentEl = parentNode.el;
+            if (parentSelector) {
+                parentNode &&
+                    (this.parentEl = parentNode.el.querySelector(parentSelector));
+            } else {
+                parentNode && (this.parentEl = parentNode.el);
             }
         },
         /**
@@ -368,48 +376,53 @@ function(_, util, Node, template) {
             //this.updating = true;
             env && (this.env = env);
             var newState = this.getState(),
-                isRoot = !this.parentNode,
+                parentNode = this.parentNode,
+                isRoot = !parentNode,
+                hasSelector = !!this.selector,
                 newEl = this.el,
-                comUpdated,
-                stateChange;
-            if ((stateChange = this._isStateChange(newState))) {
+                parentStateChange,
+                comStateChange,
+                selfStateChange;
+            if ((selfStateChange = this._isStateChange(newState))) {
                 this.state = newState;
                 this.trigger(STATE_CHANGE, newState);
             }
+            !isRoot && (parentStateChange = parentNode._tempEl);
             //取出组件的父Dom
             var pEl = isRoot ? this.parentEl :
-                this.parentNode._tempEl || this.parentNode.el;
+                parentNode._tempEl || parentNode.el;
             //如果组件需要更新 或者 是 selector
-            if (stateChange || this.selector) {
+            if (selfStateChange || hasSelector && parentStateChange) {
                 newEl = this._tempEl = this._createHTMLElement(pEl);
             }
             var component = this.firstChild;
             //通知子组件更新
             while (component) {
                 component.update(env);
-                comUpdated = !!component._tempEl;
+                comStateChange = !!component._tempEl;
                 //节点有更新，在新Dom节点上添加子组件el 或者 tempEl
                 //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
                 //详细参考selector的定义
                 if(!component.selector) {
-                    if (stateChange) {
+                    if (selfStateChange || parentStateChange && hasSelector) {
                         newEl.appendChild(component._tempEl || component.el);
-                    } else if (comUpdated) {
+                    } else if (comStateChange) {
                         newEl.replaceChild(component._tempEl, component.el);
                     }
                 }
-                if (comUpdated) {
+                if (comStateChange) {
                     //更新父节点
                     component._changeParentEl(newEl);
                     component._unbindUIEvent()._bindUIEvent();
-                    component._changeEl(component._tempEl);
                     delete component._tempEl;
                 }
                 component = component.nextNode;
             }
-            if (isRoot && stateChange) {
-                this._changeEl(newEl);
+            if (isRoot) {
                 this.parentEl.replaceChild(newEl, this.el);
+            }
+            if (selfStateChange || hasSelector) {
+                this._changeEl(newEl);
             }
             return this;
         },
@@ -539,13 +552,12 @@ function(_, util, Node, template) {
          * @private
          * @param  {Function} callback 回调
          */
-        _initTemplate: function() {
+        initTemplate: function(tplId) {
             var self = this,
-                tpl = self.tpl,
                 html;
             //使用HTML文件中的<script type="template" id="{id}"></script>
-            if (tpl && tpl.indexOf('#') === 0) {
-                html = document.getElementById(tpl.slice(1)).innerHTML;
+            if (tplId && tplId.indexOf('#') === 0) {
+                html = document.getElementById(tplId.slice(1)).innerHTML;
                 if (html) {
                     //去除头尾换行
                     self.tplContent = html.replace(/^\n|\n$/g, '');
