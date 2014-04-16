@@ -53,13 +53,16 @@ module.exports = function(grunt) {
                 tasks: ['build', 'uglify']
             },
             lib: {
-                files: ['dist/com.js'],
-                tasks: ['commander:cp2Demo']
+                files: ['dist/com.js', 'dist/com.min.js'],
+                tasks: ['commander:cp2Demo', 'commander:cp2AppStore']
             }
         },
         commander: {
             cp2Demo: {
                 command: 'cp dist/com.js demos/applist/js/lib/'
+            },
+            cp2AppStore: {
+                command: 'cp dist/com.js ~/workspace/ucplus/app-store-international/frontend/public/src/js/lib/com.js'
             }
         },
         build: {
