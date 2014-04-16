@@ -596,6 +596,7 @@ function(_, util, Node, template) {
             var evts = this.uiEvents,
                 elementSelector,
                 eventType,
+                idSelector = '#' + this.id,
                 callback,
                 evtConf;
             if (!evts) {
@@ -604,7 +605,7 @@ function(_, util, Node, template) {
             for (var evt in evts) {
                 evtConf = evt.split(' ');
                 if (evtConf.length > 1) {
-                    elementSelector = evtConf.slice(1).join(' ');
+                    elementSelector = [idSelector, evtConf.slice(1).join(' ')].join(' ');
                 } else {
                     //如果没有配置托管的对象，则使用对象本身Id
                     //例如 {
@@ -613,7 +614,7 @@ function(_, util, Node, template) {
                     //等价于{
                     //    'click #elementId', function() {}
                     //}
-                    elementSelector = '#' + this.id;
+                    elementSelector = idSelector;
                 }
                 eventType = evtConf[0];
                 callback = evts[evt];

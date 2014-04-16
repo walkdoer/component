@@ -6,7 +6,7 @@
  * Copyright 2013
  * Released under the MIT license
  *
- * Date: 2014-04-15T13:33Z
+ * Date: 2014-04-16T07:34Z
  */
 
 (function (global, factory) {
@@ -854,9 +854,10 @@ var idGen = {
                     //if listeners[evt] is string
                     //then this string would be a function name
                     if (typeof callback === 'string') {
-                        callback = this.originOption[callback];
+                        // get function from user's option or class definition
+                        callback = this.originOption[callback] || this[callback];
                     }
-                    if (!callback) { continue; }
+                    if (typeof callback != 'function') { continue; }
                     //TYPE:ID:Event
                     if (3 === len) {
                         com = this.getChildById(evtArr[1]);
@@ -1617,6 +1618,7 @@ var idGen = {
             var evts = this.uiEvents,
                 elementSelector,
                 eventType,
+                idSelector = '#' + this.id,
                 callback,
                 evtConf;
             if (!evts) {
@@ -1625,7 +1627,7 @@ var idGen = {
             for (var evt in evts) {
                 evtConf = evt.split(' ');
                 if (evtConf.length > 1) {
-                    elementSelector = evtConf.slice(1).join(' ');
+                    elementSelector = [idSelector, evtConf.slice(1).join(' ')].join(' ');
                 } else {
                     //如果没有配置托管的对象，则使用对象本身Id
                     //例如 {
@@ -1634,7 +1636,7 @@ var idGen = {
                     //等价于{
                     //    'click #elementId', function() {}
                     //}
-                    elementSelector = '#' + this.id;
+                    elementSelector = idSelector;
                 }
                 eventType = evtConf[0];
                 callback = evts[evt];
