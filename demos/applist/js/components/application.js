@@ -59,25 +59,11 @@ define(function(require, exports) {
                     listeners: {
                         'beforerender': function (evt, page) {
                             //如果要加载的页面没有页面模板，则不清空Body
-                            if (page.hasTplContent() && self._firstInitial) {
+                            if (self._firstInitial) {
                                 $(self.beforeLoad).hide();
                             }
                         },
-                        'beforerender_first_com': function (evt, page) {
-                            //如果渲染第一个组件的时候，这个页面是没有加载成功的,hasTplContent = false
-                            //这个时候body是没有清空的,需要清空body
-                            if (!page.hasTplContent()) {
-                                if (self._firstInitial && self.beforeLoad) {
-                                    //加载中提示...
-                                    $(self.beforeLoad).hide();
-                                }
-                                page.$el.empty();
-                                //取消第一次初始化的标志
-                            } else {
-                                page.$el.empty();
-                            }
-                        },
-                        'rendered': function (/*evt, page*/) {
+                        'afterrender': function (/*evt, page*/) {
                             self._firstInitial = false;
                         }
                     }

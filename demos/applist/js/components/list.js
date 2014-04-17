@@ -1,7 +1,7 @@
 /**
  * [组件] 顶部导航条
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var $ = require('core/selector'),
         Component = require('lib/com'),
@@ -19,8 +19,7 @@ define(function (require, exports) {
         components: [{
             _constructor_: LoadMoreButton,
             id: loadBtnId,
-            tpl: '#tpl-btn-loadmore',
-            display: false
+            tpl: '#tpl-btn-loadmore'
         }],
         init: function (option) {
             var self = this,
@@ -46,6 +45,9 @@ define(function (require, exports) {
                 self.setStatus(LOADING);
                 //load again
                 self.load(true);
+            },
+            'loadMoreButton:loadMore:load': function () {
+                this.load();
             }
         },
         empty: function () {

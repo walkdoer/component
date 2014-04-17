@@ -22,4 +22,13 @@ define(function(require, exports) {
         model.ping('log', data);
     };
     exports.log = log;
+    var ajaxLogWithApi = function (apiName, data, success, error){
+    	var path = data.path;
+        if (path) {
+            data.p = extractPath(data.path);
+            delete data.path;
+        }
+        model.ajaxPing(apiName, data, success, error);
+    };
+    exports.ajaxLogWithApi = ajaxLogWithApi;
 });

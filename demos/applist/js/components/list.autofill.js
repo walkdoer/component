@@ -1,7 +1,7 @@
 /**
  * [Component][List] 自动补全列表
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var List = require('components/list'),
         typeName = 'autofillList',
@@ -49,6 +49,7 @@ define(function (require, exports) {
             if (!hasMore) {
                 this.trigger('end', this);
             }
+            this.trigger('afterappend');//加载完，加载top图标
             return self;
         }
     });

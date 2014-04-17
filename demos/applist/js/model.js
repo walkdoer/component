@@ -52,6 +52,29 @@ define(function(require, exports) {
             img.src = util.param(params, url);
         }
     };
+    
+    /**
+     * @param {} apiName
+     * @param {} params
+     * @param {} success 成功的回调函数
+     * @param {} error 失败的回调函数
+     * @returns {} 
+     */
+    exports.ajaxPing = function (apiName, params, success, error) {
+        var url = api[apiName];
+        if (url){
+            params = params || {};
+            params.uc_param_str = UC_PARAM_STR;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                timeout: 800,
+                data: params,
+                success: success,
+                error: error
+            });
+        }
+    };
 
     /**
      * 获取Api地址

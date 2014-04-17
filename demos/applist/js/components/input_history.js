@@ -11,7 +11,14 @@ define(function (require, exports) {
         type: typeName,
         init: function (option) {
             this._super(option);
-            this.initVar(['storageKey', 'childTplContent', 'storageSize', 'showSize', 'filter']);
+            this.initVar([
+                'storageKey',
+                'childTpl',
+                'storageSize',
+                'showSize',
+                'filter'
+            ]);
+            this.childTplContent = this.initTemplate(this.childTpl);
         },
         /**
          * {Private} 获取匹配的历史记录
@@ -60,16 +67,19 @@ define(function (require, exports) {
         filte: function (keyword) {
             var historyArray = this._getMatchHistory(keyword),
                 historyItem,
-                fragment = document.createDocumentFragment(),
                 len;
             //截取最前的 showSize 条数据
             historyArray = historyArray.slice(0, this.showSize);
             len = historyArray.length;
+            this.removeAllChild();
             for (var i = 0; i < len; i++) {
                 historyItem = historyArray[i];
-                fragment.appendChild($(this.tmpl(this.childTplContent, historyItem))[0]);
+                this.appendChild(new Com({
+                    tplContent: this.childTplContent,
+                    data: historyItem
+                }));
             }
-            this.$el.empty().append(fragment);
+            this.render();
             return this;
         }
     });

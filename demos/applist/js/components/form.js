@@ -1,7 +1,7 @@
 /**
  * [Component] 表单
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var $ = require('core/selector'),
         Component = require('lib/com'),
@@ -67,12 +67,12 @@ define(function (require, exports) {
                 event.preventDefault();
                 var data = form._getField();
                 if (form._validate(data)) {
-                    form.trigger('submit', [this, event, data]);
+                    form.trigger('submit', form, data);
                 }
             },
             //取消按钮
             'click .cancel': function (event, form) {
-                form.trigger('cancel', [this, event]);
+                form.trigger('cancel', this, event);
             },
             //输入框聚焦
             'focus input': function (event) {

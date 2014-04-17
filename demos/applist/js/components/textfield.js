@@ -1,7 +1,7 @@
 /**
  * [Component] 输入框
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var _ = require('core/lang'),
         $ = require('core/selector'),
@@ -10,24 +10,20 @@ define(function (require, exports) {
         Textfield;
     Textfield = Component.extend({
         type: typeName,
-        init: function (option) {
-            this._super(option);
-            this.$el = $(this.el);
-        },
         uiEvents: {
-            'click .clear': function (event) {
-                var $icon = $(event.target),
+            'click .clear': function (e) {
+                var $icon = $(e.target),
                     $field = $icon.parent().find('input');
                 $field.val('');
                 $icon.hide();
             },
             //input事件触发比较频繁，需要添加事件防抖
-            'input input': _.debounce(function (event) {
-                this.value = event.target.value;
-                this.trigger('input', [this]);
+            'input input': _.debounce(function (e, field) {
+                field.value = e.target.value;
+                field.trigger('input', field);
             }, 300),
-            'blur input': function () {
-                this.trigger('blur', [this]);
+            'blur input': function (e, field) {
+                field.trigger('blur', field);
             }
         }
     });

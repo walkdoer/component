@@ -1,7 +1,7 @@
 /**
  * [Component] 顶部导航条
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var  $ = require('core/selector'),
         Component = require('lib/com'),
@@ -33,7 +33,7 @@ define(function (require, exports) {
         },
         activeTab: function (tabName) {
             if (!tabName) { return; }
-            var $tab = this.$curTab = this.$el.find('ul').find('[data-target=' + tabName + ']');
+            var $tab = this.$curTab = this.$el.find('tr').find('[data-target=' + tabName + ']');
             var self = this;
             var next = {};
             if (self.tabName === $tab.attr('data-target')) {
@@ -82,7 +82,7 @@ define(function (require, exports) {
         },
         listeners: {
             'afterrender': function (evt, tab) {
-                tab.$tabs = tab.$el.find('ul').find('li');
+                tab.$tabs = tab.$el.find('tr').find('td');
                 tab.activeTab('recommend');
             }
         }

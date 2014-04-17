@@ -1,7 +1,7 @@
 /**
  * [组件] 按钮
  */
-define(function (require) {
+define(function (require, exports) {
     'use strict';
     var Component = require('lib/com'),
         Util = require('util'),
@@ -12,14 +12,33 @@ define(function (require) {
         FULL_CLASS_INSTALL = '.' + CLASS_INSTALL,
         CLASS_INSTALLED = 'installed',
         CLASS_DEFAULT_ICON = 'icn',
+        ADD_SPEED_DIAL_SOURCE = 'webstorei',
+        URL_TYPE_OTHER_EXT = 'other-ext',
         /* --- End of 常量 --- */
         App;
+    function buildDialogParams(appInfo){
+        var params = [];
+
+        var id = appInfo.id;
+        var name = appInfo.name;
+        var icon = appInfo.logoUrl;
+        var rawUrl = appInfo.rawUrl;
+        var source = ADD_SPEED_DIAL_SOURCE;
+        var isShow = appInfo.partner == 0? '1' : '0';
+        params.push(id + '');
+        params.push(name);
+        params.push(icon);
+        params.push(rawUrl);
+        params.push(source);
+        params.push(isShow);
+        return params;
+    }
 
     App = Component.extend({
         type: 'app',
         tpl: '#tpl-item-app',
         uiEvents: {
-            'click .install': function (e, app) {
+            'click .btn': function (e, app) {
                 var appInfo = app.originOption.data;
                 Logger.log({
                     path: app.getAbsPath(),
@@ -28,10 +47,60 @@ define(function (require) {
                     id: appInfo.id
                 });
                 app.install();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+            },
+            'click .app': function () {
+                var appInfo = this.originOption.data;
+                var rawUrl = appInfo.rawUrl;
+                var params = buildDialogParams(appInfo);
+
+                Logger.ajaxLogWithApi('jump_log', {
+                        path: this.getAbsPath(),
+                        r: 'app_item_click',
+                        id: appInfo.id,
+                        n: appInfo.name,
+                        tu: appInfo.url
+                    },
+                    function(data, status, xhr) {
+                        if(data != null && data.supportDialog){
+                            if(rawUrl == URL_TYPE_OTHER_EXT){
+                                window.location.href = appInfo.url;
+                                return;
+                            }
+                            window.ucweb.startRequest('shell.openAddSpeedDialBanner',params);
+                        }else{
+                            window.location.href = appInfo.url;
+                        }
+                    },
+                    function(xhr, errorType, error) {
+                        if(error != null && error.supportDialog){
+                            if(rawUrl == URL_TYPE_OTHER_EXT){
+                                window.location.href = appInfo.url;
+                                return;
+                            }
+                            window.ucweb.startRequest('shell.openAddSpeedDialBanner',params);
+                        }else{
+                            window.location.href = appInfo.url;
+                        }
+                    }
+                );
+            },
+            'touchstart .app': function (){
+                var appInfo = this.originOption.data;
+                var id = appInfo.id;
+                var appItem = $("li[data-id='" + id + "']");
+                appItem.css('background', '#f5f5f5');
+                var timer = setTimeout(function(){
+                    appItem.css('background', '');
+                    clearTimeout(timer);
+                    timer = null;
+                }, 200);
             }
         },
         listeners: {
             'beforetmpl': function (evt, data) {
+                data.star = data.star || 60;
                 data.installed = data.installed ? 'installed' : 'install';
             },
             'afterrender': function () {
