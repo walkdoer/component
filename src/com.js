@@ -449,6 +449,7 @@ function(_, util, Node, template) {
                 com = com.nextNode;
             }
             this._super(comArray);
+            return this;
         },
         destroy: function () {
             this.parentEl.removeChild(this.el);
