@@ -71,12 +71,12 @@ define(function (require) {
             components: [{
                 _constructor_: Com,
                 id: 'go-back-home',
+                selector: '.home',
                 //验证多余1层的components配置是否会出现问题
                 components: [{
                     _constructor_: Com,
                     id: 'test-component'
                 }],
-                selector: '.home',
                 uiEvents: {
                     'click': function (e, btn) {
                         var target = e.currentTarget;
@@ -131,6 +131,7 @@ define(function (require) {
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
+        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home<section id="test-component"></section></button><button id="about">about me</button>', '渲染符合预期');
         QUnit.equal(topBar.getChildById('test-component').el, document.getElementById('test-component'), '多层级Component嵌套正常');
         QUnit.stop();
         window.onhashchange = function () {

@@ -480,9 +480,10 @@ define([
                     //if listeners[evt] is string
                     //then this string would be a function name
                     if (typeof callback === 'string') {
-                        callback = this.originOption[callback];
+                        // get function from user's option or class definition
+                        callback = this.originOption[callback] || this[callback];
                     }
-                    if (!callback) { continue; }
+                    if (typeof callback != 'function') { continue; }
                     //TYPE:ID:Event
                     if (3 === len) {
                         com = this.getChildById(evtArr[1]);

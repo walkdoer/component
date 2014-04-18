@@ -1,7 +1,7 @@
 /**
  * [Component][Button] 加载更多按钮
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var Button = require('components/button'),
         typeName = 'loadMoreButton',
@@ -22,9 +22,13 @@ define(function (require, exports) {
             self.doneMsg = self.$el.data('done');
         },
         done: function () {
+            var self = this;
+            self.$el.removeClass('fail');
             return this.setStatus(DONE);
         },
         fail: function () {
+            var self = this;
+            self.$el.addClass('fail');
             return this.setStatus(FAIL);
         },
         setStatus: function (status) {

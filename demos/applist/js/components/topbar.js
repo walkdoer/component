@@ -1,11 +1,10 @@
 /**
  * [Component] 顶部导航条
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var Component = require('lib/com'),
         Button = require('components/button'),
-        _ = require('core/lang'),
         TopBar;
 
     TopBar = Component.extend({

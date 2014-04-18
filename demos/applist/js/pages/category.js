@@ -1,18 +1,28 @@
 /**
- * [页面] 首页
+ *
+ * [页面] 列表页
  */
-define(function (require, exports) {
+define(function (require) {
     'use strict';
     var Component = require('lib/com'),
         TopBar = require('components/topbar'),
         AutoFillList = require('components/list.autofill'),
         AppItem = require('components/app'),
         util = require('util'),
+        _ = require('core/lang'),
         installedApps = [],
         Category;
 
     Category = Component.extend({
-        name: 'category',
+        type: 'page',
+        init: function (option) {
+            //处理下滑刷新, _.debounce 为防抖函数
+            //降低回调函数调用频率，提高性能
+            window.onscroll = _.debounce(function () {
+                console.log('scroll');
+            }, 100);
+            this._super(option);
+        },
         components: [{
             _constructor_: TopBar,
             getState: function () {
@@ -49,7 +59,9 @@ define(function (require, exports) {
                 installedApps = installedApps.concat(util.sliceInstalledApps(apps));
             },
             'autofillList:cateList:end': function (event, list) {
-                list.appendRecord(installedApps);
+                if (installedApps.length > 0) {
+                    list.appendRecord(installedApps);
+                }
                 installedApps = [];
             },
         }
