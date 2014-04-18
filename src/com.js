@@ -278,14 +278,9 @@ function(_, util, Node, template) {
                 originOption = self.originOption;
             //trigger event beforerender
             self.trigger(BEFORE_RENDER, self);
-            //先渲染组件的子组件,然后再渲染组件本身
-            //这样子可以尽量减少浏览器的重绘
+            //先渲染组件的子组件,然后再渲染组件本身,尽量减少浏览器的重绘
             self.firstChild && self._renderChildComponent();
-            //有selector则表明该元素已经在页面上了，不需要再渲染
-            //如果在before render的处理函数中将isContinueRender置为true
-            //则停止后续执行,后续考虑使用AOP改造此方式
-            if (self.isContinueRender !== false && !self.rendered) {
-                self.isContinueRender = true;
+            if (!self.rendered) {
                 setCss(self.el, {
                     width: originOption.width,
                     height: originOption.height
@@ -440,25 +435,10 @@ function(_, util, Node, template) {
          * @param  {Array/DisplayComponent} comArray
          */
         appendChild: function(comArray) {
-            var self = this;
             if (!comArray) {
                 return;
             }
             _.isArray(comArray) || (comArray = [comArray]);
-            var onBeforeRender = function(evt, component) {
-                //组件还没有渲染
-                if (!self._allowToRender(component)) {
-                    component.isContinueRender = false;
-                } else {
-                    //如果渲染的是第一个组件，则触发 BEFORE_RENDER_FIRST_COMPONENT
-                    //的消息
-                    if (!component.prevNode) {
-                        self.trigger(BEFORE_RENDER_FIRST_COMPONENT, self);
-                    }
-                    // isContinueRender 表示执行下面的Render
-                    component.isContinueRender = true;
-                }
-            };
             var index = comArray.length - 1,
                 com;
             while (index >= 0) {
@@ -466,7 +446,6 @@ function(_, util, Node, template) {
                 com.parentNode = this;
                 com._initParent();
                 com._bindUIEvent();
-                com.on(BEFORE_RENDER, onBeforeRender);
                 com = com.nextNode;
             }
             this._super(comArray);
