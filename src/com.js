@@ -14,8 +14,7 @@ function(_, util, Node, template) {
         enhancer = null,
         DisplayComponent;
     //添加事件
-    var BEFORE_RENDER_FIRST_COMPONENT = 'beforerender_first_com',
-        BEFORE_RENDER = 'beforerender',
+    var BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
         BEFORE_TMPL = 'beforetmpl',
         STATE_CHANGE = 'statechange';
@@ -395,7 +394,7 @@ function(_, util, Node, template) {
             //取出组件的父Dom
             var pEl = isRoot ? this.parentEl :
                 parentNode._tempEl || parentNode.el;
-            //如果组件需要更新 或者 是 selector
+            //如果组件需要更新 或者是子组件有selector，且父元素有更新
             if (selfStateChange || hasSelector && parentStateChange) {
                 newEl = this._tempEl = this._createHTMLElement(pEl);
             }
@@ -414,19 +413,17 @@ function(_, util, Node, template) {
                         newEl.replaceChild(component._tempEl, component.el);
                     }
                 }
-                if (comStateChange) {
+                if (comStateChange || component.selector && selfStateChange) {
                     //更新父节点
                     component._changeParentEl(newEl);
                     component._unbindUIEvent()._bindUIEvent();
+                    component._changeEl(component._tempEl);
                     delete component._tempEl;
                 }
                 component = component.nextNode;
             }
             if (isRoot) {
                 this.parentEl.replaceChild(newEl, this.el);
-            }
-            if (selfStateChange || hasSelector) {
-                this._changeEl(newEl);
             }
             return this;
         },
