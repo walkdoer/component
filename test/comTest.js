@@ -6,9 +6,18 @@ define(function (require) {
     var Com = require('./com');
     QUnit.module("com");
 
+    //使用 $ (Zepto or JQuery)对Com进行强化
     Com.config({
         enhancer: $
     });
+
+    QUnit.test('com config test', function () {
+        //对强化函数进行验证
+        ['show', 'hide', 'toggle', 'empty', 'html'].forEach(function(method) {
+            QUnit.ok(typeof Com.prototype[method] === 'function', '强化函数' + method + ' 正常');
+        });
+    });
+
     QUnit.test("com Api test", function () {
 
         var newName = 'andrew';
