@@ -13,11 +13,13 @@ function(_, util, Node, template) {
     var slice = Array.prototype.slice,
         enhancer = null,
         DisplayComponent;
+
     //添加事件
     var BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
         BEFORE_TMPL = 'beforetmpl',
         STATE_CHANGE = 'statechange';
+
     //获取MatchesSelector
     var div = document.createElement("div"),
         matchesSelector = ["moz", "webkit", "ms", "o"].filter(function(prefix) {
@@ -39,12 +41,15 @@ function(_, util, Node, template) {
             stopPropagation: 'isPropagationStopped'
         };
 
+
     /**
      * 处理blur事件
      */
     function eventCapture(e) {
         return !focusinSupported && (e in focus);
     }
+
+
     /**
      * appendPxIfNeed
      * 为数字添加单位 'px'
@@ -64,6 +69,7 @@ function(_, util, Node, template) {
     function setCss(el, properties) {
         el.style.cssText += ';' + getStyleText(properties);
     }
+
 
     /**
      * getStyleText
@@ -219,7 +225,7 @@ function(_, util, Node, template) {
                 'components',
                 'parentNode',
                 'parentEl',
-                '*env*',
+                '*env*', // *xxx* means clone the xxx, xxx is often a object
                 '*_data:data*',
                 'getState',
                 'userUpdate:update',
@@ -247,10 +253,15 @@ function(_, util, Node, template) {
                 self.appendChild(self._buildComponents());
             }
         },
+
+
+
         _setIdAndClass: function (el) {
             el.setAttribute('id', this.id);
             this.className && el.setAttribute('class', this.className);
         },
+
+
         /**
          * 初始化Parent
          * @private
@@ -269,6 +280,8 @@ function(_, util, Node, template) {
                 parentNode && (this.parentEl = parentNode.el);
             }
         },
+
+
         /**
          * 渲染组件
          */
@@ -291,6 +304,8 @@ function(_, util, Node, template) {
             }
             return self;
         },
+
+
         /*
          * 渲染子组件
          * @private
@@ -337,6 +352,8 @@ function(_, util, Node, template) {
                 parentElArr[i].appendChild(fragmentArr[i]);
             }
         },
+
+
         /**
          * 获取组件的数据
          * @return {Object}
@@ -347,6 +364,8 @@ function(_, util, Node, template) {
                 _id_: this.id
             });
         },
+
+
         /**
          * 查询组件是否需要更新
          * 如果组件的状态发生改变，则需要更新
@@ -355,6 +374,8 @@ function(_, util, Node, template) {
         needUpdate: function() {
             return this._isStateChange(this.getState());
         },
+
+
         /**
          * 改变节点Dom元素
          * @private
@@ -362,6 +383,8 @@ function(_, util, Node, template) {
         _changeEl: function(el) {
             this.el = el;
         },
+
+
         /**
          * 改变节点父节点Dom元素
          * @private
@@ -369,14 +392,14 @@ function(_, util, Node, template) {
         _changeParentEl: function(el) {
             this.parentEl = el;
         },
+
+
         /**
          * 更新操作
          * 更新自身，及通知子组件进行更新
          * @return {Object} this
          */
         update: function(env) {
-            //首先自我更新，保存到临时_tempEl中
-            //this.updating = true;
             env && (this.env = env);
             var newState = this.getState(),
                 parentNode = this.parentNode,
@@ -386,15 +409,21 @@ function(_, util, Node, template) {
                 parentStateChange,
                 comStateChange,
                 selfStateChange;
+
+            //状态发生改变，更新自身state,并通知state change事件
             if ((selfStateChange = this._isStateChange(newState))) {
                 this.state = newState;
                 this.trigger(STATE_CHANGE, newState);
             }
-            !isRoot && (parentStateChange = parentNode._tempEl);
+
+            //不是根节点则获取父节点是否有更新
+            !isRoot && (parentStateChange = !!parentNode._tempEl);
             //取出组件的父Dom
             var pEl = isRoot ? this.parentEl :
                 parentNode._tempEl || parentNode.el;
-            //如果组件需要更新 或者是子组件有selector，且父元素有更新
+
+            //如果组件需要更新 或者是子组件有selector，且该组件的父元素有更新
+            //则需要重新更新组件的DOM，从而改变其外观
             if (selfStateChange || hasSelector && parentStateChange) {
                 newEl = this._tempEl = this._createHTMLElement(pEl);
             }
@@ -574,6 +603,8 @@ function(_, util, Node, template) {
             self._setIdAndClass(el);
             return el;
         },
+
+
         /**
          * 结束渲染
          * @private
@@ -582,6 +613,8 @@ function(_, util, Node, template) {
             this.rendered = true; //标志已经渲染完毕
             this.trigger(AFTER_RENDER, this);
         },
+
+
         /**
          * 绑定UI事件
          * @private
@@ -622,10 +655,14 @@ function(_, util, Node, template) {
             }
             this._uiEventBinded = true;
         },
+
+
         _unbindUIEvent: function () {
             this._uiEventBinded = false;
             return this;
         },
+
+
         /**
          * _uiDelegate
          * 托管UI事件绑定
@@ -654,6 +691,8 @@ function(_, util, Node, template) {
             };
             this.parentEl.addEventListener(eventName, delegator, eventCapture(eventName));
         },
+
+
         /**
          * 组件状态是否有改变
          * @private
@@ -663,6 +702,8 @@ function(_, util, Node, template) {
         _isStateChange: function(state) {
             return !_.isEqual(state, this.state);
         },
+
+
         /**
          * 创建子组件
          * @private
@@ -712,6 +753,8 @@ function(_, util, Node, template) {
             return null;
         },
     });
+
+
     DisplayComponent.config = function (cfg) {
         enhancer = cfg.enhancer;
         if (enhancer) {
