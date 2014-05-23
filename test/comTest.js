@@ -18,6 +18,22 @@ define(function (require) {
         });
     });
 
+
+    /**
+     * 测试Com的一些细节
+     */
+    QUnit.test('com detail test', function () {
+        var a = new Com({
+            tplContent: 'a test'
+        });
+
+        var b = new Com({
+            tplContent: 'b test'
+        });
+
+
+    });
+
     QUnit.test("com Api test", function () {
 
         var newName = 'andrew';

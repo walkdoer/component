@@ -32,6 +32,9 @@ function(_, util, Node, template) {
         //分隔符
         SPLITER_SPACE = ' ',
 
+        //Node Type
+        TEXT_NODE = 3,
+
         //事件名称常量
         BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
@@ -290,8 +293,10 @@ function(_, util, Node, template) {
          * @params {DOM} el 待添加ID和Class的DOM节点
          */
         _setIdAndClass: function (el) {
-            el.setAttribute('id', this.id);
-            this.className && el.setAttribute('class', this.className);
+            if (el.nodeType !== TEXT_NODE) {
+                el.setAttribute('id', this.id);
+                this.className && el.setAttribute('class', this.className);
+            }
         },
 
 
