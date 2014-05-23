@@ -29,6 +29,8 @@ function(_, util, Node, template) {
     var //默认的tagName
         DEFAULT_TAG_NAME = 'div',
 
+        //分隔符
+        SPLITER_SPACE = ' ',
         //事件名称常量
         BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
@@ -321,7 +323,10 @@ function(_, util, Node, template) {
                 if (self.display === false) {
                     setCss(self.el, {'display': 'none'});
                 }
-                self._finishRender();
+
+                //标志已经渲染完毕
+                this.rendered = true;
+                this.trigger(AFTER_RENDER, this);
             }
             return self;
         },
@@ -526,7 +531,7 @@ function(_, util, Node, template) {
                     '[', self.id || '[unknow name]', ']',
                     'please check your option',
                     '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'
-                ].join(' '));
+                ].join(SPLITER_SPACE));
             }
             return html || '';
         },
@@ -627,36 +632,28 @@ function(_, util, Node, template) {
 
 
         /**
-         * 结束渲染
-         * @private
-         */
-        _finishRender: function() {
-            this.rendered = true; //标志已经渲染完毕
-            this.trigger(AFTER_RENDER, this);
-        },
-
-
-        /**
          * 绑定UI事件
          * @private
          */
         _bindUIEvent: function() {
+            //没有父节点，则事件无法托管，已经绑定过，也无需再绑
             if (!this.parentEl || this._uiEventBinded) {
                 return this;
             }
             var evts = this.uiEvents,
+                idSelector = '#' + this.id,
                 elementSelector,
                 eventType,
-                idSelector = '#' + this.id,
                 callback,
                 evtConf;
-            if (!evts) {
-                return;
-            }
+            if (!evts) { return; }
             for (var evt in evts) {
-                evtConf = evt.split(' ');
+                evtConf = evt.split(SPLITER_SPACE);
                 if (evtConf.length > 1) {
-                    elementSelector = [idSelector, evtConf.slice(1).join(' ')].join(' ');
+                    elementSelector = [
+                        idSelector,
+                        evtConf.slice(1).join(SPLITER_SPACE)
+                    ].join(SPLITER_SPACE);
                 } else {
                     //如果没有配置托管的对象，则使用对象本身Id
                     //例如 {
@@ -678,6 +675,10 @@ function(_, util, Node, template) {
         },
 
 
+        /**
+         * 解绑UI事件
+         * @private
+         */
         _unbindUIEvent: function () {
             this._uiEventBinded = false;
             return this;
