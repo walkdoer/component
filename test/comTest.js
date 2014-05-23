@@ -23,14 +23,22 @@ define(function (require) {
      * 测试Com的一些细节
      */
     QUnit.test('com detail test', function () {
+        var aContent = 'a test';
         var a = new Com({
-            tplContent: 'a test'
+            tplContent: aContent
         });
 
         var b = new Com({
-            tplContent: 'b test'
+            tpl: '#tpl-test'
         });
 
+        var c = new Com({
+            tpl: '#tpl-test',
+            tplContent: 'c test'
+        });
+
+        QUnit.ok(a.el.data === aContent && c.el.data === 'c test', 'tplContent配置项 正常');
+        QUnit.ok(b.el.data.trim() === 'this is a test', 'tpl配置项 正常');
 
     });
 
