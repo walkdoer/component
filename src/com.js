@@ -707,11 +707,10 @@ function(_, util, Node, template) {
                         !target[matchesSelector](selector)) {
                     target = target.parentNode;
                 }
-                ev.target = target;
                 if (target && target !== this) {
                     evProxy = _.extend(createProxy(ev), {currentTarget: target});
-                    return fn.apply(target,
-                            [evProxy, self].concat(slice.call(arguments, 1)));
+                    return fn.apply(self,
+                            [evProxy].concat(slice.call(arguments, 1)));
                 }
 
             };
