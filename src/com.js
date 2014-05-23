@@ -31,6 +31,7 @@ function(_, util, Node, template) {
 
         //分隔符
         SPLITER_SPACE = ' ',
+
         //事件名称常量
         BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
@@ -468,6 +469,10 @@ function(_, util, Node, template) {
                         newEl.replaceChild(component._tempEl, component.el);
                     }
                 }
+
+                //comStateChange意味组件需要更新
+                //如果组件的父节点更新了，且组件本身有selector属性，则组件也
+                //同样需要更新
                 if (comStateChange || component.selector && selfStateChange) {
                     //更新父节点
                     component._changeParentEl(newEl);
@@ -649,12 +654,12 @@ function(_, util, Node, template) {
             if (!evts) { return; }
             for (var evt in evts) {
                 evtConf = evt.split(SPLITER_SPACE);
-                if (evtConf.length > 1) {
-                    elementSelector = [
+                elementSelector = evtConf.length > 1 ?
+                    [
                         idSelector,
                         evtConf.slice(1).join(SPLITER_SPACE)
-                    ].join(SPLITER_SPACE);
-                } else {
+                    ].join(SPLITER_SPACE)
+
                     //如果没有配置托管的对象，则使用对象本身Id
                     //例如 {
                     //    'click': function() {}
@@ -662,8 +667,7 @@ function(_, util, Node, template) {
                     //等价于{
                     //    'click #elementId', function() {}
                     //}
-                    elementSelector = idSelector;
-                }
+                    : idSelector;
                 eventType = evtConf[0];
                 callback = evts[evt];
                 if (typeof callback === 'string') {
