@@ -114,26 +114,54 @@ define(function (require) {
         }), A = Node.extend({
             type: 'A'
         });
+        /**
+         *             root
+         *               |
+         *               c
+         *            ___|___
+         *           |       |
+         *           A1     A2
+         */
         var root = new Root({id: 'root'}),
-            c = new Node({id: 'A'}),
+            computer = new Node({id: 'computer'}),
             a1 = new A({id: 'a1'}),
             a2 = new A({id: 'a2'});
-        root.appendChild(c);
-        c.appendChild([a1, a2]);
-        c.on('event1', function (evt, a) {
-            console.log('haha' + a);
-        });
-        root.on({
-            'event1': function(evt, a) {
-                QUnit.equal(a === 1, true);
+
+        computer.sub = function () {
+            this.trigger('sub', this.a - this.b);
+        };
+
+        computer.add = function () {
+            this.trigger('add', this.a + this.b);
+        };
+
+        root.appendChild(computer);
+        computer.appendChild([a1, a2]);
+        computer.listenTo(a1, {
+            'event1': function (evt, a) {
+                console.log(a);
+                this.a = a;
             },
-            'event2': function(evt, a) {
-                QUnit.equal(a === 2, true);
+            'event2': function (evt, b) {
+                console.log(b);
+                this.b = b;
+            }
+        });
+        root.listenTo(computer, {
+            'add': function(evt, result) {
+                QUnit.equal(result === 4, true, 'listenTo API ok');
+            },
+            'sub': function(evt, result) {
+                QUnit.equal(result === -2, true, 'listenTo API ok');
             }
         });
 
+
         a1.trigger('event1', 1);
-        a2.trigger('event2', 2);
+        a1.trigger('event2', 3);
+
+        computer.add();
+        computer.sub();
     });
 
 });

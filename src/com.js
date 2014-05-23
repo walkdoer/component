@@ -1,5 +1,16 @@
 /**
- * 显示类
+ * 组件类
+ *
+ * 适用于浏览器端的组件化
+ * @example
+ *
+ * var banner = new Com({
+ *     id: 'banner',
+ *     className: 'my-banner'
+ * });
+ *
+ * 对应的dom为: <div id="banner" class="my-banner"></div>
+ *
  * @extend Component{base/Component}
  */
 define([
@@ -13,11 +24,23 @@ function(_, util, Node, template) {
     var slice = Array.prototype.slice,
         enhancer = null,
         DisplayComponent;
-    //添加事件
-    var BEFORE_RENDER = 'beforerender',
+
+
+    var //默认的tagName
+        DEFAULT_TAG_NAME = 'div',
+
+        //分隔符
+        SPLITER_SPACE = ' ',
+
+        //Node Type
+        TEXT_NODE = 3,
+
+        //事件名称常量
+        BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
         BEFORE_TMPL = 'beforetmpl',
         STATE_CHANGE = 'statechange';
+
     //获取MatchesSelector
     var div = document.createElement("div"),
         matchesSelector = ["moz", "webkit", "ms", "o"].filter(function(prefix) {
@@ -39,12 +62,15 @@ function(_, util, Node, template) {
             stopPropagation: 'isPropagationStopped'
         };
 
+
     /**
      * 处理blur事件
      */
     function eventCapture(e) {
         return !focusinSupported && (e in focus);
     }
+
+
     /**
      * appendPxIfNeed
      * 为数字添加单位 'px'
@@ -64,6 +90,7 @@ function(_, util, Node, template) {
     function setCss(el, properties) {
         el.style.cssText += ';' + getStyleText(properties);
     }
+
 
     /**
      * getStyleText
@@ -191,6 +218,14 @@ function(_, util, Node, template) {
         rendered: false, //已渲染
         /*-------- Flag ---------*/
         display: true, //是否显示组件
+
+        /**
+         * 获取组件状态
+         * 如果用户没有重写该函数，则默认返回null
+         * 表示组件的无状态的
+         *
+         * @return {object} return null
+         */
         getState: function() {
             return null;
         },
@@ -211,20 +246,21 @@ function(_, util, Node, template) {
          */
         init: function(option) {
             var self = this;
+            option = option || {};
             self._super(option);
-            self.state = {};
             self.initVar([
                 'tpl',
                 'tplContent',
                 'components',
                 'parentNode',
                 'parentEl',
-                '*env*',
+                '*env*', // *xxx* means clone the xxx, xxx is often a object
                 '*_data:data*',
                 'getState',
                 'userUpdate:update',
                 'className',
                 'display',
+                'tagName',
                 'selector',
                 'parentSelector',
                 'el'
@@ -232,13 +268,15 @@ function(_, util, Node, template) {
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
             self._initParent(self.parentNode);
-            //初始化参数
+
+            //初始化组件状态
             self.state = self.getState();
-            //初始化组件HTML元素
-            var el = self.el;
-            if (!el) {
+
+            //如果用户没有指定el元素，则初始化el元素
+            if (!self.el) {
                 //初始化模板
-                self.tplContent = self.initTemplate(self.tpl) || self.tplContent;
+                //如果用户不小心同时配置了tpl 和 tplContent, 优先使用tplContent
+                self.tplContent = self.tplContent || self.initTemplate(self.tpl);
                 self.el = self._createHTMLElement(self.parentEl);
                 enhancer && (self.$el = enhancer(self.el));
                 //用户创建的Listener
@@ -247,10 +285,21 @@ function(_, util, Node, template) {
                 self.appendChild(self._buildComponents());
             }
         },
+
+
+        /**
+         * 设置ID和Class
+         * @private
+         * @params {DOM} el 待添加ID和Class的DOM节点
+         */
         _setIdAndClass: function (el) {
-            el.setAttribute('id', this.id);
-            this.className && el.setAttribute('class', this.className);
+            if (el.nodeType !== TEXT_NODE) {
+                el.setAttribute('id', this.id);
+                this.className && el.setAttribute('class', this.className);
+            }
         },
+
+
         /**
          * 初始化Parent
          * @private
@@ -269,6 +318,8 @@ function(_, util, Node, template) {
                 parentNode && (this.parentEl = parentNode.el);
             }
         },
+
+
         /**
          * 渲染组件
          */
@@ -287,10 +338,15 @@ function(_, util, Node, template) {
                 if (self.display === false) {
                     setCss(self.el, {'display': 'none'});
                 }
-                self._finishRender();
+
+                //标志已经渲染完毕
+                this.rendered = true;
+                this.trigger(AFTER_RENDER, this);
             }
             return self;
         },
+
+
         /*
          * 渲染子组件
          * @private
@@ -337,6 +393,8 @@ function(_, util, Node, template) {
                 parentElArr[i].appendChild(fragmentArr[i]);
             }
         },
+
+
         /**
          * 获取组件的数据
          * @return {Object}
@@ -347,6 +405,8 @@ function(_, util, Node, template) {
                 _id_: this.id
             });
         },
+
+
         /**
          * 查询组件是否需要更新
          * 如果组件的状态发生改变，则需要更新
@@ -355,6 +415,8 @@ function(_, util, Node, template) {
         needUpdate: function() {
             return this._isStateChange(this.getState());
         },
+
+
         /**
          * 改变节点Dom元素
          * @private
@@ -362,6 +424,8 @@ function(_, util, Node, template) {
         _changeEl: function(el) {
             this.el = el;
         },
+
+
         /**
          * 改变节点父节点Dom元素
          * @private
@@ -369,14 +433,14 @@ function(_, util, Node, template) {
         _changeParentEl: function(el) {
             this.parentEl = el;
         },
+
+
         /**
          * 更新操作
          * 更新自身，及通知子组件进行更新
          * @return {Object} this
          */
         update: function(env) {
-            //首先自我更新，保存到临时_tempEl中
-            //this.updating = true;
             env && (this.env = env);
             var newState = this.getState(),
                 parentNode = this.parentNode,
@@ -386,15 +450,21 @@ function(_, util, Node, template) {
                 parentStateChange,
                 comStateChange,
                 selfStateChange;
+
+            //状态发生改变，更新自身state,并通知state change事件
             if ((selfStateChange = this._isStateChange(newState))) {
                 this.state = newState;
                 this.trigger(STATE_CHANGE, newState);
             }
-            !isRoot && (parentStateChange = parentNode._tempEl);
+
+            //不是根节点则获取父节点是否有更新
+            !isRoot && (parentStateChange = !!parentNode._tempEl);
             //取出组件的父Dom
             var pEl = isRoot ? this.parentEl :
                 parentNode._tempEl || parentNode.el;
-            //如果组件需要更新 或者是子组件有selector，且父元素有更新
+
+            //如果组件需要更新 或者是子组件有selector，且该组件的父元素有更新
+            //则需要重新更新组件的DOM，从而改变其外观
             if (selfStateChange || hasSelector && parentStateChange) {
                 newEl = this._tempEl = this._createHTMLElement(pEl);
             }
@@ -413,6 +483,10 @@ function(_, util, Node, template) {
                         newEl.replaceChild(component._tempEl, component.el);
                     }
                 }
+
+                //comStateChange意味组件需要更新
+                //如果组件的父节点更新了，且组件本身有selector属性，则组件也
+                //同样需要更新
                 if (comStateChange || component.selector && selfStateChange) {
                     //更新父节点
                     component._changeParentEl(newEl);
@@ -476,7 +550,7 @@ function(_, util, Node, template) {
                     '[', self.id || '[unknow name]', ']',
                     'please check your option',
                     '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'
-                ].join(' '));
+                ].join(SPLITER_SPACE));
             }
             return html || '';
         },
@@ -568,42 +642,38 @@ function(_, util, Node, template) {
                     el = createElement(self.tmpl())[0];
                 } else {
                     //没有初始化成功, 需要初始化一个页面的Element
-                    el = document.createElement('section');
+                    el = document.createElement(this.tagName || DEFAULT_TAG_NAME);
                 }
             }
             self._setIdAndClass(el);
             return el;
         },
-        /**
-         * 结束渲染
-         * @private
-         */
-        _finishRender: function() {
-            this.rendered = true; //标志已经渲染完毕
-            this.trigger(AFTER_RENDER, this);
-        },
+
+
         /**
          * 绑定UI事件
          * @private
          */
         _bindUIEvent: function() {
+            //没有父节点，则事件无法托管，已经绑定过，也无需再绑
             if (!this.parentEl || this._uiEventBinded) {
                 return this;
             }
             var evts = this.uiEvents,
+                idSelector = '#' + this.id,
                 elementSelector,
                 eventType,
-                idSelector = '#' + this.id,
                 callback,
                 evtConf;
-            if (!evts) {
-                return;
-            }
+            if (!evts) { return; }
             for (var evt in evts) {
-                evtConf = evt.split(' ');
-                if (evtConf.length > 1) {
-                    elementSelector = [idSelector, evtConf.slice(1).join(' ')].join(' ');
-                } else {
+                evtConf = evt.split(SPLITER_SPACE);
+                elementSelector = evtConf.length > 1 ?
+                    [
+                        idSelector,
+                        evtConf.slice(1).join(SPLITER_SPACE)
+                    ].join(SPLITER_SPACE)
+
                     //如果没有配置托管的对象，则使用对象本身Id
                     //例如 {
                     //    'click': function() {}
@@ -611,8 +681,7 @@ function(_, util, Node, template) {
                     //等价于{
                     //    'click #elementId', function() {}
                     //}
-                    elementSelector = idSelector;
-                }
+                    : idSelector;
                 eventType = evtConf[0];
                 callback = evts[evt];
                 if (typeof callback === 'string') {
@@ -622,10 +691,18 @@ function(_, util, Node, template) {
             }
             this._uiEventBinded = true;
         },
+
+
+        /**
+         * 解绑UI事件
+         * @private
+         */
         _unbindUIEvent: function () {
             this._uiEventBinded = false;
             return this;
         },
+
+
         /**
          * _uiDelegate
          * 托管UI事件绑定
@@ -644,16 +721,17 @@ function(_, util, Node, template) {
                         !target[matchesSelector](selector)) {
                     target = target.parentNode;
                 }
-                ev.target = target;
                 if (target && target !== this) {
                     evProxy = _.extend(createProxy(ev), {currentTarget: target});
-                    return fn.apply(target,
-                            [evProxy, self].concat(slice.call(arguments, 1)));
+                    return fn.apply(self,
+                            [evProxy].concat(slice.call(arguments, 1)));
                 }
 
             };
             this.parentEl.addEventListener(eventName, delegator, eventCapture(eventName));
         },
+
+
         /**
          * 组件状态是否有改变
          * @private
@@ -663,6 +741,8 @@ function(_, util, Node, template) {
         _isStateChange: function(state) {
             return !_.isEqual(state, this.state);
         },
+
+
         /**
          * 创建子组件
          * @private
@@ -712,11 +792,13 @@ function(_, util, Node, template) {
             return null;
         },
     });
+
+
     DisplayComponent.config = function (cfg) {
         enhancer = cfg.enhancer;
         if (enhancer) {
             //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-            ['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
+            ['show', 'hide', 'toggle', 'empty', 'html'].forEach(function(method) {
                 DisplayComponent.prototype[method] = function() {
                     var args = slice.call(arguments);
                     enhancer.fn[method].apply(this.$el, args);

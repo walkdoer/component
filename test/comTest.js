@@ -6,6 +6,42 @@ define(function (require) {
     var Com = require('./com');
     QUnit.module("com");
 
+    //使用 $ (Zepto or JQuery)对Com进行强化
+    Com.config({
+        enhancer: $
+    });
+
+    QUnit.test('com config test', function () {
+        //对强化函数进行验证
+        ['show', 'hide', 'toggle', 'empty', 'html'].forEach(function(method) {
+            QUnit.ok(typeof Com.prototype[method] === 'function', '强化函数' + method + ' 正常');
+        });
+    });
+
+
+    /**
+     * 测试Com的一些细节
+     */
+    QUnit.test('com detail test', function () {
+        var aContent = 'a test';
+        var a = new Com({
+            tplContent: aContent
+        });
+
+        var b = new Com({
+            tpl: '#tpl-test'
+        });
+
+        var c = new Com({
+            tpl: '#tpl-test',
+            tplContent: 'c test'
+        });
+
+        QUnit.ok(a.el.data === aContent && c.el.data === 'c test', 'tplContent配置项 正常');
+        QUnit.ok(b.el.data.trim() === 'this is a test', 'tpl配置项 正常');
+
+    });
+
     QUnit.test("com Api test", function () {
 
         var newName = 'andrew';
@@ -55,7 +91,8 @@ define(function (require) {
         }), AutoList = List.extend({
             type: 'autolist',
         }), Li = Com.extend({
-            type: 'li'
+            type: 'li',
+            tagName: 'li'
         });
         var list = new List({
             tplContent: '<ul></ul>'
@@ -78,11 +115,11 @@ define(function (require) {
                     id: 'test-component'
                 }],
                 uiEvents: {
-                    'click': function (e, btn) {
+                    'click': function (e) {
                         var target = e.currentTarget;
-                        QUnit.ok(btn.id === target.id, '属性selector正常');
-                        QUnit.equal(target === btn.el &&
-                            target.id === btn.id,
+                        QUnit.ok(this.id === target.id, '属性selector正常');
+                        QUnit.equal(target === this.el &&
+                            target.id === this.id,
                             true, 'uiEvent 函数回调 正常');
                         location.hash = newName;
                     }
@@ -94,8 +131,8 @@ define(function (require) {
                 uiEvents: {
                     'click' : 'aboutMe'
                 },
-                aboutMe: function (e, btn) {
-                    btn.parentNode.trigger('aboutme');
+                aboutMe: function () {
+                    this.parentNode.trigger('aboutme');
                     QUnit.ok(true, 'uiEvent 字符串回调方式 正常');
                 }
             }],
@@ -120,18 +157,14 @@ define(function (require) {
         app.appendChild([topBar, list, autoListA]);
         var index = 5;
         while (index-- > 0) {
-            list.append(new Li({
-                tplContent: '<li>item' + index + '</li>'
-            }));
-            autoListA.append(new Li({
-                tplContent: '<li>item' + index + '</li>'
-            }));
+            list.append(new Li().html('item' + index));
+            autoListA.append(new Li().html('item' + index));
         }
         QUnit.equal(app.firstChild === topBar && app.childCount === 3, true, 'API appendChild() 正常');
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
-        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home<section id="test-component"></section></button><button id="about">about me</button>', '渲染符合预期');
+        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home<div id="test-component"></div></button><button id="about">about me</button>', '渲染符合预期');
         QUnit.equal(topBar.getChildById('test-component').el, document.getElementById('test-component'), '多层级Component嵌套正常');
         QUnit.stop();
         window.onhashchange = function () {
