@@ -215,6 +215,14 @@ function(_, util, Node, template) {
         rendered: false, //已渲染
         /*-------- Flag ---------*/
         display: true, //是否显示组件
+
+        /**
+         * 获取组件状态
+         * 如果用户没有重写该函数，则默认返回null
+         * 表示组件的无状态的
+         *
+         * @return {object} return null
+         */
         getState: function() {
             return null;
         },
@@ -237,7 +245,6 @@ function(_, util, Node, template) {
             var self = this;
             option = option || {};
             self._super(option);
-            self.state = {};
             self.initVar([
                 'tpl',
                 'tplContent',
@@ -258,13 +265,15 @@ function(_, util, Node, template) {
             self.uiEvents = _.extend(self.uiEvents || {}, option.uiEvents);
             self._cpConstructors = self.components;
             self._initParent(self.parentNode);
-            //初始化参数
+
+            //初始化组件状态
             self.state = self.getState();
-            //初始化组件HTML元素
-            var el = self.el;
-            if (!el) {
+
+            //如果用户没有指定el元素，则初始化el元素
+            if (!self.el) {
                 //初始化模板
-                self.tplContent = self.initTemplate(self.tpl) || self.tplContent;
+                //如果用户不小心同时配置了tpl 和 tplContent, 优先使用tplContent
+                self.tplContent = self.tplContent || self.initTemplate(self.tpl);
                 self.el = self._createHTMLElement(self.parentEl);
                 enhancer && (self.$el = enhancer(self.el));
                 //用户创建的Listener
