@@ -232,6 +232,7 @@ function(_, util, Node, template) {
          */
         init: function(option) {
             var self = this;
+            option = option || {};
             self._super(option);
             self.state = {};
             self.initVar([

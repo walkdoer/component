@@ -55,7 +55,8 @@ define(function (require) {
         }), AutoList = List.extend({
             type: 'autolist',
         }), Li = Com.extend({
-            type: 'li'
+            type: 'li',
+            tagName: 'li'
         });
         var list = new List({
             tplContent: '<ul></ul>'
@@ -120,12 +121,8 @@ define(function (require) {
         app.appendChild([topBar, list, autoListA]);
         var index = 5;
         while (index-- > 0) {
-            list.append(new Li({
-                tplContent: '<li>item' + index + '</li>'
-            }));
-            autoListA.append(new Li({
-                tplContent: '<li>item' + index + '</li>'
-            }));
+            list.append(new Li().html('item' + index));
+            autoListA.append(new Li().html('item' + index));
         }
         QUnit.equal(app.firstChild === topBar && app.childCount === 3, true, 'API appendChild() 正常');
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
