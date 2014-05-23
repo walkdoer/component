@@ -6,6 +6,9 @@ define(function (require) {
     var Com = require('./com');
     QUnit.module("com");
 
+    Com.config({
+        enhancer: $
+    });
     QUnit.test("com Api test", function () {
 
         var newName = 'andrew';

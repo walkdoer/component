@@ -780,7 +780,7 @@ function(_, util, Node, template) {
         enhancer = cfg.enhancer;
         if (enhancer) {
             //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
-            ['show', 'hide', 'toggle', 'empty'].forEach(function(method) {
+            ['show', 'hide', 'toggle', 'empty', 'html'].forEach(function(method) {
                 DisplayComponent.prototype[method] = function() {
                     var args = slice.call(arguments);
                     enhancer.fn[method].apply(this.$el, args);
