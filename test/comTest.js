@@ -131,7 +131,7 @@ define(function (require) {
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
-        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home<section id="test-component"></section></button><button id="about">about me</button>', '渲染符合预期');
+        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home<div id="test-component"></div></button><button id="about">about me</button>', '渲染符合预期');
         QUnit.equal(topBar.getChildById('test-component').el, document.getElementById('test-component'), '多层级Component嵌套正常');
         QUnit.stop();
         window.onhashchange = function () {

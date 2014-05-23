@@ -1,5 +1,16 @@
 /**
- * 显示类
+ * 组件类
+ *
+ * 适用于浏览器端的组件化
+ * @example
+ *
+ * var banner = new Com({
+ *     id: 'banner',
+ *     className: 'my-banner'
+ * });
+ *
+ * 对应的dom为: <div id="banner" class="my-banner"></div>
+ *
  * @extend Component{base/Component}
  */
 define([
@@ -14,8 +25,12 @@ function(_, util, Node, template) {
         enhancer = null,
         DisplayComponent;
 
-    //添加事件
-    var BEFORE_RENDER = 'beforerender',
+
+    var //默认的tagName
+        DEFAULT_TAG_NAME = 'div',
+
+        //事件名称常量
+        BEFORE_RENDER = 'beforerender',
         AFTER_RENDER = 'afterrender',
         BEFORE_TMPL = 'beforetmpl',
         STATE_CHANGE = 'statechange';
@@ -231,6 +246,7 @@ function(_, util, Node, template) {
                 'userUpdate:update',
                 'className',
                 'display',
+                'tagName',
                 'selector',
                 'parentSelector',
                 'el'
@@ -255,7 +271,11 @@ function(_, util, Node, template) {
         },
 
 
-
+        /**
+         * 设置ID和Class
+         * @private
+         * @params {DOM} el 待添加ID和Class的DOM节点
+         */
         _setIdAndClass: function (el) {
             el.setAttribute('id', this.id);
             this.className && el.setAttribute('class', this.className);
@@ -597,7 +617,7 @@ function(_, util, Node, template) {
                     el = createElement(self.tmpl())[0];
                 } else {
                     //没有初始化成功, 需要初始化一个页面的Element
-                    el = document.createElement('section');
+                    el = document.createElement(this.tagName || DEFAULT_TAG_NAME);
                 }
             }
             self._setIdAndClass(el);
