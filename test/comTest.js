@@ -37,8 +37,12 @@ define(function (require) {
             tplContent: 'c test'
         });
 
-        QUnit.ok(a.el.data === aContent && c.el.data === 'c test', 'tplContent配置项 正常');
-        QUnit.ok(b.el.data.trim() === 'this is a test', 'tpl配置项 正常');
+        a.render();
+        b.render();
+        c.render();
+
+        QUnit.ok(a.el.innerHTML === aContent && c.el.innerHTML === 'c test', 'tplContent配置项 正常');
+        QUnit.ok(b.el.innerHTML.trim() === 'this is a test', 'tpl配置项 正常');
 
     });
 
@@ -49,7 +53,7 @@ define(function (require) {
 
         var app = new Com({
             id: 'application',
-            tplContent: '<div><p class="title"><%_state_.name%></p></div>',
+            tplContent: '<p class="title"><%_state_.name%></p>',
             parentEl: document.body,
             getState: function () {
                 return {
@@ -153,7 +157,6 @@ define(function (require) {
             },
             title: 'andrew\'s homepage'
         }, 'API getData() 正常');
-        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
         app.appendChild([topBar, list, autoListA]);
         var index = 5;
         while (index-- > 0) {
@@ -164,6 +167,8 @@ define(function (require) {
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
         QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
+
+        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
         QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home<div id="test-component"></div></button><button id="about">about me</button>', '渲染符合预期');
         QUnit.equal(topBar.getChildById('test-component').el, document.getElementById('test-component'), '多层级Component嵌套正常');
         QUnit.stop();

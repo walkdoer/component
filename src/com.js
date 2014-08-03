@@ -23,7 +23,7 @@ function(_, util, Node, template) {
     'use strict';
     var slice = Array.prototype.slice,
         enhancer = null,
-        DisplayComponent;
+        Component;
 
 
     var //默认的tagName
@@ -211,24 +211,18 @@ function(_, util, Node, template) {
      *
      * @extend Node
      */
-    DisplayComponent = Node.extend({
-        type: 'display',
-        /*------- Status --------*/
-        tplDowloading: false, //下载模板中
-        rendered: false, //已渲染
-        /*-------- Flag ---------*/
-        display: true, //是否显示组件
+    Component = Node.extend({
 
-        /**
-         * 获取组件状态
-         * 如果用户没有重写该函数，则默认返回null
-         * 表示组件的无状态的
-         *
-         * @return {object} return null
-         */
-        getState: function() {
-            return null;
-        },
+        type: 'Component',
+
+        tplDowloading: false, //下载模板中
+
+        rendered: false, //已渲染
+
+        //是否显示组件
+        display: true,
+
+
         /**
          * 构造函数
          * @params {object} option 组件配置项
@@ -275,6 +269,18 @@ function(_, util, Node, template) {
             self.tplContent = self.tplContent || self.initTemplate(self.tpl);
             self._createElement();
 
+        },
+
+
+        /**
+         * 获取组件状态
+         * 如果用户没有重写该函数，则默认返回null
+         * 表示组件的无状态的
+         *
+         * @return {object} return null
+         */
+        getState: function() {
+            return null;
         },
 
 
@@ -419,6 +425,11 @@ function(_, util, Node, template) {
         },
 
 
+        getType: function() {
+            return this.type;
+        },
+
+
         /**
          * 查询组件是否需要更新
          * 如果组件的状态发生改变，则需要更新
@@ -517,7 +528,7 @@ function(_, util, Node, template) {
 
         /**
          * 添加组件
-         * @param  {Array/DisplayComponent} comArray
+         * @param  {Array/Component} comArray
          */
         appendChild: function(comArray) {
             if (!comArray) {
@@ -572,6 +583,7 @@ function(_, util, Node, template) {
             }
             return html || '';
         },
+
 
 
         /**
@@ -813,12 +825,12 @@ function(_, util, Node, template) {
     });
 
 
-    DisplayComponent.config = function (cfg) {
+    Component.config = function (cfg) {
         enhancer = cfg.enhancer;
         if (enhancer) {
             //扩展方法 'show', 'hide', 'toggle', 'appendTo', 'append', 'empty'
             ['show', 'hide', 'toggle', 'empty', 'html'].forEach(function(method) {
-                DisplayComponent.prototype[method] = function() {
+                Component.prototype[method] = function() {
                     var args = slice.call(arguments);
                     enhancer.fn[method].apply(this.$el, args);
                     return this;
@@ -826,5 +838,5 @@ function(_, util, Node, template) {
             });
         }
     };
-    return DisplayComponent;
+    return Component;
 });
