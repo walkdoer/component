@@ -271,12 +271,22 @@ function(_, util, Node, template) {
 
             //初始化组件状态
             self.state = self.getState();
+            //如果用户不小心同时配置了tpl 和 tplContent, 优先使用tplContent
+            self.tplContent = self.tplContent || self.initTemplate(self.tpl);
+            self._createElement();
 
+        },
+
+
+        /**
+         * create dom element of the component;
+         * 
+         * @return
+         */
+        _createElement: function () {
+            var self = this;
             //如果用户没有指定el元素，则初始化el元素
             if (!self.el) {
-                //初始化模板
-                //如果用户不小心同时配置了tpl 和 tplContent, 优先使用tplContent
-                self.tplContent = self.tplContent || self.initTemplate(self.tpl);
                 self.el = self._createHTMLElement(self.parentEl);
                 enhancer && (self.$el = enhancer(self.el));
                 //用户创建的Listener
@@ -305,16 +315,17 @@ function(_, util, Node, template) {
          * @private
          */
         _initParent: function() {
+            //如果用户已经指定好了parentEl，则不需要再初始化parentEl
             if (this.parentEl) {
                 return;
             }
             var parentNode = this.parentNode,
                 parentSelector = this.parentSelector;
-            //指定了parentNode 没有指定parentEl
             if (parentSelector) {
                 parentNode &&
                     (this.parentEl = parentNode.el.querySelector(parentSelector));
             } else {
+                //指定了parentNode 没有指定parentEl，则将parentNode的Dom作为当前节点的parentEl
                 parentNode && (this.parentEl = parentNode.el);
             }
         },
@@ -331,6 +342,7 @@ function(_, util, Node, template) {
             //先渲染组件的子组件,然后再渲染组件本身,尽量减少浏览器的重绘
             self.firstChild && self._renderChildComponent();
             if (!self.rendered) {
+                self.el.appendChild(createElement(self.tmpl())[0]);
                 setCss(self.el, {
                     width: originOption.width,
                     height: originOption.height
@@ -501,6 +513,8 @@ function(_, util, Node, template) {
             }
             return this;
         },
+
+
         /**
          * 添加组件
          * @param  {Array/DisplayComponent} comArray
@@ -522,11 +536,15 @@ function(_, util, Node, template) {
             this._super(comArray);
             return this;
         },
+
+
         destroy: function () {
             this.parentEl.removeChild(this.el);
             this.el = null;
             this._super();
         },
+
+
         /**
          * 渲染模板
          * @params {String} tplContent 模板内容
@@ -554,6 +572,8 @@ function(_, util, Node, template) {
             }
             return html || '';
         },
+
+
         /**
          * 添加到父亲节点
          */
@@ -563,6 +583,8 @@ function(_, util, Node, template) {
             }
             return this;
         },
+
+
         /**
          * 是否有模板内容
          * @return {Boolean}
@@ -570,6 +592,8 @@ function(_, util, Node, template) {
         hasTplContent: function() {
             return !!this.tplContent;
         },
+
+
         /**
          * 获取组件在层级关系中的位置
          * @return {String} 生成结果index/recommend/app12
@@ -597,6 +621,8 @@ function(_, util, Node, template) {
             pathArray.push('');
             return pathArray.reverse().join('/');
         },
+
+
         /**
          * 是否允许渲染
          * 只有上一个节点渲染结束之后，当前节点才可渲染,或者单前节点就是第一个节点
@@ -606,6 +632,8 @@ function(_, util, Node, template) {
         _allowToRender: function() {
             return !this.prevNode || this.prevNode.rendered;
         },
+
+
         /**
          * 初始化模板
          * @param  {String} tplId 模板Id
@@ -623,28 +651,19 @@ function(_, util, Node, template) {
             }
             return html;
         },
+
+
         /**
          * 初始化HTML元素
          * @private
          * @params {DOM} 父亲Dom节点
          */
-        _createHTMLElement: function(parentEl) {
+        _createHTMLElement: function() {
             var self = this,
-                selector = self.selector,
                 el;
-             //配置了选择器，直接使用选择器查询
-            if (selector) {
-                el = parentEl.querySelector(selector);
-            //没有则初始化模板
-            } else {
-                //如果模板初始化成功则渲染模板
-                if (self.tplContent) {
-                    el = createElement(self.tmpl())[0];
-                } else {
-                    //没有初始化成功, 需要初始化一个页面的Element
-                    el = document.createElement(this.tagName || DEFAULT_TAG_NAME);
-                }
-            }
+            //如果模板初始化成功则渲染模板
+            //没有模板初始化成功,或者木有模板，则需要初始化一个页面的Element
+            el = document.createElement(this.tagName || DEFAULT_TAG_NAME);
             self._setIdAndClass(el);
             return el;
         },
