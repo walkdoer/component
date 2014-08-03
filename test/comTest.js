@@ -123,7 +123,12 @@ define(function (require) {
                 components: [{
                     _constructor_: Button,
                     id: 'test-component',
-                    tplContent: 'test component'
+                    tplContent: 'test component <% _state_.name %>',
+                    getState: function () {
+                        return {
+                            name: location.hash.slice(1) || 'name'
+                        };
+                    }
                 }, {
                     _constructor_: Button,
                     id: 'test-button-2',
@@ -151,11 +156,6 @@ define(function (require) {
                     QUnit.ok(true, 'uiEvent 字符串回调方式 正常');
                 }
             }],
-            getState: function () {
-                return {
-                    name: location.hash.slice(1) || 'name'
-                };
-            },
             data: {
                 title: 'andrew\'s homepage'
             }
@@ -163,9 +163,7 @@ define(function (require) {
 
         QUnit.deepEqual(topBar.getData(), {
             _id_: 'topbar',
-            _state_: {
-                name: 'name'
-            },
+            _state_: null,
             title: 'andrew\'s homepage'
         }, 'API getData() 正常');
         app.appendChild([topBar, list, autoListA]);
@@ -174,19 +172,31 @@ define(function (require) {
             list.append(new Li().html('item' + index));
             autoListA.append(new Li().html('item' + index));
         }
-        QUnit.equal(app.firstChild.nextNode === topBar && app.childCount === 3, true, 'API appendChild() 正常');
+
+        /**
+         * 检查 appendChild接口是不是工作正常
+         * 检查方法: 通过检查组件是否符合预期，且组件的个数是不是正常
+         */
+        QUnit.equal(app.firstChild.nextNode === topBar && app.childCount === 4, true, 'API appendChild() 正常');
+
+        /**
+         * 检查ID属性是否正常
+         */
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
+
         app.render();
 
-        QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
-        QUnit.equal(topBar.el.innerHTML, '<div id="go-back-home"><button id="test-component">test component</button><button id="test-button-2">test button 2</button></div><button id="about">about me</button>', 'tmpl接口正常');
-        QUnit.equal(topBar.el.innerHTML, '<div id="go-back-home"><button id="test-component">test component</button><button id="test-button-2">test button 2</button></div><button id="about">about me</button>', '渲染符合预期');
+        QUnit.deepEqual(topBar.getChildById('test-component').getState(), {name: 'name'}, 'API getState()正常');
+        QUnit.equal(topBar.el.innerHTML, '<div id="go-back-home"><button id="test-component">test component name</button><button id="test-button-2">test button 2</button></div><button id="about">about me</button>', 'tmpl接口正常');
+        QUnit.equal(topBar.el.innerHTML, '<div id="go-back-home"><button id="test-component">test component name</button><button id="test-button-2">test button 2</button></div><button id="about">about me</button>', '渲染符合预期');
         QUnit.equal(topBar.getChildById('test-component').el, document.getElementById('test-component'), '多层级Component嵌套正常');
         QUnit.stop();
         window.onhashchange = function () {
-            QUnit.ok(topBar.needUpdate() === true && app.needUpdate() === true, 'API needUpdate() 正常');
+            var appTitle = app.getChildById('app-title');
+            var testCom = topBar.getChildById('test-component');
+            QUnit.ok(testCom.needUpdate() === true && appTitle.needUpdate() === true && topBar.needUpdate() === false, 'API needUpdate() 正常');
             app.update();
-            QUnit.equal(topBar.el.className, newName, 'API Update() 正常');
+            QUnit.equal(topBar.getChildById('test-component').el.innerHTML, 'test component ' + newName, 'API Update() 正常');
             var clickEvent = document.createEvent('MouseEvents');
             clickEvent.initEvent('click', true, true);
             document.getElementById('go-back-home').dispatchEvent(clickEvent);
