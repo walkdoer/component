@@ -349,7 +349,10 @@ function(_, util, Node, template) {
             //先渲染组件的子组件,然后再渲染组件本身,尽量减少浏览器的重绘
             self.firstChild && self._renderChildComponent();
             if (!self.rendered) {
-                var renderedEl = createElement(self.tmpl());
+                var renderedEl, html;
+                if (html = self.tmpl()) {
+                    renderedEl = createElement(html);
+                }
                 if (renderedEl) {
                     self.el.appendChild(renderedEl);
                 }
@@ -470,12 +473,6 @@ function(_, util, Node, template) {
         update: function(env) {
             env && (this.env = env);
             var newState = this.getState(),
-                parentNode = this.parentNode,
-                isRoot = !parentNode,
-                hasSelector = !!this.selector,
-                newEl = this.el,
-                parentStateChange,
-                comStateChange,
                 selfStateChange;
 
             //状态发生改变，更新自身state,并通知state change事件
@@ -484,48 +481,60 @@ function(_, util, Node, template) {
                 this.trigger(STATE_CHANGE, newState);
             }
 
-            //不是根节点则获取父节点是否有更新
-            !isRoot && (parentStateChange = !!parentNode._tempEl);
-            //取出组件的父Dom
-            var pEl = isRoot ? this.parentEl :
-                parentNode._tempEl || parentNode.el;
+            var com = this.firstChild;
 
-            //如果组件需要更新 或者是子组件有selector，且该组件的父元素有更新
-            //则需要重新更新组件的DOM，从而改变其外观
-            if (selfStateChange || hasSelector && parentStateChange) {
-                newEl = this._tempEl = this._createHTMLElement(pEl);
+            while(com) {
+                com.update(env);
+                com = com.nextNode;
             }
-            var component = this.firstChild;
-            //通知子组件更新
-            while (component) {
-                component.update(env);
-                comStateChange = !!component._tempEl;
-                //节点有更新，在新Dom节点上添加子组件el 或者 tempEl
-                //如果有了selector，表示组件的dom已经在父节点中了，不需要添加
-                //详细参考selector的定义
-                if(!component.selector) {
-                    if (selfStateChange || parentStateChange && hasSelector) {
-                        newEl.appendChild(component._tempEl || component.el);
-                    } else if (comStateChange) {
-                        newEl.replaceChild(component._tempEl, component.el);
-                    }
-                }
 
-                //comStateChange意味组件需要更新
-                //如果组件的父节点更新了，且组件本身有selector属性，则组件也
-                //同样需要更新
-                if (comStateChange || component.selector && selfStateChange) {
-                    //更新父节点
-                    component._changeParentEl(newEl);
-                    component._unbindUIEvent()._bindUIEvent();
-                    component._changeEl(component._tempEl);
-                    delete component._tempEl;
+            //如果组件发生更新，则更新组件
+            if(selfStateChange) {
+                var html;
+                if (html = this.tmpl()) {
+                    this.el.innerHTML = html;
                 }
-                component = component.nextNode;
             }
-            if (isRoot) {
-                this.parentEl.replaceChild(newEl, this.el);
-            }
+
+            ////不是根节点则获取父节点是否有更新
+            //!isRoot && (parentStateChange = !!parentNode._tempEl);
+
+            ////如果组件需要更新 或者是子组件有selector，且该组件的父元素有更新
+            ////则需要重新更新组件的DOM，从而改变其外观
+            //if (selfStateChange) {
+                //newEl = this._tempEl = this.render();
+            //}
+            //var component = this.firstChild;
+            ////通知子组件更新
+            //while (component) {
+                //component.update(env);
+                //comStateChange = !!component._tempEl;
+                ////节点有更新，在新Dom节点上添加子组件el 或者 tempEl
+                ////如果有了selector，表示组件的dom已经在父节点中了，不需要添加
+                ////详细参考selector的定义
+                //if(!component.selector) {
+                    //if (selfStateChange) {
+                        //newEl.appendChild(component._tempEl || component.el);
+                    //} else if (comStateChange) {
+                        //newEl.replaceChild(component._tempEl, component.el);
+                    //}
+                //}
+
+                ////comStateChange意味组件需要更新
+                ////如果组件的父节点更新了，且组件本身有selector属性，则组件也
+                ////同样需要更新
+                //if (comStateChange || component.selector && selfStateChange) {
+                    ////更新父节点
+                    //component._changeParentEl(newEl);
+                    //component._unbindUIEvent()._bindUIEvent();
+                    //component._changeEl(component._tempEl);
+                    //delete component._tempEl;
+                //}
+                //component = component.nextNode;
+            //}
+            //if (isRoot) {
+                //this.parentEl.replaceChild(newEl, this.el);
+            //}
             return this;
         },
 

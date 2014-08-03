@@ -53,13 +53,17 @@ define(function (require) {
 
         var app = new Com({
             id: 'application',
-            tplContent: '<p class="title"><%_state_.name%></p>',
+            components: [{
+                _constructor_: Com,
+                id: 'app-title',
+                tplContent: '<%_state_.name%>',
+                getState: function () {
+                    return {
+                        name: 'application' + counter++
+                    };
+                }
+            }],
             parentEl: document.body,
-            getState: function () {
-                return {
-                    name: 'application' + counter++
-                };
-            },
             listeners: {
                 'display:topbar:statechange': 'change',
                 'display:topbar:aboutme': function () {
@@ -80,7 +84,7 @@ define(function (require) {
         });
 
         app.render();
-        QUnit.equal(app.el.innerHTML, '<p class="title">application1</p>', "元素HTML正常");
+        QUnit.equal(app.el.innerHTML, '<div id="app-title">application1</div>', "元素HTML正常");
         app.appendToParent();
         QUnit.equal(document.getElementById('application'),
             app.el,
@@ -105,18 +109,25 @@ define(function (require) {
             id: 'auto-list-a',
             tplContent: '<ul></ul>'
         });
+        var Button = Com.extend({
+            type: 'button',
+            tagName: 'button'
+        });
 
         var topBar = new Com({
             id: 'topbar',
-            tplContent: '<nav class="<%_state_.name%>"><%title%><button class="home">home</button></nav>',
             components: [{
                 _constructor_: Com,
                 id: 'go-back-home',
-                selector: '.home',
                 //验证多余1层的components配置是否会出现问题
                 components: [{
-                    _constructor_: Com,
-                    id: 'test-component'
+                    _constructor_: Button,
+                    id: 'test-component',
+                    tplContent: 'test component'
+                }, {
+                    _constructor_: Button,
+                    id: 'test-button-2',
+                    tplContent: 'test button 2'
                 }],
                 uiEvents: {
                     'click': function (e) {
@@ -129,9 +140,9 @@ define(function (require) {
                     }
                 }
             }, {
-                _constructor_: Com,
+                _constructor_: Button,
                 id: 'about',
-                tplContent: '<button>about me</button>',
+                tplContent: 'about me',
                 uiEvents: {
                     'click' : 'aboutMe'
                 },
@@ -163,13 +174,13 @@ define(function (require) {
             list.append(new Li().html('item' + index));
             autoListA.append(new Li().html('item' + index));
         }
-        QUnit.equal(app.firstChild === topBar && app.childCount === 3, true, 'API appendChild() 正常');
+        QUnit.equal(app.firstChild.nextNode === topBar && app.childCount === 3, true, 'API appendChild() 正常');
         QUnit.equal(topBar.el.id, topBar.id, 'ID属性正常');
-        QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
         app.render();
 
-        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home</button>', 'tmpl接口正常');
-        QUnit.equal(topBar.el.innerHTML, 'andrew\'s homepage<button class="home" id="go-back-home">home<div id="test-component"></div></button><button id="about">about me</button>', '渲染符合预期');
+        QUnit.equal(topBar.el.className, 'name', 'API getState()正常');
+        QUnit.equal(topBar.el.innerHTML, '<div id="go-back-home"><button id="test-component">test component</button><button id="test-button-2">test button 2</button></div><button id="about">about me</button>', 'tmpl接口正常');
+        QUnit.equal(topBar.el.innerHTML, '<div id="go-back-home"><button id="test-component">test component</button><button id="test-button-2">test button 2</button></div><button id="about">about me</button>', '渲染符合预期');
         QUnit.equal(topBar.getChildById('test-component').el, document.getElementById('test-component'), '多层级Component嵌套正常');
         QUnit.stop();
         window.onhashchange = function () {
