@@ -151,11 +151,12 @@ function(_, util, Node, template) {
         }
         container = containers[name];
         container.innerHTML = '' + html;
-        doms = _.each(slice.call(container.childNodes), function (index, dom) {
-            return container.removeChild(dom);
+        var fragment = document.createDocumentFragment();
+        _.each(slice.call(container.childNodes), function (index, dom) {
+            fragment.appendChild(container.removeChild(dom));
         });
 
-        return doms;
+        return fragment;
     }
 
 
@@ -348,7 +349,10 @@ function(_, util, Node, template) {
             //先渲染组件的子组件,然后再渲染组件本身,尽量减少浏览器的重绘
             self.firstChild && self._renderChildComponent();
             if (!self.rendered) {
-                self.el.appendChild(createElement(self.tmpl())[0]);
+                var renderedEl = createElement(self.tmpl());
+                if (renderedEl) {
+                    self.el.appendChild(renderedEl);
+                }
                 setCss(self.el, {
                     width: originOption.width,
                     height: originOption.height
@@ -564,7 +568,7 @@ function(_, util, Node, template) {
         tmpl: function(tplContent, data) {
             var self = this,
                 tplCompile = self._tplCompile,
-                html;
+                html = null;
             tplContent = tplContent || self.tplContent;
             data = data || self.getData();
             this.trigger(BEFORE_TMPL, data);
@@ -573,15 +577,8 @@ function(_, util, Node, template) {
                     this._tplCompile = tplCompile = template.tmpl(tplContent);
                 }
                 html = tplCompile(data, self.helper);
-            } else {
-                console.warn(['Has no template content for',
-                    '[', self.getType() || '[unknow type]', ']',
-                    '[', self.id || '[unknow name]', ']',
-                    'please check your option',
-                    '模板的内容为空，请检查模板文件是否存在,或者模板加载失败'
-                ].join(SPLITER_SPACE));
             }
-            return html || '';
+            return html;
         },
 
 
